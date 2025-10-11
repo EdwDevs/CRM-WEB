@@ -56,7 +56,6 @@
             margin-bottom: 0;
         }
         
-        /* Dashboard Cards */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -107,7 +106,6 @@
             opacity: 0.5;
         }
         
-        /* Form Styles */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -191,14 +189,12 @@
             background: #15803d;
         }
         
-        /* Filters */
         .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
         
-        /* Table */
         .table-container {
             overflow-x: auto;
         }
@@ -384,22 +380,21 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Monto</label>
-                        <input type="number" id="monto" step="0.01" placeholder="0.00" required>
+                        <label>Monto (COP)</label>
+                        <input type="number" id="monto" step="1" placeholder="0" required>
                     </div>
 
                     <div class="form-group">
                         <label>Categoría</label>
                         <select id="categoria" required>
-                            <option value="alimentacion">🍔 Alimentación</option>
-                            <option value="transporte">🚗 Transporte</option>
-                            <option value="servicios">💡 Servicios</option>
-                            <option value="entretenimiento">🎬 Entretenimiento</option>
-                            <option value="salud">⚕️ Salud</option>
-                            <option value="educacion">📚 Educación</option>
-                            <option value="otros">📦 Otros</option>
-                            <option value="salario">💼 Salario</option>
-                            <option value="transferencia">🔄 Transferencia</option>
+                            <option value="">Seleccione una categoría</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="subcategoriaDiv" style="display: none;">
+                        <label>Subcategoría</label>
+                        <select id="subcategoria" required>
+                            <option value="">Seleccione una subcategoría</option>
                         </select>
                     </div>
 
@@ -477,6 +472,7 @@
                             <th>Tipo</th>
                             <th>Método</th>
                             <th>Categoría</th>
+                            <th>Subcategoría</th>
                             <th>Miembro</th>
                             <th>Descripción</th>
                             <th>Monto</th>
@@ -513,39 +509,172 @@
         let transactions = [];
         let editingTransactionId = null;
 
+        // Categorías y subcategorías para hogares colombianos
+        const categorias = {
+            gasto: {
+                'vivienda': {
+                    icon: '🏠',
+                    subcategorias: ['Arriendo', 'Cuota hipoteca', 'Administración', 'Impuesto predial', 'Reparaciones', 'Muebles y electrodomésticos']
+                },
+                'servicios_publicos': {
+                    icon: '💡',
+                    subcategorias: ['Energía eléctrica', 'Agua y alcantarillado', 'Gas natural', 'Internet', 'Telefonía móvil', 'TV por cable/streaming']
+                },
+                'alimentacion': {
+                    icon: '🍔',
+                    subcategorias: ['Mercado semanal', 'Carnes y pescados', 'Frutas y verduras', 'Panadería', 'Tienda de barrio', 'Domicilios']
+                },
+                'transporte': {
+                    icon: '🚗',
+                    subcategorias: ['Transporte público', 'Gasolina', 'SOAT', 'Revisión técnico-mecánica', 'Mantenimiento vehículo', 'Parqueadero', 'Peajes', 'Uber/Taxi']
+                },
+                'educacion': {
+                    icon: '📚',
+                    subcategorias: ['Pensión escolar', 'Universidad', 'Útiles escolares', 'Uniformes', 'Transporte escolar', 'Cursos/academias', 'Libros']
+                },
+                'salud': {
+                    icon: '⚕️',
+                    subcategorias: ['Medicina prepagada', 'Consultas médicas', 'Medicamentos', 'Odontología', 'Exámenes', 'Óptica', 'EPS copagos']
+                },
+                'vestuario': {
+                    icon: '👕',
+                    subcategorias: ['Ropa adultos', 'Ropa niños', 'Calzado', 'Ropa interior', 'Accesorios']
+                },
+                'cuidado_personal': {
+                    icon: '💄',
+                    subcategorias: ['Peluquería/barbería', 'Productos de aseo', 'Cosméticos', 'Gym/deporte']
+                },
+                'entretenimiento': {
+                    icon: '🎬',
+                    subcategorias: ['Restaurantes', 'Cine', 'Paseos/turismo', 'Eventos/conciertos', 'Parques de diversiones', 'Streaming (Netflix, etc.)']
+                },
+                'deudas': {
+                    icon: '💳',
+                    subcategorias: ['Tarjetas de crédito', 'Préstamos bancarios', 'Créditos de libre inversión', 'Préstamos familiares', 'Gota a gota']
+                },
+                'seguros': {
+                    icon: '🛡️',
+                    subcategorias: ['Seguro de vida', 'Seguro hogar', 'Seguro vehículo', 'SOAT']
+                },
+                'otros': {
+                    icon: '📦',
+                    subcategorias: ['Mascotas', 'Regalos', 'Donaciones/diezmos', 'Imprevistos', 'Otros gastos']
+                }
+            },
+            ingreso: {
+                'salario': {
+                    icon: '💼',
+                    subcategorias: ['Salario principal', 'Horas extras', 'Bonificaciones', 'Prima', 'Cesantías']
+                },
+                'negocio': {
+                    icon: '🏪',
+                    subcategorias: ['Ventas', 'Servicios profesionales', 'Comisiones', 'Arriendos']
+                },
+                'inversiones': {
+                    icon: '📈',
+                    subcategorias: ['Dividendos', 'Intereses', 'Ganancias de capital']
+                },
+                'otros': {
+                    icon: '💰',
+                    subcategorias: ['Subsidios estatales', 'Pensión', 'Regalos/donaciones', 'Otros ingresos']
+                }
+            }
+        };
+
+        // Función para formatear moneda colombiana
+        function formatCOP(valor) {
+            return '$' + Math.round(valor).toLocaleString('es-CO');
+        }
+
         // Establecer fecha actual
         document.getElementById('fecha').valueAsDate = new Date();
 
-        // Mostrar/Ocultar método destino para transferencias
-        document.getElementById('tipo').addEventListener('change', function() {
+        // Cargar categorías según tipo
+        function cargarCategorias() {
+            const tipo = document.getElementById('tipo').value;
+            const categoriaSelect = document.getElementById('categoria');
+            const subcategoriaDiv = document.getElementById('subcategoriaDiv');
             const metodoDestinoDiv = document.getElementById('metodoDestinoDiv');
-            if (this.value === 'transferencia') {
+            
+            categoriaSelect.innerHTML = '<option value="">Seleccione una categoría</option>';
+            subcategoriaDiv.style.display = 'none';
+            
+            if (tipo === 'transferencia') {
                 metodoDestinoDiv.style.display = 'block';
                 document.getElementById('metodoDestino').required = true;
-                document.getElementById('categoria').value = 'transferencia';
+                categoriaSelect.innerHTML = '<option value="transferencia">🔄 Transferencia entre cuentas</option>';
+                categoriaSelect.value = 'transferencia';
+                categoriaSelect.disabled = true;
+                document.getElementById('subcategoria').required = false;
             } else {
                 metodoDestinoDiv.style.display = 'none';
                 document.getElementById('metodoDestino').required = false;
+                categoriaSelect.disabled = false;
+                
+                const cats = categorias[tipo];
+                for (let key in cats) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = `${cats[key].icon} ${key.replace(/_/g, ' ').toUpperCase()}`;
+                    categoriaSelect.appendChild(option);
+                }
             }
-        });
+        }
+
+        // Cargar subcategorías según categoría
+        function cargarSubcategorias() {
+            const tipo = document.getElementById('tipo').value;
+            const categoria = document.getElementById('categoria').value;
+            const subcategoriaDiv = document.getElementById('subcategoriaDiv');
+            const subcategoriaSelect = document.getElementById('subcategoria');
+            
+            if (tipo === 'transferencia' || !categoria) {
+                subcategoriaDiv.style.display = 'none';
+                subcategoriaSelect.required = false;
+                return;
+            }
+            
+            subcategoriaSelect.innerHTML = '<option value="">Seleccione una subcategoría</option>';
+            
+            const subcats = categorias[tipo][categoria]?.subcategorias || [];
+            subcats.forEach(subcat => {
+                const option = document.createElement('option');
+                option.value = subcat;
+                option.textContent = subcat;
+                subcategoriaSelect.appendChild(option);
+            });
+            
+            subcategoriaDiv.style.display = 'block';
+            subcategoriaSelect.required = true;
+        }
+
+        // Event listeners
+        document.getElementById('tipo').addEventListener('change', cargarCategorias);
+        document.getElementById('categoria').addEventListener('change', cargarSubcategorias);
+
+        // Inicializar categorías
+        cargarCategorias();
 
         // Guardar transacción
         document.getElementById('transactionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            const tipo = document.getElementById('tipo').value;
+            const categoria = document.getElementById('categoria').value;
+            
             const transactionData = {
-                tipo: document.getElementById('tipo').value,
+                tipo: tipo,
                 metodoPago: document.getElementById('metodoPago').value,
                 monto: parseFloat(document.getElementById('monto').value),
-                categoria: document.getElementById('categoria').value,
+                categoria: categoria,
+                subcategoria: tipo !== 'transferencia' ? document.getElementById('subcategoria').value : 'Transferencia',
                 miembro: document.getElementById('miembro').value,
                 descripcion: document.getElementById('descripcion').value,
                 fecha: document.getElementById('fecha').value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // Agregar método destino si es transferencia
-            if (transactionData.tipo === 'transferencia') {
+            if (tipo === 'transferencia') {
                 transactionData.metodoDestino = document.getElementById('metodoDestino').value;
             }
 
@@ -553,18 +682,17 @@
                 const editingId = document.getElementById('editingId').value;
                 
                 if (editingId) {
-                    // Actualizar transacción existente
                     await db.collection('transactions').doc(editingId).update(transactionData);
                     alert('✅ Transacción actualizada exitosamente');
                     cancelEdit();
                 } else {
-                    // Crear nueva transacción
                     await db.collection('transactions').add(transactionData);
                     alert('✅ Transacción guardada exitosamente');
                 }
                 
                 this.reset();
                 document.getElementById('fecha').valueAsDate = new Date();
+                cargarCategorias();
                 loadTransactions();
             } catch (error) {
                 alert('❌ Error: ' + error.message);
@@ -600,12 +728,10 @@
                 const monto = t.monto;
                 
                 if (t.tipo === 'transferencia') {
-                    // Restar del método origen
                     if (t.metodoPago === 'debito') saldoDebito -= monto;
                     else if (t.metodoPago === 'efectivo') saldoEfectivo -= monto;
                     else if (t.metodoPago === 'nequi') saldoNequi -= monto;
                     
-                    // Sumar al método destino
                     if (t.metodoDestino === 'debito') saldoDebito += monto;
                     else if (t.metodoDestino === 'efectivo') saldoEfectivo += monto;
                     else if (t.metodoDestino === 'nequi') saldoNequi += monto;
@@ -618,10 +744,10 @@
                 }
             });
 
-            document.getElementById('saldoDebito').textContent = '$' + saldoDebito.toFixed(2);
-            document.getElementById('saldoEfectivo').textContent = '$' + saldoEfectivo.toFixed(2);
-            document.getElementById('saldoNequi').textContent = '$' + saldoNequi.toFixed(2);
-            document.getElementById('saldoTotal').textContent = '$' + (saldoDebito + saldoEfectivo + saldoNequi).toFixed(2);
+            document.getElementById('saldoDebito').textContent = formatCOP(saldoDebito);
+            document.getElementById('saldoEfectivo').textContent = formatCOP(saldoEfectivo);
+            document.getElementById('saldoNequi').textContent = formatCOP(saldoNequi);
+            document.getElementById('saldoTotal').textContent = formatCOP(saldoDebito + saldoEfectivo + saldoNequi);
         }
 
         // Mostrar transacciones
@@ -659,10 +785,11 @@
                     <td>${t.fecha}</td>
                     <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
                     <td>${metodoPagoText}</td>
-                    <td>${t.categoria}</td>
+                    <td>${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
+                    <td>${t.subcategoria || '-'}</td>
                     <td>${t.miembro}</td>
                     <td>${t.descripcion}</td>
-                    <td class="${tipoClass}">$${t.monto.toFixed(2)}</td>
+                    <td class="${tipoClass}">${formatCOP(t.monto)}</td>
                     <td>
                         <button onclick="editTransaction('${t.id}')" class="btn-edit">
                             <i class="fas fa-edit"></i>
@@ -683,24 +810,34 @@
             editingTransactionId = id;
             document.getElementById('editingId').value = id;
             document.getElementById('tipo').value = transaction.tipo;
-            document.getElementById('metodoPago').value = transaction.metodoPago;
-            document.getElementById('monto').value = transaction.monto;
-            document.getElementById('categoria').value = transaction.categoria;
-            document.getElementById('miembro').value = transaction.miembro;
-            document.getElementById('descripcion').value = transaction.descripcion;
-            document.getElementById('fecha').value = transaction.fecha;
-
-            if (transaction.tipo === 'transferencia' && transaction.metodoDestino) {
-                document.getElementById('metodoDestinoDiv').style.display = 'block';
-                document.getElementById('metodoDestino').value = transaction.metodoDestino;
-            }
-
-            document.getElementById('formTitle').textContent = 'Editar Transacción';
-            document.getElementById('btnSubmitText').textContent = 'Actualizar';
-            document.getElementById('btnCancelar').style.display = 'inline-block';
+            cargarCategorias();
             
-            displayTransactions();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                document.getElementById('metodoPago').value = transaction.metodoPago;
+                document.getElementById('monto').value = transaction.monto;
+                document.getElementById('categoria').value = transaction.categoria;
+                cargarSubcategorias();
+                
+                setTimeout(() => {
+                    if (transaction.subcategoria) {
+                        document.getElementById('subcategoria').value = transaction.subcategoria;
+                    }
+                    document.getElementById('miembro').value = transaction.miembro;
+                    document.getElementById('descripcion').value = transaction.descripcion;
+                    document.getElementById('fecha').value = transaction.fecha;
+
+                    if (transaction.tipo === 'transferencia' && transaction.metodoDestino) {
+                        document.getElementById('metodoDestino').value = transaction.metodoDestino;
+                    }
+
+                    document.getElementById('formTitle').textContent = 'Editar Transacción';
+                    document.getElementById('btnSubmitText').textContent = 'Actualizar';
+                    document.getElementById('btnCancelar').style.display = 'inline-block';
+                    
+                    displayTransactions();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 100);
+            }, 100);
         };
 
         // Cancelar edición
@@ -712,7 +849,7 @@
             document.getElementById('formTitle').textContent = 'Nueva Transacción';
             document.getElementById('btnSubmitText').textContent = 'Guardar';
             document.getElementById('btnCancelar').style.display = 'none';
-            document.getElementById('metodoDestinoDiv').style.display = 'none';
+            cargarCategorias();
             displayTransactions();
         }
 
@@ -738,10 +875,10 @@
 
         // Exportar a CSV
         document.getElementById('btnExportar').addEventListener('click', function() {
-            let csv = 'Fecha,Tipo,Método,Categoría,Miembro,Descripción,Monto\n';
+            let csv = 'Fecha,Tipo,Método,Categoría,Subcategoría,Miembro,Descripción,Monto\n';
             
             transactions.forEach(t => {
-                csv += `${t.fecha},${t.tipo},${t.metodoPago},${t.categoria},${t.miembro},"${t.descripcion}",${t.monto}\n`;
+                csv += `${t.fecha},${t.tipo},${t.metodoPago},${t.categoria || ''},${t.subcategoria || ''},${t.miembro},"${t.descripcion}",${Math.round(t.monto)}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
