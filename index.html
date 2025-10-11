@@ -3,476 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Financiero</title>
+    <title>CRM Financiero Familiar Avanzado</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
         }
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
         }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
         h1 {
+            font-size: 2.5rem;
+            color: #5b21b6;
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 2.5em;
+            margin-bottom: 10px;
         }
-        .dashboard {
+        
+        h2 {
+            font-size: 1.8rem;
+            color: #5b21b6;
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 0;
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
-        .card {
+        
+        .stat-card {
             background: white;
+            border-radius: 15px;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: white;
         }
-        .card h3 {
-            color: #7f8c8d;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+        
+        .stat-card.debito {
+            background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
         }
-        .card .amount {
-            font-size: 2em;
-            font-weight: bold;
+        
+        .stat-card.efectivo {
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+        }
+        
+        .stat-card.nequi {
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+        }
+        
+        .stat-card.total {
+            background: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%);
+        }
+        
+        .stat-info p:first-child {
+            font-size: 0.9rem;
+            opacity: 0.9;
             margin-bottom: 5px;
         }
-        .income { color: #27ae60; }
-        .expense { color: #e74c3c; }
-        .balance { color: #3498db; }
-        .form-section {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+        
+        .stat-info p:last-child {
+            font-size: 2rem;
+            font-weight: bold;
         }
+        
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+        
+        /* Form Styles */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
+        
         .form-group {
             display: flex;
             flex-direction: column;
         }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
         label {
-            margin-bottom: 5px;
             font-weight: 600;
-            color: #555;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
         }
+        
         input, select, textarea {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1em;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
         }
-        textarea {
-            resize: vertical;
-            min-height: 80px;
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
-        button {
-            background: #3498db;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #2980b9;
-        }
-        .btn-export {
-            background: #27ae60;
-            margin-left: 10px;
-        }
-        .btn-export:hover {
-            background: #229954;
-        }
-        .btn-delete {
-            background: #e74c3c;
-            padding: 5px 15px;
-            font-size: 0.9em;
-        }
-        .btn-delete:hover {
-            background: #c0392b;
-        }
-        .transactions {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .transactions h2 {
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-        .filters {
+        
+        .button-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            align-items: flex-end;
         }
-        .filters select, .filters input {
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             flex: 1;
-            min-width: 150px;
         }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+            display: none;
+        }
+        
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+        
+        .btn-export {
+            background: #16a34a;
+            color: white;
+        }
+        
+        .btn-export:hover {
+            background: #15803d;
+        }
+        
+        /* Filters */
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
+        
+        thead {
+            background: #f3e8ff;
         }
+        
         th {
-            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
             font-weight: 600;
-            color: #2c3e50;
+            color: #5b21b6;
         }
-        tr:hover {
-            background: #f8f9fa;
+        
+        th:nth-last-child(2),
+        td:nth-last-child(2) {
+            text-align: right;
         }
-        .transaction-income {
-            color: #27ae60;
-            font-weight: 600;
-        }
-        .transaction-expense {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-        .loading {
+        
+        th:last-child,
+        td:last-child {
             text-align: center;
-            padding: 20px;
-            color: #7f8c8d;
         }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #95a5a6;
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .editing-row {
+            background: #fef3c7 !important;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .tipo-ingreso {
+            color: #16a34a;
+            font-weight: 600;
+        }
+        
+        .tipo-gasto {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        .tipo-transferencia {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+        
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+        
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.4rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💰 CRM Financiero</h1>
-        
-        <!-- Dashboard -->
-        <div class="dashboard">
-            <div class="card">
-                <h3>Saldo Inicial</h3>
-                <div class="amount balance" id="initialBalance">$0.00</div>
-                <button onclick="setInitialBalance()" style="margin-top: 10px; padding: 8px 15px; font-size: 0.9em;">Configurar</button>
+        <!-- Header -->
+        <div class="card">
+            <h1><i class="fas fa-home"></i> CRM Financiero Familiar Avanzado</h1>
+            <p class="subtitle">Gestión inteligente de gastos familiares</p>
+        </div>
+
+        <!-- Dashboard de Saldos -->
+        <div class="dashboard-grid">
+            <div class="stat-card debito">
+                <div class="stat-info">
+                    <p>Débito</p>
+                    <p id="saldoDebito">$0</p>
+                </div>
+                <i class="fas fa-credit-card stat-icon"></i>
             </div>
-            <div class="card">
-                <h3>Ingresos Totales</h3>
-                <div class="amount income" id="totalIncome">$0.00</div>
+            <div class="stat-card efectivo">
+                <div class="stat-info">
+                    <p>Efectivo</p>
+                    <p id="saldoEfectivo">$0</p>
+                </div>
+                <i class="fas fa-money-bill-wave stat-icon"></i>
             </div>
-            <div class="card">
-                <h3>Gastos Totales</h3>
-                <div class="amount expense" id="totalExpenses">$0.00</div>
+            <div class="stat-card nequi">
+                <div class="stat-info">
+                    <p>Nequi</p>
+                    <p id="saldoNequi">$0</p>
+                </div>
+                <i class="fas fa-mobile-alt stat-icon"></i>
             </div>
-            <div class="card">
-                <h3>Saldo Actual</h3>
-                <div class="amount balance" id="currentBalance">$0.00</div>
+            <div class="stat-card total">
+                <div class="stat-info">
+                    <p>Total</p>
+                    <p id="saldoTotal">$0</p>
+                </div>
+                <i class="fas fa-wallet stat-icon"></i>
             </div>
         </div>
 
-        <!-- Transaction Form -->
-        <div class="form-section">
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">Nueva Transacción</h2>
+        <!-- Formulario de Transacciones -->
+        <div class="card">
+            <h2><i class="fas fa-plus-circle"></i> <span id="formTitle">Nueva Transacción</span></h2>
+            
             <form id="transactionForm">
+                <input type="hidden" id="editingId" value="">
+                
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Tipo *</label>
-                        <select id="type" required>
-                            <option value="income">Ingreso</option>
-                            <option value="expense">Gasto</option>
+                        <label>Tipo</label>
+                        <select id="tipo" required>
+                            <option value="gasto">💸 Gasto</option>
+                            <option value="ingreso">💰 Ingreso</option>
+                            <option value="transferencia">🔄 Transferencia</option>
                         </select>
                     </div>
+
                     <div class="form-group">
-                        <label>Monto *</label>
-                        <input type="number" id="amount" step="0.01" min="0" required placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label>Categoría *</label>
-                        <select id="category" required>
-                            <option value="">Seleccionar...</option>
-                            <option value="salary">Salario</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="investment">Inversión</option>
-                            <option value="food">Alimentación</option>
-                            <option value="transport">Transporte</option>
-                            <option value="utilities">Servicios</option>
-                            <option value="entertainment">Entretenimiento</option>
-                            <option value="health">Salud</option>
-                            <option value="education">Educación</option>
-                            <option value="other">Otro</option>
+                        <label>Método de Pago</label>
+                        <select id="metodoPago" required>
+                            <option value="debito">💳 Débito</option>
+                            <option value="efectivo">💵 Efectivo</option>
+                            <option value="nequi">📱 Nequi</option>
                         </select>
                     </div>
+
+                    <div class="form-group" id="metodoDestinoDiv" style="display: none;">
+                        <label>Método Destino</label>
+                        <select id="metodoDestino">
+                            <option value="debito">💳 Débito</option>
+                            <option value="efectivo">💵 Efectivo</option>
+                            <option value="nequi">📱 Nequi</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
-                        <label>Fecha *</label>
-                        <input type="date" id="date" required>
+                        <label>Monto</label>
+                        <input type="number" id="monto" step="0.01" placeholder="0.00" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="categoria" required>
+                            <option value="alimentacion">🍔 Alimentación</option>
+                            <option value="transporte">🚗 Transporte</option>
+                            <option value="servicios">💡 Servicios</option>
+                            <option value="entretenimiento">🎬 Entretenimiento</option>
+                            <option value="salud">⚕️ Salud</option>
+                            <option value="educacion">📚 Educación</option>
+                            <option value="otros">📦 Otros</option>
+                            <option value="salario">💼 Salario</option>
+                            <option value="transferencia">🔄 Transferencia</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Miembro Familiar</label>
+                        <select id="miembro" required>
+                            <option value="papa">👨 Papá</option>
+                            <option value="mama">👩 Mamá</option>
+                            <option value="hijo1">👦 Hijo/a 1</option>
+                            <option value="hijo2">👧 Hijo/a 2</option>
+                            <option value="compartido">👨‍👩‍👧‍👦 Compartido</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Descripción</label>
+                        <input type="text" id="descripcion" placeholder="Descripción de la transacción" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+
+                    <div class="form-group button-group">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> <span id="btnSubmitText">Guardar</span>
+                        </button>
+                        <button type="button" id="btnCancelar" class="btn-cancel">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
                     </div>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Descripción</label>
-                    <textarea id="description" placeholder="Detalles de la transacción..."></textarea>
-                </div>
-                <button type="submit">Agregar Transacción</button>
-                <button type="button" class="btn-export" onclick="exportToCSV()">Exportar a CSV</button>
             </form>
         </div>
 
-        <!-- Transactions List -->
-        <div class="transactions">
-            <h2>Historial de Transacciones</h2>
-            
-            <div class="filters">
-                <select id="filterType" onchange="applyFilters()">
-                    <option value="all">Todos los tipos</option>
-                    <option value="income">Solo Ingresos</option>
-                    <option value="expense">Solo Gastos</option>
+        <!-- Filtros y Búsqueda -->
+        <div class="card">
+            <h2><i class="fas fa-filter"></i> Filtros</h2>
+            <div class="filters-grid">
+                <select id="filtroTipo">
+                    <option value="">Todos los tipos</option>
+                    <option value="gasto">Gastos</option>
+                    <option value="ingreso">Ingresos</option>
+                    <option value="transferencia">Transferencias</option>
                 </select>
-                <select id="filterCategory" onchange="applyFilters()">
-                    <option value="all">Todas las categorías</option>
+                <select id="filtroMetodo">
+                    <option value="">Todos los métodos</option>
+                    <option value="debito">Débito</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="nequi">Nequi</option>
                 </select>
-                <input type="date" id="filterDateFrom" onchange="applyFilters()" placeholder="Desde">
-                <input type="date" id="filterDateTo" onchange="applyFilters()" placeholder="Hasta">
+                <select id="filtroMiembro">
+                    <option value="">Todos los miembros</option>
+                    <option value="papa">Papá</option>
+                    <option value="mama">Mamá</option>
+                    <option value="hijo1">Hijo/a 1</option>
+                    <option value="hijo2">Hijo/a 2</option>
+                    <option value="compartido">Compartido</option>
+                </select>
+                <button id="btnExportar" class="btn-export">
+                    <i class="fas fa-file-excel"></i> Exportar
+                </button>
             </div>
+        </div>
 
-            <div id="transactionsList">
-                <div class="loading">Cargando transacciones...</div>
+        <!-- Historial de Transacciones -->
+        <div class="card">
+            <h2><i class="fas fa-history"></i> Historial de Transacciones</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Método</th>
+                            <th>Categoría</th>
+                            <th>Miembro</th>
+                            <th>Descripción</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionList"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, updateDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY",
             authDomain: "crm-financiero.firebaseapp.com",
             projectId: "crm-financiero",
             storageBucket: "crm-financiero.firebasestorage.app",
             messagingSenderId: "442754442943",
-            appId: "1:442754442943:web:d3026acff3ecab6d07880a",
-            measurementId: "G-1MSE2XXK39"
+            appId: "1:442754442943:web:914d5a8ef619d77407880a",
+            measurementId: "G-5EBSSNG8P9"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
+        // Variables globales
         let transactions = [];
-        let initialBalanceValue = 0;
+        let editingTransactionId = null;
 
-        // Set today's date as default
-        document.getElementById('date').valueAsDate = new Date();
+        // Establecer fecha actual
+        document.getElementById('fecha').valueAsDate = new Date();
 
-        // Load initial balance
-        async function loadInitialBalance() {
-            const docRef = doc(db, "settings", "initialBalance");
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                initialBalanceValue = docSnap.data().amount || 0;
-            }
-            updateDashboard();
-        }
-
-        // Set initial balance
-        window.setInitialBalance = async function() {
-            const amount = prompt("Ingrese el saldo inicial:", initialBalanceValue);
-            if (amount !== null) {
-                initialBalanceValue = parseFloat(amount) || 0;
-                await setDoc(doc(db, "settings", "initialBalance"), {
-                    amount: initialBalanceValue,
-                    updatedAt: new Date().toISOString()
-                });
-                updateDashboard();
-            }
-        };
-
-        // Add transaction
-        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const transaction = {
-                type: document.getElementById('type').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                category: document.getElementById('category').value,
-                date: document.getElementById('date').value,
-                description: document.getElementById('description').value,
-                createdAt: new Date().toISOString()
-            };
-
-            try {
-                await addDoc(collection(db, "transactions"), transaction);
-                document.getElementById('transactionForm').reset();
-                document.getElementById('date').valueAsDate = new Date();
-                await loadTransactions();
-                alert('Transacción agregada exitosamente');
-            } catch (error) {
-                console.error("Error:", error);
-                alert('Error al agregar la transacción');
+        // Mostrar/Ocultar método destino para transferencias
+        document.getElementById('tipo').addEventListener('change', function() {
+            const metodoDestinoDiv = document.getElementById('metodoDestinoDiv');
+            if (this.value === 'transferencia') {
+                metodoDestinoDiv.style.display = 'block';
+                document.getElementById('metodoDestino').required = true;
+                document.getElementById('categoria').value = 'transferencia';
+            } else {
+                metodoDestinoDiv.style.display = 'none';
+                document.getElementById('metodoDestino').required = false;
             }
         });
 
-        // Load transactions
+        // Guardar transacción
+        document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const transactionData = {
+                tipo: document.getElementById('tipo').value,
+                metodoPago: document.getElementById('metodoPago').value,
+                monto: parseFloat(document.getElementById('monto').value),
+                categoria: document.getElementById('categoria').value,
+                miembro: document.getElementById('miembro').value,
+                descripcion: document.getElementById('descripcion').value,
+                fecha: document.getElementById('fecha').value,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // Agregar método destino si es transferencia
+            if (transactionData.tipo === 'transferencia') {
+                transactionData.metodoDestino = document.getElementById('metodoDestino').value;
+            }
+
+            try {
+                const editingId = document.getElementById('editingId').value;
+                
+                if (editingId) {
+                    // Actualizar transacción existente
+                    await db.collection('transactions').doc(editingId).update(transactionData);
+                    alert('✅ Transacción actualizada exitosamente');
+                    cancelEdit();
+                } else {
+                    // Crear nueva transacción
+                    await db.collection('transactions').add(transactionData);
+                    alert('✅ Transacción guardada exitosamente');
+                }
+                
+                this.reset();
+                document.getElementById('fecha').valueAsDate = new Date();
+                loadTransactions();
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+                console.error(error);
+            }
+        });
+
+        // Cargar transacciones
         async function loadTransactions() {
             try {
-                const q = query(collection(db, "transactions"), orderBy("date", "desc"));
-                const querySnapshot = await getDocs(q);
+                const snapshot = await db.collection('transactions').orderBy('fecha', 'desc').get();
                 transactions = [];
-                querySnapshot.forEach((doc) => {
+                
+                snapshot.forEach(doc => {
                     transactions.push({ id: doc.id, ...doc.data() });
                 });
-                populateCategoryFilter();
-                applyFilters();
+
                 updateDashboard();
+                displayTransactions();
             } catch (error) {
-                console.error("Error:", error);
-                document.getElementById('transactionsList').innerHTML = '<div class="empty-state">Error al cargar las transacciones</div>';
+                console.error('Error al cargar transacciones:', error);
+                alert('❌ Error al cargar transacciones. Verifica las reglas de Firestore.');
             }
         }
 
-        // Update dashboard
+        // Actualizar dashboard
         function updateDashboard() {
-            const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-            const balance = initialBalanceValue + income - expenses;
+            let saldoDebito = 0;
+            let saldoEfectivo = 0;
+            let saldoNequi = 0;
 
-            document.getElementById('initialBalance').textContent = formatCurrency(initialBalanceValue);
-            document.getElementById('totalIncome').textContent = formatCurrency(income);
-            document.getElementById('totalExpenses').textContent = formatCurrency(expenses);
-            document.getElementById('currentBalance').textContent = formatCurrency(balance);
-        }
-
-        // Populate category filter
-        function populateCategoryFilter() {
-            const categories = [...new Set(transactions.map(t => t.category))];
-            const filterCategory = document.getElementById('filterCategory');
-            filterCategory.innerHTML = '<option value="all">Todas las categorías</option>';
-            categories.forEach(cat => {
-                filterCategory.innerHTML += `<option value="${cat}">${getCategoryName(cat)}</option>`;
-            });
-        }
-
-        // Apply filters
-        window.applyFilters = function() {
-            const typeFilter = document.getElementById('filterType').value;
-            const categoryFilter = document.getElementById('filterCategory').value;
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-
-            let filtered = transactions.filter(t => {
-                if (typeFilter !== 'all' && t.type !== typeFilter) return false;
-                if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
-                if (dateFrom && t.date < dateFrom) return false;
-                if (dateTo && t.date > dateTo) return false;
-                return true;
+            transactions.forEach(t => {
+                const monto = t.monto;
+                
+                if (t.tipo === 'transferencia') {
+                    // Restar del método origen
+                    if (t.metodoPago === 'debito') saldoDebito -= monto;
+                    else if (t.metodoPago === 'efectivo') saldoEfectivo -= monto;
+                    else if (t.metodoPago === 'nequi') saldoNequi -= monto;
+                    
+                    // Sumar al método destino
+                    if (t.metodoDestino === 'debito') saldoDebito += monto;
+                    else if (t.metodoDestino === 'efectivo') saldoEfectivo += monto;
+                    else if (t.metodoDestino === 'nequi') saldoNequi += monto;
+                } else {
+                    const multiplier = t.tipo === 'ingreso' ? 1 : -1;
+                    
+                    if (t.metodoPago === 'debito') saldoDebito += monto * multiplier;
+                    else if (t.metodoPago === 'efectivo') saldoEfectivo += monto * multiplier;
+                    else if (t.metodoPago === 'nequi') saldoNequi += monto * multiplier;
+                }
             });
 
-            displayTransactions(filtered);
-        };
+            document.getElementById('saldoDebito').textContent = '$' + saldoDebito.toFixed(2);
+            document.getElementById('saldoEfectivo').textContent = '$' + saldoEfectivo.toFixed(2);
+            document.getElementById('saldoNequi').textContent = '$' + saldoNequi.toFixed(2);
+            document.getElementById('saldoTotal').textContent = '$' + (saldoDebito + saldoEfectivo + saldoNequi).toFixed(2);
+        }
 
-        // Display transactions
-        function displayTransactions(transactionsToShow) {
-            const container = document.getElementById('transactionsList');
-            
-            if (transactionsToShow.length === 0) {
-                container.innerHTML = '<div class="empty-state">No hay transacciones para mostrar</div>';
-                return;
-            }
+        // Mostrar transacciones
+        function displayTransactions() {
+            const filtroTipo = document.getElementById('filtroTipo').value;
+            const filtroMetodo = document.getElementById('filtroMetodo').value;
+            const filtroMiembro = document.getElementById('filtroMiembro').value;
 
-            let html = '<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Acción</th></tr></thead><tbody>';
-            
-            transactionsToShow.forEach(t => {
-                const typeClass = t.type === 'income' ? 'transaction-income' : 'transaction-expense';
-                const typeText = t.type === 'income' ? 'Ingreso' : 'Gasto';
-                html += `
-                    <tr>
-                        <td>${formatDate(t.date)}</td>
-                        <td class="${typeClass}">${typeText}</td>
-                        <td>${getCategoryName(t.category)}</td>
-                        <td>${t.description || '-'}</td>
-                        <td class="${typeClass}">${formatCurrency(t.amount)}</td>
-                        <td><button class="btn-delete" onclick="deleteTransaction('${t.id}')">Eliminar</button></td>
-                    </tr>
+            const filtered = transactions.filter(t => {
+                return (!filtroTipo || t.tipo === filtroTipo) &&
+                       (!filtroMetodo || t.metodoPago === filtroMetodo) &&
+                       (!filtroMiembro || t.miembro === filtroMiembro);
+            });
+
+            const tbody = document.getElementById('transactionList');
+            tbody.innerHTML = '';
+
+            filtered.forEach(t => {
+                const row = tbody.insertRow();
+                const isEditing = editingTransactionId === t.id;
+                if (isEditing) {
+                    row.classList.add('editing-row');
+                }
+                
+                const tipoIcon = t.tipo === 'ingreso' ? '💰' : t.tipo === 'transferencia' ? '🔄' : '💸';
+                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
+                
+                let metodoPagoText = t.metodoPago === 'debito' ? '💳 Débito' : t.metodoPago === 'efectivo' ? '💵 Efectivo' : '📱 Nequi';
+                if (t.tipo === 'transferencia' && t.metodoDestino) {
+                    const metodoDestinoIcon = t.metodoDestino === 'debito' ? '💳' : t.metodoDestino === 'efectivo' ? '💵' : '📱';
+                    metodoPagoText += ` → ${metodoDestinoIcon}`;
+                }
+
+                row.innerHTML = `
+                    <td>${t.fecha}</td>
+                    <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
+                    <td>${metodoPagoText}</td>
+                    <td>${t.categoria}</td>
+                    <td>${t.miembro}</td>
+                    <td>${t.descripcion}</td>
+                    <td class="${tipoClass}">$${t.monto.toFixed(2)}</td>
+                    <td>
+                        <button onclick="editTransaction('${t.id}')" class="btn-edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
                 `;
             });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
         }
 
-        // Delete transaction
+        // Editar transacción
+        window.editTransaction = function(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) return;
+
+            editingTransactionId = id;
+            document.getElementById('editingId').value = id;
+            document.getElementById('tipo').value = transaction.tipo;
+            document.getElementById('metodoPago').value = transaction.metodoPago;
+            document.getElementById('monto').value = transaction.monto;
+            document.getElementById('categoria').value = transaction.categoria;
+            document.getElementById('miembro').value = transaction.miembro;
+            document.getElementById('descripcion').value = transaction.descripcion;
+            document.getElementById('fecha').value = transaction.fecha;
+
+            if (transaction.tipo === 'transferencia' && transaction.metodoDestino) {
+                document.getElementById('metodoDestinoDiv').style.display = 'block';
+                document.getElementById('metodoDestino').value = transaction.metodoDestino;
+            }
+
+            document.getElementById('formTitle').textContent = 'Editar Transacción';
+            document.getElementById('btnSubmitText').textContent = 'Actualizar';
+            document.getElementById('btnCancelar').style.display = 'inline-block';
+            
+            displayTransactions();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // Cancelar edición
+        function cancelEdit() {
+            editingTransactionId = null;
+            document.getElementById('editingId').value = '';
+            document.getElementById('transactionForm').reset();
+            document.getElementById('fecha').valueAsDate = new Date();
+            document.getElementById('formTitle').textContent = 'Nueva Transacción';
+            document.getElementById('btnSubmitText').textContent = 'Guardar';
+            document.getElementById('btnCancelar').style.display = 'none';
+            document.getElementById('metodoDestinoDiv').style.display = 'none';
+            displayTransactions();
+        }
+
+        document.getElementById('btnCancelar').addEventListener('click', cancelEdit);
+
+        // Eliminar transacción
         window.deleteTransaction = async function(id) {
-            if (confirm('¿Está seguro de eliminar esta transacción?')) {
-                try {
-                    await deleteDoc(doc(db, "transactions", id));
-                    await loadTransactions();
-                } catch (error) {
-                    console.error("Error:", error);
-                    alert('Error al eliminar la transacción');
-                }
+            if (!confirm('¿Estás seguro de eliminar esta transacción?')) return;
+
+            try {
+                await db.collection('transactions').doc(id).delete();
+                alert('✅ Transacción eliminada');
+                loadTransactions();
+            } catch (error) {
+                alert('❌ Error al eliminar: ' + error.message);
             }
         };
 
-        // Export to CSV
-        window.exportToCSV = function() {
-            const csv = ['Fecha,Tipo,Categoría,Descripción,Monto'];
-            transactions.forEach(t => {
-                csv.push(`${t.date},${t.type},${t.category},"${t.description || ''}",${t.amount}`);
-            });
+        // Filtros
+        document.getElementById('filtroTipo').addEventListener('change', displayTransactions);
+        document.getElementById('filtroMetodo').addEventListener('change', displayTransactions);
+        document.getElementById('filtroMiembro').addEventListener('change', displayTransactions);
+
+        // Exportar a CSV
+        document.getElementById('btnExportar').addEventListener('click', function() {
+            let csv = 'Fecha,Tipo,Método,Categoría,Miembro,Descripción,Monto\n';
             
-            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            transactions.forEach(t => {
+                csv += `${t.fecha},${t.tipo},${t.metodoPago},${t.categoria},${t.miembro},"${t.descripcion}",${t.monto}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `transacciones_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
-        };
+        });
 
-        // Helper functions
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(amount);
-        }
-
-        function formatDate(dateString) {
-            return new Date(dateString + 'T00:00:00').toLocaleDateString('es-CO');
-        }
-
-        function getCategoryName(category) {
-            const names = {
-                salary: 'Salario', freelance: 'Freelance', investment: 'Inversión',
-                food: 'Alimentación', transport: 'Transporte', utilities: 'Servicios',
-                entertainment: 'Entretenimiento', health: 'Salud', education: 'Educación',
-                other: 'Otro'
-            };
-            return names[category] || category;
-        }
-
-        // Initialize
-        loadInitialBalance();
+        // Cargar transacciones al iniciar
         loadTransactions();
     </script>
 </body>
