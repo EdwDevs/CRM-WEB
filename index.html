@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM Financiero Familiar Avanzado</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         * {
             margin: 0;
@@ -50,10 +51,53 @@
             margin-bottom: 20px;
         }
         
+        h3 {
+            font-size: 1.3rem;
+            color: #6b21a8;
+            margin: 20px 0 15px 0;
+        }
+        
         .subtitle {
             text-align: center;
             color: #6b7280;
             margin-bottom: 0;
+        }
+        
+        /* Tabs de navegación */
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #374151;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
         }
         
         .dashboard-grid {
@@ -104,6 +148,124 @@
         .stat-icon {
             font-size: 3rem;
             opacity: 0.5;
+        }
+        
+        /* Estadísticas avanzadas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .mini-stat {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .mini-stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .mini-stat-label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .mini-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #5b21b6;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        
+        .period-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .period-btn {
+            padding: 10px 20px;
+            border: 2px solid #7c3aed;
+            border-radius: 8px;
+            background: white;
+            color: #7c3aed;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .period-btn.active {
+            background: #7c3aed;
+            color: white;
+        }
+        
+        .period-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .ranking-list {
+            list-style: none;
+        }
+        
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #7c3aed;
+        }
+        
+        .ranking-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .ranking-position {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #7c3aed;
+            margin-right: 15px;
+        }
+        
+        .ranking-info {
+            flex: 1;
+        }
+        
+        .ranking-name {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .ranking-details {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .ranking-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #dc2626;
         }
         
         .form-grid {
@@ -277,6 +439,21 @@
             background: #dc2626;
         }
         
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
+            transition: width 0.3s;
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -301,6 +478,14 @@
             .button-group {
                 flex-direction: column;
             }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -309,178 +494,330 @@
         <!-- Header -->
         <div class="card">
             <h1><i class="fas fa-home"></i> CRM Financiero Familiar Avanzado</h1>
-            <p class="subtitle">Gestión inteligente de gastos familiares</p>
+            <p class="subtitle">Gestión inteligente de gastos familiares con análisis avanzado 📊</p>
         </div>
 
-        <!-- Dashboard de Saldos -->
-        <div class="dashboard-grid">
-            <div class="stat-card debito">
-                <div class="stat-info">
-                    <p>Débito</p>
-                    <p id="saldoDebito">$0</p>
-                </div>
-                <i class="fas fa-credit-card stat-icon"></i>
-            </div>
-            <div class="stat-card efectivo">
-                <div class="stat-info">
-                    <p>Efectivo</p>
-                    <p id="saldoEfectivo">$0</p>
-                </div>
-                <i class="fas fa-money-bill-wave stat-icon"></i>
-            </div>
-            <div class="stat-card nequi">
-                <div class="stat-info">
-                    <p>Nequi</p>
-                    <p id="saldoNequi">$0</p>
-                </div>
-                <i class="fas fa-mobile-alt stat-icon"></i>
-            </div>
-            <div class="stat-card total">
-                <div class="stat-info">
-                    <p>Total</p>
-                    <p id="saldoTotal">$0</p>
-                </div>
-                <i class="fas fa-wallet stat-icon"></i>
-            </div>
-        </div>
-
-        <!-- Formulario de Transacciones -->
+        <!-- Tabs de navegación -->
         <div class="card">
-            <h2><i class="fas fa-plus-circle"></i> <span id="formTitle">Nueva Transacción</span></h2>
-            
-            <form id="transactionForm">
-                <input type="hidden" id="editingId" value="">
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Tipo</label>
-                        <select id="tipo" required>
-                            <option value="gasto">💸 Gasto</option>
-                            <option value="ingreso">💰 Ingreso</option>
-                            <option value="transferencia">🔄 Transferencia</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Método de Pago</label>
-                        <select id="metodoPago" required>
-                            <option value="debito">💳 Débito</option>
-                            <option value="efectivo">💵 Efectivo</option>
-                            <option value="nequi">📱 Nequi</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="metodoDestinoDiv" style="display: none;">
-                        <label>Método Destino</label>
-                        <select id="metodoDestino">
-                            <option value="debito">💳 Débito</option>
-                            <option value="efectivo">💵 Efectivo</option>
-                            <option value="nequi">📱 Nequi</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Monto (COP)</label>
-                        <input type="number" id="monto" step="1" placeholder="0" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Categoría</label>
-                        <select id="categoria" required>
-                            <option value="">Seleccione una categoría</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="subcategoriaDiv" style="display: none;">
-                        <label>Subcategoría</label>
-                        <select id="subcategoria" required>
-                            <option value="">Seleccione una subcategoría</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Miembro Familiar</label>
-                        <select id="miembro" required>
-                            <option value="papa">👨 Papá</option>
-                            <option value="mama">👩 Mamá</option>
-                            <option value="hijo1">👦 Hijo/a 1</option>
-                            <option value="hijo2">👧 Hijo/a 2</option>
-                            <option value="compartido">👨‍👩‍👧‍👦 Compartido</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Descripción</label>
-                        <input type="text" id="descripcion" placeholder="Descripción de la transacción" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Fecha</label>
-                        <input type="date" id="fecha" required>
-                    </div>
-
-                    <div class="form-group button-group">
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-save"></i> <span id="btnSubmitText">Guardar</span>
-                        </button>
-                        <button type="button" id="btnCancelar" class="btn-cancel">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Filtros y Búsqueda -->
-        <div class="card">
-            <h2><i class="fas fa-filter"></i> Filtros</h2>
-            <div class="filters-grid">
-                <select id="filtroTipo">
-                    <option value="">Todos los tipos</option>
-                    <option value="gasto">Gastos</option>
-                    <option value="ingreso">Ingresos</option>
-                    <option value="transferencia">Transferencias</option>
-                </select>
-                <select id="filtroMetodo">
-                    <option value="">Todos los métodos</option>
-                    <option value="debito">Débito</option>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="nequi">Nequi</option>
-                </select>
-                <select id="filtroMiembro">
-                    <option value="">Todos los miembros</option>
-                    <option value="papa">Papá</option>
-                    <option value="mama">Mamá</option>
-                    <option value="hijo1">Hijo/a 1</option>
-                    <option value="hijo2">Hijo/a 2</option>
-                    <option value="compartido">Compartido</option>
-                </select>
-                <button id="btnExportar" class="btn-export">
-                    <i class="fas fa-file-excel"></i> Exportar
+            <div class="tabs-container">
+                <button class="tab-button active" onclick="switchTab('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="tab-button" onclick="switchTab('transacciones')">
+                    <i class="fas fa-exchange-alt"></i> Transacciones
+                </button>
+                <button class="tab-button" onclick="switchTab('estadisticas')">
+                    <i class="fas fa-chart-line"></i> Estadísticas Avanzadas
+                </button>
+                <button class="tab-button" onclick="switchTab('historial')">
+                    <i class="fas fa-history"></i> Historial
                 </button>
             </div>
         </div>
 
-        <!-- Historial de Transacciones -->
-        <div class="card">
-            <h2><i class="fas fa-history"></i> Historial de Transacciones</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Método</th>
-                            <th>Categoría</th>
-                            <th>Subcategoría</th>
-                            <th>Miembro</th>
-                            <th>Descripción</th>
-                            <th>Monto</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionList"></tbody>
-                </table>
+        <!-- TAB: Dashboard -->
+        <div id="tab-dashboard" class="tab-content active">
+            <!-- Dashboard de Saldos -->
+            <div class="dashboard-grid">
+                <div class="stat-card debito">
+                    <div class="stat-info">
+                        <p>Débito</p>
+                        <p id="saldoDebito">$0</p>
+                    </div>
+                    <i class="fas fa-credit-card stat-icon"></i>
+                </div>
+                <div class="stat-card efectivo">
+                    <div class="stat-info">
+                        <p>Efectivo</p>
+                        <p id="saldoEfectivo">$0</p>
+                    </div>
+                    <i class="fas fa-money-bill-wave stat-icon"></i>
+                </div>
+                <div class="stat-card nequi">
+                    <div class="stat-info">
+                        <p>Nequi</p>
+                        <p id="saldoNequi">$0</p>
+                    </div>
+                    <i class="fas fa-mobile-alt stat-icon"></i>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-info">
+                        <p>Total</p>
+                        <p id="saldoTotal">$0</p>
+                    </div>
+                    <i class="fas fa-wallet stat-icon"></i>
+                </div>
+            </div>
+
+            <!-- Resumen rápido -->
+            <div class="card">
+                <h2><i class="fas fa-chart-pie"></i> Resumen del Mes Actual</h2>
+                <div class="stats-grid">
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">💰</div>
+                        <div class="mini-stat-label">Total Ingresos</div>
+                        <div class="mini-stat-value" id="totalIngresosMes">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">💸</div>
+                        <div class="mini-stat-label">Total Gastos</div>
+                        <div class="mini-stat-value" id="totalGastosMes">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">📊</div>
+                        <div class="mini-stat-label">Balance</div>
+                        <div class="mini-stat-value" id="balanceMes">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">📈</div>
+                        <div class="mini-stat-label">Promedio Diario</div>
+                        <div class="mini-stat-value" id="promedioDiario">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Transacciones -->
+        <div id="tab-transacciones" class="tab-content">
+            <!-- Formulario de Transacciones -->
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> <span id="formTitle">Nueva Transacción</span></h2>
+                
+                <form id="transactionForm">
+                    <input type="hidden" id="editingId" value="">
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select id="tipo" required>
+                                <option value="gasto">💸 Gasto</option>
+                                <option value="ingreso">💰 Ingreso</option>
+                                <option value="transferencia">🔄 Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Método de Pago</label>
+                            <select id="metodoPago" required>
+                                <option value="debito">💳 Débito</option>
+                                <option value="efectivo">💵 Efectivo</option>
+                                <option value="nequi">📱 Nequi</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="metodoDestinoDiv" style="display: none;">
+                            <label>Método Destino</label>
+                            <select id="metodoDestino">
+                                <option value="debito">💳 Débito</option>
+                                <option value="efectivo">💵 Efectivo</option>
+                                <option value="nequi">📱 Nequi</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monto (COP)</label>
+                            <input type="number" id="monto" step="1" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Categoría</label>
+                            <select id="categoria" required>
+                                <option value="">Seleccione una categoría</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="subcategoriaDiv" style="display: none;">
+                            <label>Subcategoría</label>
+                            <select id="subcategoria" required>
+                                <option value="">Seleccione una subcategoría</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Miembro Familiar</label>
+                            <select id="miembro" required>
+                                <option value="papa">👨 Papá</option>
+                                <option value="mama">👩 Mamá</option>
+                                <option value="hijo1">👦 Hijo/a 1</option>
+                                <option value="hijo2">👧 Hijo/a 2</option>
+                                <option value="compartido">👨‍👩‍👧‍👦 Compartido</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Descripción</label>
+                            <input type="text" id="descripcion" placeholder="Descripción de la transacción" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="fecha" required>
+                        </div>
+                        <div class="form-group button-group">
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i> <span id="btnSubmitText">Guardar</span>
+                            </button>
+                            <button type="button" id="btnCancelar" class="btn-cancel">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB: Estadísticas Avanzadas -->
+        <div id="tab-estadisticas" class="tab-content">
+            <!-- Selector de período -->
+            <div class="card">
+                <h2><i class="fas fa-calendar-alt"></i> Seleccionar Período de Análisis</h2>
+                <div class="period-selector">
+                    <button class="period-btn active" onclick="changePeriod('mes')">Este Mes</button>
+                    <button class="period-btn" onclick="changePeriod('trimestre')">Último Trimestre</button>
+                    <button class="period-btn" onclick="changePeriod('semestre')">Último Semestre</button>
+                    <button class="period-btn" onclick="changePeriod('ano')">Este Año</button>
+                    <button class="period-btn" onclick="changePeriod('todo')">Todo el Tiempo</button>
+                </div>
+            </div>
+
+            <!-- Métricas avanzadas -->
+            <div class="card">
+                <h2><i class="fas fa-calculator"></i> Métricas del Período</h2>
+                <div class="stats-grid">
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">💰</div>
+                        <div class="mini-stat-label">Ingresos Totales</div>
+                        <div class="mini-stat-value" id="statIngresos">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">💸</div>
+                        <div class="mini-stat-label">Gastos Totales</div>
+                        <div class="mini-stat-value" id="statGastos">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">📊</div>
+                        <div class="mini-stat-label">Balance Neto</div>
+                        <div class="mini-stat-value" id="statBalance">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">📈</div>
+                        <div class="mini-stat-label">Promedio Mensual</div>
+                        <div class="mini-stat-value" id="statPromedioMensual">$0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">🎯</div>
+                        <div class="mini-stat-label">Transacciones</div>
+                        <div class="mini-stat-value" id="statTransacciones">0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-icon">💳</div>
+                        <div class="mini-stat-label">Ticket Promedio</div>
+                        <div class="mini-stat-value" id="statTicketPromedio">$0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="card">
+                <h2><i class="fas fa-chart-pie"></i> Análisis Visual</h2>
+                
+                <div class="charts-grid">
+                    <div>
+                        <h3>Distribución de Gastos por Categoría</h3>
+                        <div class="chart-container">
+                            <canvas id="chartGastosPorCategoria"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3>Gastos por Método de Pago</h3>
+                        <div class="chart-container">
+                            <canvas id="chartPorMetodo"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Evolución Temporal: Ingresos vs Gastos</h3>
+                    <div class="chart-container">
+                        <canvas id="chartEvolucion"></canvas>
+                    </div>
+                </div>
+
+                <div class="charts-grid" style="margin-top: 30px;">
+                    <div>
+                        <h3>Gastos por Miembro Familiar</h3>
+                        <div class="chart-container">
+                            <canvas id="chartPorMiembro"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3>Distribución de Ingresos</h3>
+                        <div class="chart-container">
+                            <canvas id="chartIngresos"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rankings -->
+            <div class="card">
+                <h2><i class="fas fa-trophy"></i> Top Categorías de Gasto</h2>
+                <ul class="ranking-list" id="rankingCategorias"></ul>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-users"></i> Gastos por Miembro</h2>
+                <ul class="ranking-list" id="rankingMiembros"></ul>
+            </div>
+        </div>
+
+        <!-- TAB: Historial -->
+        <div id="tab-historial" class="tab-content">
+            <!-- Filtros y Búsqueda -->
+            <div class="card">
+                <h2><i class="fas fa-filter"></i> Filtros</h2>
+                <div class="filters-grid">
+                    <select id="filtroTipo">
+                        <option value="">Todos los tipos</option>
+                        <option value="gasto">Gastos</option>
+                        <option value="ingreso">Ingresos</option>
+                        <option value="transferencia">Transferencias</option>
+                    </select>
+                    <select id="filtroMetodo">
+                        <option value="">Todos los métodos</option>
+                        <option value="debito">Débito</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="nequi">Nequi</option>
+                    </select>
+                    <select id="filtroMiembro">
+                        <option value="">Todos los miembros</option>
+                        <option value="papa">Papá</option>
+                        <option value="mama">Mamá</option>
+                        <option value="hijo1">Hijo/a 1</option>
+                        <option value="hijo2">Hijo/a 2</option>
+                        <option value="compartido">Compartido</option>
+                    </select>
+                    <button id="btnExportar" class="btn-export">
+                        <i class="fas fa-file-excel"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Historial de Transacciones -->
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Historial de Transacciones</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Método</th>
+                                <th>Categoría</th>
+                                <th>Subcategoría</th>
+                                <th>Miembro</th>
+                                <th>Descripción</th>
+                                <th>Monto</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionList"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -508,6 +845,8 @@
         // Variables globales
         let transactions = [];
         let editingTransactionId = null;
+        let currentPeriod = 'mes';
+        let charts = {};
 
         // Categorías y subcategorías para hogares colombianos
         const categorias = {
@@ -589,6 +928,433 @@
         // Establecer fecha actual
         document.getElementById('fecha').valueAsDate = new Date();
 
+        // Cambiar tabs
+        function switchTab(tabName) {
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Desactivar todos los botones
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Activar el tab seleccionado
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Si es la pestaña de estadísticas, actualizar gráficos
+            if (tabName === 'estadisticas') {
+                updateStatistics();
+            }
+        }
+
+        // Cambiar período de análisis
+        function changePeriod(period) {
+            currentPeriod = period;
+            
+            // Actualizar botones
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateStatistics();
+        }
+
+        // Filtrar transacciones por período
+        function filterByPeriod(transactions) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            
+            return transactions.filter(t => {
+                const transDate = new Date(t.fecha);
+                
+                switch(currentPeriod) {
+                    case 'mes':
+                        return transDate.getMonth() === currentMonth && 
+                               transDate.getFullYear() === currentYear;
+                    case 'trimestre':
+                        const threeMonthsAgo = new Date(now);
+                        threeMonthsAgo.setMonth(now.getMonth() - 3);
+                        return transDate >= threeMonthsAgo;
+                    case 'semestre':
+                        const sixMonthsAgo = new Date(now);
+                        sixMonthsAgo.setMonth(now.getMonth() - 6);
+                        return transDate >= sixMonthsAgo;
+                    case 'ano':
+                        return transDate.getFullYear() === currentYear;
+                    case 'todo':
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // Actualizar estadísticas
+        function updateStatistics() {
+            const filtered = filterByPeriod(transactions);
+            
+            // Calcular métricas
+            let totalIngresos = 0;
+            let totalGastos = 0;
+            
+            filtered.forEach(t => {
+                if (t.tipo === 'ingreso') {
+                    totalIngresos += t.monto;
+                } else if (t.tipo === 'gasto') {
+                    totalGastos += t.monto;
+                }
+            });
+            
+            const balance = totalIngresos - totalGastos;
+            const numTransacciones = filtered.length;
+            const ticketPromedio = numTransacciones > 0 ? (totalIngresos + totalGastos) / numTransacciones : 0;
+            
+            // Calcular promedio mensual según período
+            let mesesEnPeriodo = 1;
+            switch(currentPeriod) {
+                case 'trimestre': mesesEnPeriodo = 3; break;
+                case 'semestre': mesesEnPeriodo = 6; break;
+                case 'ano': mesesEnPeriodo = 12; break;
+                case 'todo': 
+                    if (filtered.length > 0) {
+                        const fechas = filtered.map(t => new Date(t.fecha));
+                        const minFecha = new Date(Math.min(...fechas));
+                        const maxFecha = new Date(Math.max(...fechas));
+                        mesesEnPeriodo = Math.max(1, (maxFecha - minFecha) / (1000 * 60 * 60 * 24 * 30));
+                    }
+                    break;
+            }
+            const promedioMensual = totalGastos / mesesEnPeriodo;
+            
+            // Actualizar DOM
+            document.getElementById('statIngresos').textContent = formatCOP(totalIngresos);
+            document.getElementById('statGastos').textContent = formatCOP(totalGastos);
+            document.getElementById('statBalance').textContent = formatCOP(balance);
+            document.getElementById('statPromedioMensual').textContent = formatCOP(promedioMensual);
+            document.getElementById('statTransacciones').textContent = numTransacciones;
+            document.getElementById('statTicketPromedio').textContent = formatCOP(ticketPromedio);
+            
+            // Actualizar gráficos
+            updateCharts(filtered);
+            updateRankings(filtered);
+        }
+
+        // Actualizar gráficos
+        function updateCharts(filtered) {
+            // Destruir gráficos existentes
+            Object.values(charts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            
+            // Preparar datos para gráfico de categorías
+            const gastosPorCategoria = {};
+            const gastosPorMetodo = { debito: 0, efectivo: 0, nequi: 0 };
+            const gastosPorMiembro = {};
+            const ingresosPorCategoria = {};
+            
+            filtered.forEach(t => {
+                if (t.tipo === 'gasto') {
+                    gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.monto;
+                    gastosPorMetodo[t.metodoPago] += t.monto;
+                    gastosPorMiembro[t.miembro] = (gastosPorMiembro[t.miembro] || 0) + t.monto;
+                } else if (t.tipo === 'ingreso') {
+                    ingresosPorCategoria[t.categoria] = (ingresosPorCategoria[t.categoria] || 0) + t.monto;
+                }
+            });
+            
+            // Gráfico de gastos por categoría
+            const ctxCategoria = document.getElementById('chartGastosPorCategoria');
+            charts.categoria = new Chart(ctxCategoria, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(gastosPorCategoria).map(k => k.replace(/_/g, ' ').toUpperCase()),
+                    datasets: [{
+                        data: Object.values(gastosPorCategoria),
+                        backgroundColor: [
+                            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                            '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+                            '#a8edea', '#fed6e3', '#c471f5', '#12c2e9'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = formatCOP(context.parsed);
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de gastos por método
+            const ctxMetodo = document.getElementById('chartPorMetodo');
+            charts.metodo = new Chart(ctxMetodo, {
+                type: 'pie',
+                data: {
+                    labels: ['Débito', 'Efectivo', 'Nequi'],
+                    datasets: [{
+                        data: [gastosPorMetodo.debito, gastosPorMetodo.efectivo, gastosPorMetodo.nequi],
+                        backgroundColor: ['#4ade80', '#60a5fa', '#a78bfa']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${formatCOP(context.parsed)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de evolución temporal
+            const transaccionesPorMes = {};
+            filtered.forEach(t => {
+                const fecha = new Date(t.fecha);
+                const mesAno = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!transaccionesPorMes[mesAno]) {
+                    transaccionesPorMes[mesAno] = { ingresos: 0, gastos: 0 };
+                }
+                
+                if (t.tipo === 'ingreso') {
+                    transaccionesPorMes[mesAno].ingresos += t.monto;
+                } else if (t.tipo === 'gasto') {
+                    transaccionesPorMes[mesAno].gastos += t.monto;
+                }
+            });
+            
+            const mesesOrdenados = Object.keys(transaccionesPorMes).sort();
+            const ctxEvolucion = document.getElementById('chartEvolucion');
+            charts.evolucion = new Chart(ctxEvolucion, {
+                type: 'line',
+                data: {
+                    labels: mesesOrdenados.map(m => {
+                        const [year, month] = m.split('-');
+                        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                        return `${monthNames[parseInt(month) - 1]} ${year}`;
+                    }),
+                    datasets: [{
+                        label: 'Ingresos',
+                        data: mesesOrdenados.map(m => transaccionesPorMes[m].ingresos),
+                        borderColor: '#16a34a',
+                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Gastos',
+                        data: mesesOrdenados.map(m => transaccionesPorMes[m].gastos),
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCOP(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCOP(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de gastos por miembro
+            const ctxMiembro = document.getElementById('chartPorMiembro');
+            const miembrosLabels = {
+                papa: '👨 Papá',
+                mama: '👩 Mamá',
+                hijo1: '👦 Hijo/a 1',
+                hijo2: '👧 Hijo/a 2',
+                compartido: '👨‍👩‍👧‍👦 Compartido'
+            };
+            charts.miembro = new Chart(ctxMiembro, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(gastosPorMiembro).map(k => miembrosLabels[k]),
+                    datasets: [{
+                        label: 'Gastos',
+                        data: Object.values(gastosPorMiembro),
+                        backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Gastos: ${formatCOP(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCOP(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de ingresos
+            const ctxIngresos = document.getElementById('chartIngresos');
+            charts.ingresos = new Chart(ctxIngresos, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(ingresosPorCategoria).map(k => k.replace(/_/g, ' ').toUpperCase()),
+                    datasets: [{
+                        data: Object.values(ingresosPorCategoria),
+                        backgroundColor: ['#16a34a', '#22c55e', '#4ade80', '#86efac']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${formatCOP(context.parsed)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Actualizar rankings
+        function updateRankings(filtered) {
+            // Ranking de categorías
+            const gastosPorCategoria = {};
+            const gastosPorMiembro = {};
+            
+            filtered.forEach(t => {
+                if (t.tipo === 'gasto') {
+                    gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.monto;
+                    gastosPorMiembro[t.miembro] = (gastosPorMiembro[t.miembro] || 0) + t.monto;
+                }
+            });
+            
+            // Ranking categorías
+            const categoriasOrdenadas = Object.entries(gastosPorCategoria)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const rankingCategoriasHTML = categoriasOrdenadas.map((item, index) => {
+                const [categoria, monto] = item;
+                const totalGastos = Object.values(gastosPorCategoria).reduce((a, b) => a + b, 0);
+                const porcentaje = ((monto / totalGastos) * 100).toFixed(1);
+                
+                return `
+                    <li class="ranking-item">
+                        <span class="ranking-position">#${index + 1}</span>
+                        <div class="ranking-info">
+                            <div class="ranking-name">${categoria.replace(/_/g, ' ').toUpperCase()}</div>
+                            <div class="ranking-details">${porcentaje}% del total de gastos</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${porcentaje}%"></div>
+                            </div>
+                        </div>
+                        <div class="ranking-value">${formatCOP(monto)}</div>
+                    </li>
+                `;
+            }).join('');
+            
+            document.getElementById('rankingCategorias').innerHTML = rankingCategoriasHTML || '<li class="ranking-item">No hay datos disponibles</li>';
+            
+            // Ranking miembros
+            const miembrosOrdenados = Object.entries(gastosPorMiembro)
+                .sort((a, b) => b[1] - a[1]);
+            
+            const miembrosLabels = {
+                papa: '👨 Papá',
+                mama: '👩 Mamá',
+                hijo1: '👦 Hijo/a 1',
+                hijo2: '👧 Hijo/a 2',
+                compartido: '👨‍👩‍👧‍👦 Compartido'
+            };
+            
+            const rankingMiembrosHTML = miembrosOrdenados.map((item, index) => {
+                const [miembro, monto] = item;
+                const totalGastos = Object.values(gastosPorMiembro).reduce((a, b) => a + b, 0);
+                const porcentaje = ((monto / totalGastos) * 100).toFixed(1);
+                
+                return `
+                    <li class="ranking-item">
+                        <span class="ranking-position">#${index + 1}</span>
+                        <div class="ranking-info">
+                            <div class="ranking-name">${miembrosLabels[miembro]}</div>
+                            <div class="ranking-details">${porcentaje}% del total de gastos</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${porcentaje}%"></div>
+                            </div>
+                        </div>
+                        <div class="ranking-value">${formatCOP(monto)}</div>
+                    </li>
+                `;
+            }).join('');
+            
+            document.getElementById('rankingMiembros').innerHTML = rankingMiembrosHTML || '<li class="ranking-item">No hay datos disponibles</li>';
+        }
+
         // Cargar categorías según tipo
         function cargarCategorias() {
             const tipo = document.getElementById('tipo').value;
@@ -658,7 +1424,6 @@
         // Guardar transacción
         document.getElementById('transactionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const tipo = document.getElementById('tipo').value;
             const categoria = document.getElementById('categoria').value;
             
@@ -711,7 +1476,9 @@
                 });
 
                 updateDashboard();
+                updateMonthSummary();
                 displayTransactions();
+                updateStatistics();
             } catch (error) {
                 console.error('Error al cargar transacciones:', error);
                 alert('❌ Error al cargar transacciones. Verifica las reglas de Firestore.');
@@ -748,6 +1515,35 @@
             document.getElementById('saldoEfectivo').textContent = formatCOP(saldoEfectivo);
             document.getElementById('saldoNequi').textContent = formatCOP(saldoNequi);
             document.getElementById('saldoTotal').textContent = formatCOP(saldoDebito + saldoEfectivo + saldoNequi);
+        }
+
+        // Actualizar resumen del mes
+        function updateMonthSummary() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const mesActual = transactions.filter(t => {
+                const fecha = new Date(t.fecha);
+                return fecha.getMonth() === currentMonth && fecha.getFullYear() === currentYear;
+            });
+            
+            let ingresos = 0;
+            let gastos = 0;
+            
+            mesActual.forEach(t => {
+                if (t.tipo === 'ingreso') ingresos += t.monto;
+                else if (t.tipo === 'gasto') gastos += t.monto;
+            });
+            
+            const balance = ingresos - gastos;
+            const diasDelMes = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const promedioDiario = gastos / now.getDate();
+            
+            document.getElementById('totalIngresosMes').textContent = formatCOP(ingresos);
+            document.getElementById('totalGastosMes').textContent = formatCOP(gastos);
+            document.getElementById('balanceMes').textContent = formatCOP(balance);
+            document.getElementById('promedioDiario').textContent = formatCOP(promedioDiario);
         }
 
         // Mostrar transacciones
@@ -811,6 +1607,11 @@
             document.getElementById('editingId').value = id;
             document.getElementById('tipo').value = transaction.tipo;
             cargarCategorias();
+            
+            // Cambiar a la pestaña de transacciones
+            switchTab('transacciones');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-button')[1].classList.add('active');
             
             setTimeout(() => {
                 document.getElementById('metodoPago').value = transaction.metodoPago;
