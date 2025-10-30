@@ -496,7 +496,6 @@
             <h1><i class="fas fa-home"></i> CRM Financiero Familiar Avanzado</h1>
             <p class="subtitle">Gestión inteligente de gastos familiares con análisis avanzado 📊</p>
         </div>
-
         <!-- Tabs de navegación -->
         <div class="card">
             <div class="tabs-container">
@@ -514,7 +513,6 @@
                 </button>
             </div>
         </div>
-
         <!-- TAB: Dashboard -->
         <div id="tab-dashboard" class="tab-content active">
             <!-- Dashboard de Saldos -->
@@ -548,7 +546,6 @@
                     <i class="fas fa-wallet stat-icon"></i>
                 </div>
             </div>
-
             <!-- Resumen rápido -->
             <div class="card">
                 <h2><i class="fas fa-chart-pie"></i> Resumen del Mes Actual</h2>
@@ -576,7 +573,6 @@
                 </div>
             </div>
         </div>
-
         <!-- TAB: Transacciones -->
         <div id="tab-transacciones" class="tab-content">
             <!-- Formulario de Transacciones -->
@@ -657,7 +653,6 @@
                 </form>
             </div>
         </div>
-
         <!-- TAB: Estadísticas Avanzadas -->
         <div id="tab-estadisticas" class="tab-content">
             <!-- Selector de período -->
@@ -671,7 +666,6 @@
                     <button class="period-btn" onclick="changePeriod('todo')">Todo el Tiempo</button>
                 </div>
             </div>
-
             <!-- Métricas avanzadas -->
             <div class="card">
                 <h2><i class="fas fa-calculator"></i> Métricas del Período</h2>
@@ -708,7 +702,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Gráficos -->
             <div class="card">
                 <h2><i class="fas fa-chart-pie"></i> Análisis Visual</h2>
@@ -728,14 +721,12 @@
                         </div>
                     </div>
                 </div>
-
                 <div style="margin-top: 30px;">
                     <h3>Evolución Temporal: Ingresos vs Gastos</h3>
                     <div class="chart-container">
                         <canvas id="chartEvolucion"></canvas>
                     </div>
                 </div>
-
                 <div class="charts-grid" style="margin-top: 30px;">
                     <div>
                         <h3>Gastos por Miembro Familiar</h3>
@@ -752,19 +743,16 @@
                     </div>
                 </div>
             </div>
-
             <!-- Rankings -->
             <div class="card">
                 <h2><i class="fas fa-trophy"></i> Top Categorías de Gasto</h2>
                 <ul class="ranking-list" id="rankingCategorias"></ul>
             </div>
-
             <div class="card">
                 <h2><i class="fas fa-users"></i> Gastos por Miembro</h2>
                 <ul class="ranking-list" id="rankingMiembros"></ul>
             </div>
         </div>
-
         <!-- TAB: Historial -->
         <div id="tab-historial" class="tab-content">
             <!-- Filtros y Búsqueda -->
@@ -796,7 +784,6 @@
                     </button>
                 </div>
             </div>
-
             <!-- Historial de Transacciones -->
             <div class="card">
                 <h2><i class="fas fa-history"></i> Historial de Transacciones</h2>
@@ -821,7 +808,6 @@
             </div>
         </div>
     </div>
-
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -837,17 +823,14 @@
             appId: "1:442754442943:web:914d5a8ef619d77407880a",
             measurementId: "G-5EBSSNG8P9"
         };
-
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
         // Variables globales
         let transactions = [];
         let editingTransactionId = null;
         let currentPeriod = 'mes';
         let charts = {};
-
         // Categorías y subcategorías para hogares colombianos
         const categorias = {
             gasto: {
@@ -919,15 +902,12 @@
                 }
             }
         };
-
         // Función para formatear moneda colombiana
         function formatCOP(valor) {
             return '$' + Math.round(valor).toLocaleString('es-CO');
         }
-
         // Establecer fecha actual
         document.getElementById('fecha').valueAsDate = new Date();
-
         // Cambiar tabs
         function switchTab(tabName) {
             // Ocultar todos los contenidos
@@ -949,7 +929,6 @@
                 updateStatistics();
             }
         }
-
         // Cambiar período de análisis
         function changePeriod(period) {
             currentPeriod = period;
@@ -962,7 +941,6 @@
             
             updateStatistics();
         }
-
         // Filtrar transacciones por período
         function filterByPeriod(transactions) {
             const now = new Date();
@@ -992,7 +970,6 @@
                 }
             });
         }
-
         // Actualizar estadísticas
         function updateStatistics() {
             const filtered = filterByPeriod(transactions);
@@ -1042,7 +1019,6 @@
             updateCharts(filtered);
             updateRankings(filtered);
         }
-
         // Actualizar gráficos
         function updateCharts(filtered) {
             // Destruir gráficos existentes
@@ -1279,7 +1255,6 @@
                 }
             });
         }
-
         // Actualizar rankings
         function updateRankings(filtered) {
             // Ranking de categorías
@@ -1354,7 +1329,6 @@
             
             document.getElementById('rankingMiembros').innerHTML = rankingMiembrosHTML || '<li class="ranking-item">No hay datos disponibles</li>';
         }
-
         // Cargar categorías según tipo
         function cargarCategorias() {
             const tipo = document.getElementById('tipo').value;
@@ -1386,7 +1360,6 @@
                 }
             }
         }
-
         // Cargar subcategorías según categoría
         function cargarSubcategorias() {
             const tipo = document.getElementById('tipo').value;
@@ -1413,14 +1386,11 @@
             subcategoriaDiv.style.display = 'block';
             subcategoriaSelect.required = true;
         }
-
         // Event listeners
         document.getElementById('tipo').addEventListener('change', cargarCategorias);
         document.getElementById('categoria').addEventListener('change', cargarSubcategorias);
-
         // Inicializar categorías
         cargarCategorias();
-
         // Guardar transacción
         document.getElementById('transactionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -1438,11 +1408,9 @@
                 fecha: document.getElementById('fecha').value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-
             if (tipo === 'transferencia') {
                 transactionData.metodoDestino = document.getElementById('metodoDestino').value;
             }
-
             try {
                 const editingId = document.getElementById('editingId').value;
                 
@@ -1464,7 +1432,6 @@
                 console.error(error);
             }
         });
-
         // Cargar transacciones
         async function loadTransactions() {
             try {
@@ -1474,7 +1441,6 @@
                 snapshot.forEach(doc => {
                     transactions.push({ id: doc.id, ...doc.data() });
                 });
-
                 updateDashboard();
                 updateMonthSummary();
                 displayTransactions();
@@ -1484,13 +1450,11 @@
                 alert('❌ Error al cargar transacciones. Verifica las reglas de Firestore.');
             }
         }
-
         // Actualizar dashboard
         function updateDashboard() {
             let saldoDebito = 0;
             let saldoEfectivo = 0;
             let saldoNequi = 0;
-
             transactions.forEach(t => {
                 const monto = t.monto;
                 
@@ -1510,13 +1474,11 @@
                     else if (t.metodoPago === 'nequi') saldoNequi += monto * multiplier;
                 }
             });
-
             document.getElementById('saldoDebito').textContent = formatCOP(saldoDebito);
             document.getElementById('saldoEfectivo').textContent = formatCOP(saldoEfectivo);
             document.getElementById('saldoNequi').textContent = formatCOP(saldoNequi);
             document.getElementById('saldoTotal').textContent = formatCOP(saldoDebito + saldoEfectivo + saldoNequi);
         }
-
         // Actualizar resumen del mes
         function updateMonthSummary() {
             const now = new Date();
@@ -1545,23 +1507,21 @@
             document.getElementById('balanceMes').textContent = formatCOP(balance);
             document.getElementById('promedioDiario').textContent = formatCOP(promedioDiario);
         }
-
-        // Mostrar transacciones
+        // Mostrar transacciones (ACTUALIZADO - muestra las más recientes primero)
         function displayTransactions() {
             const filtroTipo = document.getElementById('filtroTipo').value;
             const filtroMetodo = document.getElementById('filtroMetodo').value;
             const filtroMiembro = document.getElementById('filtroMiembro').value;
-
             const filtered = transactions.filter(t => {
                 return (!filtroTipo || t.tipo === filtroTipo) &&
                        (!filtroMetodo || t.metodoPago === filtroMetodo) &&
                        (!filtroMiembro || t.miembro === filtroMiembro);
             });
-
             const tbody = document.getElementById('transactionList');
             tbody.innerHTML = '';
-
-            filtered.forEach(t => {
+            
+            // CAMBIO PRINCIPAL: Invertir el array para mostrar los más recientes primero
+            filtered.reverse().forEach(t => {
                 const row = tbody.insertRow();
                 const isEditing = editingTransactionId === t.id;
                 if (isEditing) {
@@ -1576,7 +1536,6 @@
                     const metodoDestinoIcon = t.metodoDestino === 'debito' ? '💳' : t.metodoDestino === 'efectivo' ? '💵' : '📱';
                     metodoPagoText += ` → ${metodoDestinoIcon}`;
                 }
-
                 row.innerHTML = `
                     <td>${t.fecha}</td>
                     <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
@@ -1597,12 +1556,10 @@
                 `;
             });
         }
-
         // Editar transacción
         window.editTransaction = function(id) {
             const transaction = transactions.find(t => t.id === id);
             if (!transaction) return;
-
             editingTransactionId = id;
             document.getElementById('editingId').value = id;
             document.getElementById('tipo').value = transaction.tipo;
@@ -1626,11 +1583,9 @@
                     document.getElementById('miembro').value = transaction.miembro;
                     document.getElementById('descripcion').value = transaction.descripcion;
                     document.getElementById('fecha').value = transaction.fecha;
-
                     if (transaction.tipo === 'transferencia' && transaction.metodoDestino) {
                         document.getElementById('metodoDestino').value = transaction.metodoDestino;
                     }
-
                     document.getElementById('formTitle').textContent = 'Editar Transacción';
                     document.getElementById('btnSubmitText').textContent = 'Actualizar';
                     document.getElementById('btnCancelar').style.display = 'inline-block';
@@ -1640,7 +1595,6 @@
                 }, 100);
             }, 100);
         };
-
         // Cancelar edición
         function cancelEdit() {
             editingTransactionId = null;
@@ -1653,13 +1607,10 @@
             cargarCategorias();
             displayTransactions();
         }
-
         document.getElementById('btnCancelar').addEventListener('click', cancelEdit);
-
         // Eliminar transacción
         window.deleteTransaction = async function(id) {
             if (!confirm('¿Estás seguro de eliminar esta transacción?')) return;
-
             try {
                 await db.collection('transactions').doc(id).delete();
                 alert('✅ Transacción eliminada');
@@ -1668,12 +1619,10 @@
                 alert('❌ Error al eliminar: ' + error.message);
             }
         };
-
         // Filtros
         document.getElementById('filtroTipo').addEventListener('change', displayTransactions);
         document.getElementById('filtroMetodo').addEventListener('change', displayTransactions);
         document.getElementById('filtroMiembro').addEventListener('change', displayTransactions);
-
         // Exportar a CSV
         document.getElementById('btnExportar').addEventListener('click', function() {
             let csv = 'Fecha,Tipo,Método,Categoría,Subcategoría,Miembro,Descripción,Monto\n';
@@ -1681,7 +1630,6 @@
             transactions.forEach(t => {
                 csv += `${t.fecha},${t.tipo},${t.metodoPago},${t.categoria || ''},${t.subcategoria || ''},${t.miembro},"${t.descripcion}",${Math.round(t.monto)}\n`;
             });
-
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1689,7 +1637,6 @@
             a.download = `transacciones_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         });
-
         // Cargar transacciones al iniciar
         loadTransactions();
     </script>
