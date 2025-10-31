@@ -18,11 +18,33 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
             min-height: 100vh;
+            transition: background 0.3s ease;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
+        }
+        
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .card {
@@ -32,6 +54,12 @@
             margin-bottom: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: transform 0.3s;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        body.dark-mode .card {
+            background: #2d3748;
+            color: #e5e7eb;
         }
         
         .card:hover {
@@ -45,16 +73,28 @@
             margin-bottom: 10px;
         }
         
+        body.dark-mode h1 {
+            color: #a78bfa;
+        }
+        
         h2 {
             font-size: 1.8rem;
             color: #5b21b6;
             margin-bottom: 20px;
         }
         
+        body.dark-mode h2 {
+            color: #a78bfa;
+        }
+        
         h3 {
             font-size: 1.3rem;
             color: #6b21a8;
             margin: 20px 0 15px 0;
+        }
+        
+        body.dark-mode h3 {
+            color: #a78bfa;
         }
         
         .subtitle {
@@ -116,7 +156,13 @@
             align-items: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             color: white;
+            animation: fadeInUp 0.5s ease-out;
         }
+        
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
         
         .stat-card.debito {
             background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
@@ -180,6 +226,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             color: #5b21b6;
+            transition: color 0.3s;
         }
         
         .chart-container {
@@ -290,12 +337,24 @@
             font-size: 0.9rem;
         }
         
+        body.dark-mode label {
+            color: #e5e7eb;
+        }
+        
         input, select, textarea {
             padding: 12px 15px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s;
+        }
+        
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: #1f2937;
+            border-color: #374151;
+            color: #e5e7eb;
         }
         
         input:focus, select:focus, textarea:focus {
@@ -370,11 +429,19 @@
             background: #f3e8ff;
         }
         
+        body.dark-mode thead {
+            background: #374151;
+        }
+        
         th {
             padding: 15px;
             text-align: left;
             font-weight: 600;
             color: #5b21b6;
+        }
+        
+        body.dark-mode th {
+            color: #a78bfa;
         }
         
         th:nth-last-child(2),
@@ -392,13 +459,45 @@
             border-bottom: 1px solid #e5e7eb;
         }
         
+        body.dark-mode td {
+            border-bottom-color: #374151;
+        }
+        
         tbody tr:hover {
             background: #f9fafb;
+        }
+        
+        body.dark-mode tbody tr:hover {
+            background: #374151;
         }
         
         .editing-row {
             background: #fef3c7 !important;
             border-left: 4px solid #f59e0b;
+        }
+        
+        /* Badges de tipo */
+        .tipo-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-ingreso {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-gasto {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-transferencia {
+            background: #dbeafe;
+            color: #1e40af;
         }
         
         .tipo-ingreso {
@@ -422,6 +521,7 @@
             padding: 8px 15px;
             border-radius: 5px;
             margin-right: 5px;
+            position: relative;
         }
         
         .btn-edit:hover {
@@ -433,10 +533,98 @@
             color: white;
             padding: 8px 15px;
             border-radius: 5px;
+            position: relative;
         }
         
         .btn-delete:hover {
             background: #dc2626;
+        }
+        
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+        
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1f2937;
+        }
+        
+        /* Destacar transacciones grandes */
+        .transaction-highlight {
+            background: linear-gradient(90deg, #fef3c7 0%, transparent 100%) !important;
+            border-left: 4px solid #f59e0b !important;
+        }
+        
+        body.dark-mode .transaction-highlight {
+            background: linear-gradient(90deg, #78350f 0%, transparent 100%) !important;
+        }
+        
+        /* Estado vacío */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: #7c3aed;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #7c3aed;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Totales en tabla */
+        tfoot {
+            background: #f3e8ff;
+            font-weight: bold;
+        }
+        
+        body.dark-mode tfoot {
+            background: #374151;
+        }
+        
+        tfoot td {
+            padding: 15px;
+            border-top: 3px solid #7c3aed;
         }
         
         .progress-bar {
@@ -452,6 +640,62 @@
             height: 100%;
             background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
             transition: width 0.3s;
+        }
+        
+        /* Botón scroll to top */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .scroll-top-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
+        .scroll-top-btn.show {
+            display: flex;
+        }
+        
+        /* Botón dark mode */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode-toggle:hover {
+            transform: rotate(180deg);
+            background: rgba(255, 255, 255, 0.3);
         }
         
         @media (max-width: 768px) {
@@ -486,16 +730,37 @@
             .chart-container {
                 height: 300px;
             }
+            
+            .dark-mode-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .scroll-top-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Botón Dark Mode -->
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+        
         <!-- Header -->
         <div class="card">
             <h1><i class="fas fa-home"></i> CRM Financiero Familiar Avanzado</h1>
             <p class="subtitle">Gestión inteligente de gastos familiares con análisis avanzado 📊</p>
         </div>
+        
         <!-- Tabs de navegación -->
         <div class="card">
             <div class="tabs-container">
@@ -513,6 +778,7 @@
                 </button>
             </div>
         </div>
+        
         <!-- TAB: Dashboard -->
         <div id="tab-dashboard" class="tab-content active">
             <!-- Dashboard de Saldos -->
@@ -546,6 +812,7 @@
                     <i class="fas fa-wallet stat-icon"></i>
                 </div>
             </div>
+            
             <!-- Resumen rápido -->
             <div class="card">
                 <h2><i class="fas fa-chart-pie"></i> Resumen del Mes Actual</h2>
@@ -573,6 +840,7 @@
                 </div>
             </div>
         </div>
+        
         <!-- TAB: Transacciones -->
         <div id="tab-transacciones" class="tab-content">
             <!-- Formulario de Transacciones -->
@@ -653,6 +921,7 @@
                 </form>
             </div>
         </div>
+        
         <!-- TAB: Estadísticas Avanzadas -->
         <div id="tab-estadisticas" class="tab-content">
             <!-- Selector de período -->
@@ -666,6 +935,7 @@
                     <button class="period-btn" onclick="changePeriod('todo')">Todo el Tiempo</button>
                 </div>
             </div>
+            
             <!-- Métricas avanzadas -->
             <div class="card">
                 <h2><i class="fas fa-calculator"></i> Métricas del Período</h2>
@@ -702,6 +972,7 @@
                     </div>
                 </div>
             </div>
+            
             <!-- Gráficos -->
             <div class="card">
                 <h2><i class="fas fa-chart-pie"></i> Análisis Visual</h2>
@@ -721,12 +992,14 @@
                         </div>
                     </div>
                 </div>
+                
                 <div style="margin-top: 30px;">
                     <h3>Evolución Temporal: Ingresos vs Gastos</h3>
                     <div class="chart-container">
                         <canvas id="chartEvolucion"></canvas>
                     </div>
                 </div>
+                
                 <div class="charts-grid" style="margin-top: 30px;">
                     <div>
                         <h3>Gastos por Miembro Familiar</h3>
@@ -743,16 +1016,19 @@
                     </div>
                 </div>
             </div>
+            
             <!-- Rankings -->
             <div class="card">
                 <h2><i class="fas fa-trophy"></i> Top Categorías de Gasto</h2>
                 <ul class="ranking-list" id="rankingCategorias"></ul>
             </div>
+            
             <div class="card">
                 <h2><i class="fas fa-users"></i> Gastos por Miembro</h2>
                 <ul class="ranking-list" id="rankingMiembros"></ul>
             </div>
         </div>
+        
         <!-- TAB: Historial -->
         <div id="tab-historial" class="tab-content">
             <!-- Filtros y Búsqueda -->
@@ -784,6 +1060,7 @@
                     </button>
                 </div>
             </div>
+            
             <!-- Historial de Transacciones -->
             <div class="card">
                 <h2><i class="fas fa-history"></i> Historial de Transacciones</h2>
@@ -803,11 +1080,24 @@
                             </tr>
                         </thead>
                         <tbody id="transactionList"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7" style="text-align: right;">TOTALES:</td>
+                                <td id="totalTableAmount" style="text-align: right;">$0</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Botón Scroll to Top -->
+    <button class="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -823,14 +1113,17 @@
             appId: "1:442754442943:web:914d5a8ef619d77407880a",
             measurementId: "G-5EBSSNG8P9"
         };
+        
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        
         // Variables globales
         let transactions = [];
         let editingTransactionId = null;
         let currentPeriod = 'mes';
         let charts = {};
+        
         // Categorías y subcategorías para hogares colombianos
         const categorias = {
             gasto: {
@@ -902,12 +1195,44 @@
                 }
             }
         };
+        
         // Función para formatear moneda colombiana
         function formatCOP(valor) {
             return '$' + Math.round(valor).toLocaleString('es-CO');
         }
+        
         // Establecer fecha actual
         document.getElementById('fecha').valueAsDate = new Date();
+        
+        // Dark Mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.dark-mode-toggle i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+        
+        // Cargar preferencia de dark mode
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.dark-mode-toggle i').className = 'fas fa-sun';
+        }
+        
+        // Scroll to top button
+        window.addEventListener('scroll', function() {
+            const btn = document.querySelector('.scroll-top-btn');
+            if (window.scrollY > 300) {
+                btn.classList.add('show');
+            } else {
+                btn.classList.remove('show');
+            }
+        });
+        
         // Cambiar tabs
         function switchTab(tabName) {
             // Ocultar todos los contenidos
@@ -929,6 +1254,7 @@
                 updateStatistics();
             }
         }
+        
         // Cambiar período de análisis
         function changePeriod(period) {
             currentPeriod = period;
@@ -941,6 +1267,7 @@
             
             updateStatistics();
         }
+        
         // Filtrar transacciones por período
         function filterByPeriod(transactions) {
             const now = new Date();
@@ -970,6 +1297,7 @@
                 }
             });
         }
+        
         // Actualizar estadísticas
         function updateStatistics() {
             const filtered = filterByPeriod(transactions);
@@ -1010,7 +1338,11 @@
             // Actualizar DOM
             document.getElementById('statIngresos').textContent = formatCOP(totalIngresos);
             document.getElementById('statGastos').textContent = formatCOP(totalGastos);
-            document.getElementById('statBalance').textContent = formatCOP(balance);
+            
+            const balanceElement = document.getElementById('statBalance');
+            balanceElement.textContent = formatCOP(balance);
+            balanceElement.style.color = balance >= 0 ? '#16a34a' : '#dc2626';
+            
             document.getElementById('statPromedioMensual').textContent = formatCOP(promedioMensual);
             document.getElementById('statTransacciones').textContent = numTransacciones;
             document.getElementById('statTicketPromedio').textContent = formatCOP(ticketPromedio);
@@ -1019,6 +1351,7 @@
             updateCharts(filtered);
             updateRankings(filtered);
         }
+        
         // Actualizar gráficos
         function updateCharts(filtered) {
             // Destruir gráficos existentes
@@ -1255,6 +1588,7 @@
                 }
             });
         }
+        
         // Actualizar rankings
         function updateRankings(filtered) {
             // Ranking de categorías
@@ -1329,6 +1663,7 @@
             
             document.getElementById('rankingMiembros').innerHTML = rankingMiembrosHTML || '<li class="ranking-item">No hay datos disponibles</li>';
         }
+        
         // Cargar categorías según tipo
         function cargarCategorias() {
             const tipo = document.getElementById('tipo').value;
@@ -1360,6 +1695,7 @@
                 }
             }
         }
+        
         // Cargar subcategorías según categoría
         function cargarSubcategorias() {
             const tipo = document.getElementById('tipo').value;
@@ -1386,14 +1722,18 @@
             subcategoriaDiv.style.display = 'block';
             subcategoriaSelect.required = true;
         }
+        
         // Event listeners
         document.getElementById('tipo').addEventListener('change', cargarCategorias);
         document.getElementById('categoria').addEventListener('change', cargarSubcategorias);
+        
         // Inicializar categorías
         cargarCategorias();
+        
         // Guardar transacción
         document.getElementById('transactionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
             const tipo = document.getElementById('tipo').value;
             const categoria = document.getElementById('categoria').value;
             
@@ -1408,9 +1748,11 @@
                 fecha: document.getElementById('fecha').value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
+            
             if (tipo === 'transferencia') {
                 transactionData.metodoDestino = document.getElementById('metodoDestino').value;
             }
+            
             try {
                 const editingId = document.getElementById('editingId').value;
                 
@@ -1432,6 +1774,7 @@
                 console.error(error);
             }
         });
+        
         // Cargar transacciones
         async function loadTransactions() {
             try {
@@ -1441,6 +1784,7 @@
                 snapshot.forEach(doc => {
                     transactions.push({ id: doc.id, ...doc.data() });
                 });
+                
                 updateDashboard();
                 updateMonthSummary();
                 displayTransactions();
@@ -1450,11 +1794,13 @@
                 alert('❌ Error al cargar transacciones. Verifica las reglas de Firestore.');
             }
         }
+        
         // Actualizar dashboard
         function updateDashboard() {
             let saldoDebito = 0;
             let saldoEfectivo = 0;
             let saldoNequi = 0;
+            
             transactions.forEach(t => {
                 const monto = t.monto;
                 
@@ -1474,11 +1820,13 @@
                     else if (t.metodoPago === 'nequi') saldoNequi += monto * multiplier;
                 }
             });
+            
             document.getElementById('saldoDebito').textContent = formatCOP(saldoDebito);
             document.getElementById('saldoEfectivo').textContent = formatCOP(saldoEfectivo);
             document.getElementById('saldoNequi').textContent = formatCOP(saldoNequi);
             document.getElementById('saldoTotal').textContent = formatCOP(saldoDebito + saldoEfectivo + saldoNequi);
         }
+        
         // Actualizar resumen del mes
         function updateMonthSummary() {
             const now = new Date();
@@ -1504,62 +1852,107 @@
             
             document.getElementById('totalIngresosMes').textContent = formatCOP(ingresos);
             document.getElementById('totalGastosMes').textContent = formatCOP(gastos);
-            document.getElementById('balanceMes').textContent = formatCOP(balance);
+            
+            const balanceElement = document.getElementById('balanceMes');
+            balanceElement.textContent = formatCOP(balance);
+            balanceElement.style.color = balance >= 0 ? '#16a34a' : '#dc2626';
+            
             document.getElementById('promedioDiario').textContent = formatCOP(promedioDiario);
         }
+        
         // Mostrar transacciones (ACTUALIZADO - muestra las más recientes primero)
         function displayTransactions() {
             const filtroTipo = document.getElementById('filtroTipo').value;
             const filtroMetodo = document.getElementById('filtroMetodo').value;
             const filtroMiembro = document.getElementById('filtroMiembro').value;
+            
             const filtered = transactions.filter(t => {
                 return (!filtroTipo || t.tipo === filtroTipo) &&
                        (!filtroMetodo || t.metodoPago === filtroMetodo) &&
                        (!filtroMiembro || t.miembro === filtroMiembro);
             });
+            
             const tbody = document.getElementById('transactionList');
             tbody.innerHTML = '';
             
-            // CAMBIO PRINCIPAL: Invertir el array para mostrar los más recientes primero
-            filtered.reverse().forEach(t => {
+            // Estado vacío
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p style="font-size: 1.2rem; font-weight: 600;">No hay transacciones que mostrar</p>
+                            <p>Ajusta los filtros o agrega una nueva transacción</p>
+                        </td>
+                    </tr>
+                `;
+                
+                // Actualizar total
+                document.getElementById('totalTableAmount').textContent = '$0';
+                document.getElementById('totalTableAmount').style.color = '';
+                return;
+            }
+            
+            // SOLUCIÓN: Crear una copia invertida sin modificar el array original
+            const transaccionesOrdenadas = [...filtered].reverse();
+            
+            transaccionesOrdenadas.forEach(t => {
                 const row = tbody.insertRow();
                 const isEditing = editingTransactionId === t.id;
                 if (isEditing) {
                     row.classList.add('editing-row');
                 }
                 
+                // Destacar transacciones grandes (mayor a 500,000 COP)
+                if (t.monto > 500000) {
+                    row.classList.add('transaction-highlight');
+                }
+                
                 const tipoIcon = t.tipo === 'ingreso' ? '💰' : t.tipo === 'transferencia' ? '🔄' : '💸';
-                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
                 
                 let metodoPagoText = t.metodoPago === 'debito' ? '💳 Débito' : t.metodoPago === 'efectivo' ? '💵 Efectivo' : '📱 Nequi';
                 if (t.tipo === 'transferencia' && t.metodoDestino) {
                     const metodoDestinoIcon = t.metodoDestino === 'debito' ? '💳' : t.metodoDestino === 'efectivo' ? '💵' : '📱';
                     metodoPagoText += ` → ${metodoDestinoIcon}`;
                 }
+                
+                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
+                
                 row.innerHTML = `
-                    <td>${t.fecha}</td>
-                    <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
-                    <td>${metodoPagoText}</td>
-                    <td>${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
-                    <td>${t.subcategoria || '-'}</td>
-                    <td>${t.miembro}</td>
-                    <td>${t.descripcion}</td>
-                    <td class="${tipoClass}">${formatCOP(t.monto)}</td>
-                    <td>
-                        <button onclick="editTransaction('${t.id}')" class="btn-edit">
+                    <td data-label="Fecha">${t.fecha}</td>
+                    <td data-label="Tipo"><span class="tipo-badge badge-${t.tipo}">${tipoIcon} ${t.tipo.toUpperCase()}</span></td>
+                    <td data-label="Método">${metodoPagoText}</td>
+                    <td data-label="Categoría">${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
+                    <td data-label="Subcategoría">${t.subcategoria || '-'}</td>
+                    <td data-label="Miembro">${t.miembro}</td>
+                    <td data-label="Descripción">${t.descripcion}</td>
+                    <td data-label="Monto" class="${tipoClass}">${formatCOP(t.monto)}</td>
+                    <td data-label="Acciones">
+                        <button onclick="editTransaction('${t.id}')" class="btn-edit tooltip" data-tooltip="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete">
+                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete tooltip" data-tooltip="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 `;
             });
+            
+            // Calcular y mostrar totales
+            const totalIngresos = filtered.filter(t => t.tipo === 'ingreso').reduce((sum, t) => sum + t.monto, 0);
+            const totalGastos = filtered.filter(t => t.tipo === 'gasto').reduce((sum, t) => sum + t.monto, 0);
+            const totalNeto = totalIngresos - totalGastos;
+            
+            const totalElement = document.getElementById('totalTableAmount');
+            totalElement.textContent = formatCOP(totalNeto);
+            totalElement.style.color = totalNeto >= 0 ? '#16a34a' : '#dc2626';
         }
+        
         // Editar transacción
         window.editTransaction = function(id) {
             const transaction = transactions.find(t => t.id === id);
             if (!transaction) return;
+            
             editingTransactionId = id;
             document.getElementById('editingId').value = id;
             document.getElementById('tipo').value = transaction.tipo;
@@ -1583,9 +1976,11 @@
                     document.getElementById('miembro').value = transaction.miembro;
                     document.getElementById('descripcion').value = transaction.descripcion;
                     document.getElementById('fecha').value = transaction.fecha;
+                    
                     if (transaction.tipo === 'transferencia' && transaction.metodoDestino) {
                         document.getElementById('metodoDestino').value = transaction.metodoDestino;
                     }
+                    
                     document.getElementById('formTitle').textContent = 'Editar Transacción';
                     document.getElementById('btnSubmitText').textContent = 'Actualizar';
                     document.getElementById('btnCancelar').style.display = 'inline-block';
@@ -1595,6 +1990,7 @@
                 }, 100);
             }, 100);
         };
+        
         // Cancelar edición
         function cancelEdit() {
             editingTransactionId = null;
@@ -1607,10 +2003,13 @@
             cargarCategorias();
             displayTransactions();
         }
+        
         document.getElementById('btnCancelar').addEventListener('click', cancelEdit);
+        
         // Eliminar transacción
         window.deleteTransaction = async function(id) {
             if (!confirm('¿Estás seguro de eliminar esta transacción?')) return;
+            
             try {
                 await db.collection('transactions').doc(id).delete();
                 alert('✅ Transacción eliminada');
@@ -1619,10 +2018,12 @@
                 alert('❌ Error al eliminar: ' + error.message);
             }
         };
+        
         // Filtros
         document.getElementById('filtroTipo').addEventListener('change', displayTransactions);
         document.getElementById('filtroMetodo').addEventListener('change', displayTransactions);
         document.getElementById('filtroMiembro').addEventListener('change', displayTransactions);
+        
         // Exportar a CSV
         document.getElementById('btnExportar').addEventListener('click', function() {
             let csv = 'Fecha,Tipo,Método,Categoría,Subcategoría,Miembro,Descripción,Monto\n';
@@ -1630,6 +2031,7 @@
             transactions.forEach(t => {
                 csv += `${t.fecha},${t.tipo},${t.metodoPago},${t.categoria || ''},${t.subcategoria || ''},${t.miembro},"${t.descripcion}",${Math.round(t.monto)}\n`;
             });
+            
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1637,6 +2039,7 @@
             a.download = `transacciones_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         });
+        
         // Cargar transacciones al iniciar
         loadTransactions();
     </script>
