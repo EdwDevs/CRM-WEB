@@ -18,33 +18,11 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
             min-height: 100vh;
-            transition: background 0.3s ease;
-        }
-        
-        body.dark-mode {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
-        }
-        
-        /* Animaciones */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
         
         .card {
@@ -57,13 +35,19 @@
             animation: fadeInUp 0.5s ease-out;
         }
         
-        body.dark-mode .card {
-            background: #2d3748;
-            color: #e5e7eb;
-        }
-        
         .card:hover {
             transform: translateY(-5px);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         h1 {
@@ -73,28 +57,16 @@
             margin-bottom: 10px;
         }
         
-        body.dark-mode h1 {
-            color: #a78bfa;
-        }
-        
         h2 {
             font-size: 1.8rem;
             color: #5b21b6;
             margin-bottom: 20px;
         }
         
-        body.dark-mode h2 {
-            color: #a78bfa;
-        }
-        
         h3 {
             font-size: 1.3rem;
             color: #6b21a8;
             margin: 20px 0 15px 0;
-        }
-        
-        body.dark-mode h3 {
-            color: #a78bfa;
         }
         
         .subtitle {
@@ -226,7 +198,6 @@
             font-size: 1.5rem;
             font-weight: bold;
             color: #5b21b6;
-            transition: color 0.3s;
         }
         
         .chart-container {
@@ -337,24 +308,12 @@
             font-size: 0.9rem;
         }
         
-        body.dark-mode label {
-            color: #e5e7eb;
-        }
-        
         input, select, textarea {
             padding: 12px 15px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s;
-        }
-        
-        body.dark-mode input,
-        body.dark-mode select,
-        body.dark-mode textarea {
-            background: #1f2937;
-            border-color: #374151;
-            color: #e5e7eb;
         }
         
         input:focus, select:focus, textarea:focus {
@@ -410,6 +369,16 @@
             background: #15803d;
         }
         
+        /* Estilos para el botón de ordenamiento */
+        #btnToggleOrden {
+            transition: all 0.3s ease;
+        }
+
+        #btnToggleOrden:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+        }
+        
         .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -429,19 +398,11 @@
             background: #f3e8ff;
         }
         
-        body.dark-mode thead {
-            background: #374151;
-        }
-        
         th {
             padding: 15px;
             text-align: left;
             font-weight: 600;
             color: #5b21b6;
-        }
-        
-        body.dark-mode th {
-            color: #a78bfa;
         }
         
         th:nth-last-child(2),
@@ -459,45 +420,28 @@
             border-bottom: 1px solid #e5e7eb;
         }
         
-        body.dark-mode td {
-            border-bottom-color: #374151;
+        tbody tr {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
         
         tbody tr:hover {
             background: #f9fafb;
         }
         
-        body.dark-mode tbody tr:hover {
-            background: #374151;
-        }
-        
         .editing-row {
             background: #fef3c7 !important;
             border-left: 4px solid #f59e0b;
-        }
-        
-        /* Badges de tipo */
-        .tipo-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        
-        .badge-ingreso {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .badge-gasto {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .badge-transferencia {
-            background: #dbeafe;
-            color: #1e40af;
         }
         
         .tipo-ingreso {
@@ -521,7 +465,6 @@
             padding: 8px 15px;
             border-radius: 5px;
             margin-right: 5px;
-            position: relative;
         }
         
         .btn-edit:hover {
@@ -533,98 +476,10 @@
             color: white;
             padding: 8px 15px;
             border-radius: 5px;
-            position: relative;
         }
         
         .btn-delete:hover {
             background: #dc2626;
-        }
-        
-        /* Tooltips */
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2937;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            z-index: 1000;
-        }
-        
-        .tooltip:hover::before {
-            content: '';
-            position: absolute;
-            bottom: 115%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: #1f2937;
-        }
-        
-        /* Destacar transacciones grandes */
-        .transaction-highlight {
-            background: linear-gradient(90deg, #fef3c7 0%, transparent 100%) !important;
-            border-left: 4px solid #f59e0b !important;
-        }
-        
-        body.dark-mode .transaction-highlight {
-            background: linear-gradient(90deg, #78350f 0%, transparent 100%) !important;
-        }
-        
-        /* Estado vacío */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6b7280;
-        }
-        
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-        
-        /* Loading */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            color: #7c3aed;
-        }
-        
-        .spinner {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #7c3aed;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        
-        /* Totales en tabla */
-        tfoot {
-            background: #f3e8ff;
-            font-weight: bold;
-        }
-        
-        body.dark-mode tfoot {
-            background: #374151;
-        }
-        
-        tfoot td {
-            padding: 15px;
-            border-top: 3px solid #7c3aed;
         }
         
         .progress-bar {
@@ -640,62 +495,6 @@
             height: 100%;
             background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
             transition: width 0.3s;
-        }
-        
-        /* Botón scroll to top */
-        .scroll-top-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            transition: all 0.3s;
-        }
-        
-        .scroll-top-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        }
-        
-        .scroll-top-btn.show {
-            display: flex;
-        }
-        
-        /* Botón dark mode */
-        .dark-mode-toggle {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            z-index: 1000;
-            transition: all 0.3s;
-        }
-        
-        .dark-mode-toggle:hover {
-            transform: rotate(180deg);
-            background: rgba(255, 255, 255, 0.3);
         }
         
         @media (max-width: 768px) {
@@ -731,30 +530,19 @@
                 height: 300px;
             }
             
-            .dark-mode-toggle {
-                top: 10px;
-                right: 10px;
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
+            .filters-grid {
+                grid-template-columns: 1fr;
             }
             
-            .scroll-top-btn {
-                bottom: 20px;
-                right: 20px;
-                width: 45px;
-                height: 45px;
+            #btnToggleOrden,
+            #btnExportar {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Botón Dark Mode -->
-        <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Cambiar tema">
-            <i class="fas fa-moon"></i>
-        </button>
-        
         <!-- Header -->
         <div class="card">
             <h1><i class="fas fa-home"></i> CRM Financiero Familiar Avanzado</h1>
@@ -859,6 +647,7 @@
                                 <option value="transferencia">🔄 Transferencia</option>
                             </select>
                         </div>
+                        
                         <div class="form-group">
                             <label>Método de Pago</label>
                             <select id="metodoPago" required>
@@ -867,6 +656,7 @@
                                 <option value="nequi">📱 Nequi</option>
                             </select>
                         </div>
+                        
                         <div class="form-group" id="metodoDestinoDiv" style="display: none;">
                             <label>Método Destino</label>
                             <select id="metodoDestino">
@@ -875,22 +665,26 @@
                                 <option value="nequi">📱 Nequi</option>
                             </select>
                         </div>
+                        
                         <div class="form-group">
                             <label>Monto (COP)</label>
                             <input type="number" id="monto" step="1" placeholder="0" required>
                         </div>
+                        
                         <div class="form-group">
                             <label>Categoría</label>
                             <select id="categoria" required>
                                 <option value="">Seleccione una categoría</option>
                             </select>
                         </div>
+                        
                         <div class="form-group" id="subcategoriaDiv" style="display: none;">
                             <label>Subcategoría</label>
                             <select id="subcategoria" required>
                                 <option value="">Seleccione una subcategoría</option>
                             </select>
                         </div>
+                        
                         <div class="form-group">
                             <label>Miembro Familiar</label>
                             <select id="miembro" required>
@@ -901,14 +695,17 @@
                                 <option value="compartido">👨‍👩‍👧‍👦 Compartido</option>
                             </select>
                         </div>
+                        
                         <div class="form-group full-width">
                             <label>Descripción</label>
                             <input type="text" id="descripcion" placeholder="Descripción de la transacción" required>
                         </div>
+                        
                         <div class="form-group">
                             <label>Fecha</label>
                             <input type="date" id="fecha" required>
                         </div>
+                        
                         <div class="form-group button-group">
                             <button type="submit" class="btn-primary">
                                 <i class="fas fa-save"></i> <span id="btnSubmitText">Guardar</span>
@@ -1033,7 +830,7 @@
         <div id="tab-historial" class="tab-content">
             <!-- Filtros y Búsqueda -->
             <div class="card">
-                <h2><i class="fas fa-filter"></i> Filtros</h2>
+                <h2><i class="fas fa-filter"></i> Filtros y Ordenamiento</h2>
                 <div class="filters-grid">
                     <select id="filtroTipo">
                         <option value="">Todos los tipos</option>
@@ -1055,6 +852,9 @@
                         <option value="hijo2">Hijo/a 2</option>
                         <option value="compartido">Compartido</option>
                     </select>
+                    <button id="btnToggleOrden" onclick="toggleOrden()" class="btn-export" style="background: #7c3aed;">
+                        <i class="fas fa-sort-amount-down"></i> Más Recientes Primero
+                    </button>
                     <button id="btnExportar" class="btn-export">
                         <i class="fas fa-file-excel"></i> Exportar
                     </button>
@@ -1080,23 +880,11 @@
                             </tr>
                         </thead>
                         <tbody id="transactionList"></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="7" style="text-align: right;">TOTALES:</td>
-                                <td id="totalTableAmount" style="text-align: right;">$0</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Botón Scroll to Top -->
-    <button class="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-        <i class="fas fa-arrow-up"></i>
-    </button>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1123,6 +911,7 @@
         let editingTransactionId = null;
         let currentPeriod = 'mes';
         let charts = {};
+        let ordenDescendente = true; // Nueva variable para controlar el orden
         
         // Categorías y subcategorías para hogares colombianos
         const categorias = {
@@ -1196,6 +985,17 @@
             }
         };
         
+        // Función para alternar orden
+        function toggleOrden() {
+            ordenDescendente = !ordenDescendente;
+            const btn = document.getElementById('btnToggleOrden');
+            btn.innerHTML = ordenDescendente ? 
+                '<i class="fas fa-sort-amount-down"></i> Más Recientes Primero' : 
+                '<i class="fas fa-sort-amount-up"></i> Más Antiguas Primero';
+            btn.style.background = ordenDescendente ? '#7c3aed' : '#2563eb';
+            displayTransactions();
+        }
+        
         // Función para formatear moneda colombiana
         function formatCOP(valor) {
             return '$' + Math.round(valor).toLocaleString('es-CO');
@@ -1203,35 +1003,6 @@
         
         // Establecer fecha actual
         document.getElementById('fecha').valueAsDate = new Date();
-        
-        // Dark Mode
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const icon = document.querySelector('.dark-mode-toggle i');
-            if (document.body.classList.contains('dark-mode')) {
-                icon.className = 'fas fa-sun';
-                localStorage.setItem('darkMode', 'enabled');
-            } else {
-                icon.className = 'fas fa-moon';
-                localStorage.setItem('darkMode', 'disabled');
-            }
-        }
-        
-        // Cargar preferencia de dark mode
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            document.body.classList.add('dark-mode');
-            document.querySelector('.dark-mode-toggle i').className = 'fas fa-sun';
-        }
-        
-        // Scroll to top button
-        window.addEventListener('scroll', function() {
-            const btn = document.querySelector('.scroll-top-btn');
-            if (window.scrollY > 300) {
-                btn.classList.add('show');
-            } else {
-                btn.classList.remove('show');
-            }
-        });
         
         // Cambiar tabs
         function switchTab(tabName) {
@@ -1338,11 +1109,7 @@
             // Actualizar DOM
             document.getElementById('statIngresos').textContent = formatCOP(totalIngresos);
             document.getElementById('statGastos').textContent = formatCOP(totalGastos);
-            
-            const balanceElement = document.getElementById('statBalance');
-            balanceElement.textContent = formatCOP(balance);
-            balanceElement.style.color = balance >= 0 ? '#16a34a' : '#dc2626';
-            
+            document.getElementById('statBalance').textContent = formatCOP(balance);
             document.getElementById('statPromedioMensual').textContent = formatCOP(promedioMensual);
             document.getElementById('statTransacciones').textContent = numTransacciones;
             document.getElementById('statTicketPromedio').textContent = formatCOP(ticketPromedio);
@@ -1852,63 +1619,54 @@
             
             document.getElementById('totalIngresosMes').textContent = formatCOP(ingresos);
             document.getElementById('totalGastosMes').textContent = formatCOP(gastos);
-            
-            const balanceElement = document.getElementById('balanceMes');
-            balanceElement.textContent = formatCOP(balance);
-            balanceElement.style.color = balance >= 0 ? '#16a34a' : '#dc2626';
-            
+            document.getElementById('balanceMes').textContent = formatCOP(balance);
             document.getElementById('promedioDiario').textContent = formatCOP(promedioDiario);
         }
         
-        // Mostrar transacciones (ACTUALIZADO - muestra las más recientes primero)
+        // Mostrar transacciones con orden configurable
         function displayTransactions() {
             const filtroTipo = document.getElementById('filtroTipo').value;
             const filtroMetodo = document.getElementById('filtroMetodo').value;
             const filtroMiembro = document.getElementById('filtroMiembro').value;
             
-            const filtered = transactions.filter(t => {
+            let filtered = transactions.filter(t => {
                 return (!filtroTipo || t.tipo === filtroTipo) &&
                        (!filtroMetodo || t.metodoPago === filtroMetodo) &&
                        (!filtroMiembro || t.miembro === filtroMiembro);
             });
             
+            // Aplicar orden según la preferencia del usuario
+            // Si ordenDescendente es false, invertimos el array
+            if (!ordenDescendente) {
+                filtered = [...filtered].reverse();
+            }
+            
             const tbody = document.getElementById('transactionList');
             tbody.innerHTML = '';
             
-            // Estado vacío
+            // Mensaje si no hay transacciones
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <p style="font-size: 1.2rem; font-weight: 600;">No hay transacciones que mostrar</p>
-                            <p>Ajusta los filtros o agrega una nueva transacción</p>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #6b7280;">
+                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                            <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 5px;">No hay transacciones que mostrar</p>
+                            <p style="font-size: 0.9rem;">Ajusta los filtros o agrega una nueva transacción</p>
                         </td>
                     </tr>
                 `;
-                
-                // Actualizar total
-                document.getElementById('totalTableAmount').textContent = '$0';
-                document.getElementById('totalTableAmount').style.color = '';
                 return;
             }
             
-            // SOLUCIÓN: Crear una copia invertida sin modificar el array original
-            const transaccionesOrdenadas = [...filtered].reverse();
-            
-            transaccionesOrdenadas.forEach(t => {
+            filtered.forEach(t => {
                 const row = tbody.insertRow();
                 const isEditing = editingTransactionId === t.id;
                 if (isEditing) {
                     row.classList.add('editing-row');
                 }
                 
-                // Destacar transacciones grandes (mayor a 500,000 COP)
-                if (t.monto > 500000) {
-                    row.classList.add('transaction-highlight');
-                }
-                
                 const tipoIcon = t.tipo === 'ingreso' ? '💰' : t.tipo === 'transferencia' ? '🔄' : '💸';
+                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
                 
                 let metodoPagoText = t.metodoPago === 'debito' ? '💳 Débito' : t.metodoPago === 'efectivo' ? '💵 Efectivo' : '📱 Nequi';
                 if (t.tipo === 'transferencia' && t.metodoDestino) {
@@ -1916,36 +1674,25 @@
                     metodoPagoText += ` → ${metodoDestinoIcon}`;
                 }
                 
-                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
-                
                 row.innerHTML = `
-                    <td data-label="Fecha">${t.fecha}</td>
-                    <td data-label="Tipo"><span class="tipo-badge badge-${t.tipo}">${tipoIcon} ${t.tipo.toUpperCase()}</span></td>
-                    <td data-label="Método">${metodoPagoText}</td>
-                    <td data-label="Categoría">${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
-                    <td data-label="Subcategoría">${t.subcategoria || '-'}</td>
-                    <td data-label="Miembro">${t.miembro}</td>
-                    <td data-label="Descripción">${t.descripcion}</td>
-                    <td data-label="Monto" class="${tipoClass}">${formatCOP(t.monto)}</td>
-                    <td data-label="Acciones">
-                        <button onclick="editTransaction('${t.id}')" class="btn-edit tooltip" data-tooltip="Editar">
+                    <td>${t.fecha}</td>
+                    <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
+                    <td>${metodoPagoText}</td>
+                    <td>${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
+                    <td>${t.subcategoria || '-'}</td>
+                    <td>${t.miembro}</td>
+                    <td>${t.descripcion}</td>
+                    <td class="${tipoClass}">${formatCOP(t.monto)}</td>
+                    <td>
+                        <button onclick="editTransaction('${t.id}')" class="btn-edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete tooltip" data-tooltip="Eliminar">
+                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 `;
             });
-            
-            // Calcular y mostrar totales
-            const totalIngresos = filtered.filter(t => t.tipo === 'ingreso').reduce((sum, t) => sum + t.monto, 0);
-            const totalGastos = filtered.filter(t => t.tipo === 'gasto').reduce((sum, t) => sum + t.monto, 0);
-            const totalNeto = totalIngresos - totalGastos;
-            
-            const totalElement = document.getElementById('totalTableAmount');
-            totalElement.textContent = formatCOP(totalNeto);
-            totalElement.style.color = totalNeto >= 0 ? '#16a34a' : '#dc2626';
         }
         
         // Editar transacción
