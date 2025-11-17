@@ -622,6 +622,7 @@
             justify-content: center;
             align-items: center;
             height: 200px;
+            color: var(--text-muted);
         }
 
         .spinner {
@@ -647,6 +648,40 @@
         .btn-action {
             width: 120px;
             text-align: center;
+        }
+
+        /* Estilo para las notificaciones */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--shadow-hover);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .toast.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .toast.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
         }
     </style>
 </head>
@@ -997,15 +1032,20 @@
                             </tr>
                         </thead>
                         <tbody id="transactionList">
-                            <div class="loading">
-                                <div class="spinner"></div>
-                            </div>
+                            <tr>
+                                <td colspan="9" class="loading">
+                                    <div class="spinner"></div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Contenedor de notificaciones -->
+    <div id="toastContainer"></div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1160,6 +1200,24 @@
         // Establecer fecha actual
         document.getElementById('fecha').valueAsDate = new Date();
 
+        // Mostrar notificación
+        function showToast(message, type) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
         // Cargar categorías según tipo
         function cargarCategorias() {
             const tipo = document.getElementById('tipo').value;
@@ -1271,40 +1329,13 @@
             }
         });
 
-        // Mostrar notificación
-        function showToast(message, type) {
-            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
-                    <span>${message}</span>
-                </div>
-                <button class="toast-close" onclick="this.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            toastContainer.appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
-        }
-
-        // Crear contenedor de notificaciones
-        function createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.style.position = 'fixed';
-            container.style.bottom = '20px';
-            container.style.right = '20px';
-            container.style.zIndex = '1000';
-            document.body.appendChild(container);
-            return container;
-        }
-
         // Cargar transacciones
         async function loadTransactions() {
             try {
-                document.getElementById('transactionList').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+                // Mostrar mensaje de carga
+                const tbody = document.getElementById('transactionList');
+                tbody.innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div></td></tr>';
+
                 document.getElementById('rankingCategorias').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
                 document.getElementById('rankingMiembros').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
@@ -1323,6 +1354,86 @@
                 console.error('Error al cargar transacciones:', error);
                 showToast('❌ Error al cargar transacciones. Verifica las reglas de Firestore.', 'error');
             }
+        }
+
+        // Mostrar transacciones con orden configurable
+        function displayTransactions() {
+            const filtroTipo = document.getElementById('filtroTipo').value;
+            const filtroMetodo = document.getElementById('filtroMetodo').value;
+            const filtroMiembro = document.getElementById('filtroMiembro').value;
+
+            let filtered = transactions.filter(t => {
+                return (!filtroTipo || t.tipo === filtroTipo) &&
+                       (!filtroMetodo || t.metodoPago === filtroMetodo) &&
+                       (!filtroMiembro || t.miembro === filtroMiembro);
+            });
+
+            // Aplicar orden según la preferencia del usuario
+            if (!ordenDescendente) {
+                filtered = [...filtered].reverse();
+            }
+
+            const tbody = document.getElementById('transactionList');
+
+            // Limpiar el contenido antes de agregar nuevos registros
+            tbody.innerHTML = '';
+
+            // Mensaje si no hay transacciones
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                            <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 5px;">No hay transacciones que mostrar</p>
+                            <p style="font-size: 0.9rem;">Ajusta los filtros o agrega una nueva transacción</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Crear fragmento para mejorar rendimiento
+            const fragment = document.createDocumentFragment();
+
+            filtered.forEach(t => {
+                const row = document.createElement('tr');
+                const isEditing = editingTransactionId === t.id;
+                if (isEditing) {
+                    row.classList.add('editing-row');
+                }
+
+                const tipoIcon = t.tipo === 'ingreso' ? '💰' : t.tipo === 'transferencia' ? '🔄' : '💸';
+                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
+
+                let metodoPagoText = t.metodoPago === 'debito' ? '💳 Débito' : t.metodoPago === 'efectivo' ? '💵 Efectivo' : '📱 Nequi';
+                if (t.tipo === 'transferencia' && t.metodoDestino) {
+                    const metodoDestinoIcon = t.metodoDestino === 'debito' ? '💳' : t.metodoDestino === 'efectivo' ? '💵' : '📱';
+                    metodoPagoText += ` → ${metodoDestinoIcon}`;
+                }
+
+                row.innerHTML = `
+                    <td>${t.fecha}</td>
+                    <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
+                    <td>${metodoPagoText}</td>
+                    <td>${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
+                    <td>${t.subcategoria || '-'}</td>
+                    <td>${t.miembro}</td>
+                    <td>${t.descripcion}</td>
+                    <td class="${tipoClass}">${formatCOP(t.monto)}</td>
+                    <td>
+                        <button onclick="editTransaction('${t.id}')" class="btn-edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+
+                fragment.appendChild(row);
+            });
+
+            tbody.appendChild(fragment);
         }
 
         // Actualizar dashboard
@@ -1384,84 +1495,6 @@
             document.getElementById('totalGastosMes').textContent = formatCOP(gastos);
             document.getElementById('balanceMes').textContent = formatCOP(balance);
             document.getElementById('promedioDiario').textContent = formatCOP(promedioDiario);
-        }
-
-        // Mostrar transacciones con orden configurable
-        function displayTransactions() {
-            const filtroTipo = document.getElementById('filtroTipo').value;
-            const filtroMetodo = document.getElementById('filtroMetodo').value;
-            const filtroMiembro = document.getElementById('filtroMiembro').value;
-
-            let filtered = transactions.filter(t => {
-                return (!filtroTipo || t.tipo === filtroTipo) &&
-                       (!filtroMetodo || t.metodoPago === filtroMetodo) &&
-                       (!filtroMiembro || t.miembro === filtroMiembro);
-            });
-
-            // Aplicar orden según la preferencia del usuario
-            if (!ordenDescendente) {
-                filtered = [...filtered].reverse();
-            }
-
-            const tbody = document.getElementById('transactionList');
-
-            // Mensaje si no hay transacciones
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
-                            <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 5px;">No hay transacciones que mostrar</p>
-                            <p style="font-size: 0.9rem;">Ajusta los filtros o agrega una nueva transacción</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // Crear fragmento para mejorar rendimiento
-            const fragment = document.createDocumentFragment();
-
-            filtered.forEach(t => {
-                const row = document.createElement('tr');
-                const isEditing = editingTransactionId === t.id;
-                if (isEditing) {
-                    row.classList.add('editing-row');
-                }
-
-                const tipoIcon = t.tipo === 'ingreso' ? '💰' : t.tipo === 'transferencia' ? '🔄' : '💸';
-                const tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto';
-
-                let metodoPagoText = t.metodoPago === 'debito' ? '💳 Débito' : t.metodoPago === 'efectivo' ? '💵 Efectivo' : '📱 Nequi';
-                if (t.tipo === 'transferencia' && t.metodoDestino) {
-                    const metodoDestinoIcon = t.metodoDestino === 'debito' ? '💳' : t.metodoDestino === 'efectivo' ? '💵' : '📱';
-                    metodoPagoText += ` → ${metodoDestinoIcon}`;
-                }
-
-                row.innerHTML = `
-                    <td>${t.fecha}</td>
-                    <td class="${tipoClass}">${tipoIcon} ${t.tipo}</td>
-                    <td>${metodoPagoText}</td>
-                    <td>${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
-                    <td>${t.subcategoria || '-'}</td>
-                    <td>${t.miembro}</td>
-                    <td>${t.descripcion}</td>
-                    <td class="${tipoClass}">${formatCOP(t.monto)}</td>
-                    <td>
-                        <button onclick="editTransaction('${t.id}')" class="btn-edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-
-                fragment.appendChild(row);
-            });
-
-            tbody.innerHTML = '';
-            tbody.appendChild(fragment);
         }
 
         // Editar transacción
