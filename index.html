@@ -2,978 +2,751 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Financiero - Control Total Tarjetas</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Finanzas Enterprise</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        dark: '#111827',
+                        light: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5a67d8;
-            --secondary: #764ba2;
-            --accent: #f093fb;
-            --success: #4ade80;
-            --danger: #dc2626;
-            --warning: #fbbf24;
-            --info: #60a5fa;
-            --light: #f8fafc;
-            --dark: #1e293b;
-            --text: #374151;
-            --text-muted: #6b7280;
-            --white: #ffffff;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            --border-radius: 12px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        body { -webkit-tap-highlight-color: transparent; }
+        .card-gradient-1 { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); }
+        .card-gradient-2 { background: linear-gradient(135deg, #059669 0%, #10B981 100%); }
+        .card-gradient-3 { background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%); }
+        .credit-card-glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            padding: 20px;
-            min-height: 100vh;
-            color: var(--text);
-        }
-
-        .container { max-width: 1400px; margin: 0 auto; }
-
-        .card {
-            background: var(--white);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: var(--shadow);
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        h1, h2, h3 { color: var(--dark); margin-bottom: 15px; }
-        h1 { font-size: 2.5rem; text-align: center; }
-        .subtitle { text-align: center; color: var(--text-muted); }
-
-        /* Tabs */
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .tab-button {
-            padding: 12px 25px; border: none; border-radius: var(--border-radius);
-            font-size: 1rem; font-weight: 600; cursor: pointer;
-            background: var(--white); color: var(--text); border: 1px solid var(--light);
-            transition: var(--transition); display: flex; align-items: center; gap: 8px;
-        }
-        .tab-button.active {
-            background: var(--primary); color: var(--white); border-color: var(--primary);
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Dashboard */
-        .dashboard-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px;
-        }
-        .stat-card {
-            background: var(--white); border-radius: var(--border-radius); padding: 25px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow); color: var(--white);
-        }
-        .stat-card.debito { background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%); }
-        .stat-card.efectivo { background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%); }
-        .stat-card.nequi { background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); }
-        .stat-card.total { background: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%); }
-
-        .stat-info p:first-child { font-size: 0.9rem; opacity: 0.9; }
-        .stat-info p:last-child { font-size: 2rem; font-weight: bold; }
-        .stat-icon { font-size: 3rem; opacity: 0.5; }
-
-        /* Credit Cards Dinámicas */
-        .credit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-bottom: 25px; }
-        .credit-card-visual {
-            border-radius: 16px; padding: 25px; color: white; position: relative; height: 220px;
-            display: flex; flex-direction: column; justify-content: space-between;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3); transition: transform 0.3s ease;
-            background-size: cover; overflow: hidden;
-        }
-        .credit-card-visual:hover { transform: translateY(-5px); }
-        .card-top { display: flex; justify-content: space-between; z-index: 2; }
-        .card-chip { width: 40px; height: 30px; background: linear-gradient(135deg, #e2e2e2 0%, #a1a1a1 100%); border-radius: 5px; }
-        .card-brand { font-weight: bold; font-style: italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-        .card-middle { font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; z-index: 2; margin-top: 10px; }
-        .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; margin-top: auto; }
-        .card-stat-group { display: flex; flex-direction: column; }
-        .card-label { font-size: 0.7rem; opacity: 0.9; text-transform: uppercase; }
-        .card-val { font-weight: bold; font-size: 1.3rem; }
-        .card-progress-bg { position: absolute; bottom: 0; left: 0; height: 5px; width: 100%; background: rgba(255,255,255,0.3); }
-        .card-progress-fill { height: 100%; background: #fff; transition: width 0.5s; }
-        .btn-card-action { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); border: none; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: none; z-index: 10; transition: 0.2s; }
-        .btn-card-action:hover { background: rgba(0,0,0,0.6); }
-        .credit-card-visual:hover .btn-card-action { display: block; }
-
-        /* Forms */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        label { font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
-        input, select { padding: 12px; border: 2px solid var(--light); border-radius: var(--border-radius); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            display: none; justify-content: center; align-items: center; z-index: 2000;
-        }
-        .modal-content { background: white; padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; animation: slideUp 0.3s; }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* Interest Estimator */
-        .interest-box {
-            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; margin-top: 10px;
-            display: none; font-size: 0.9rem; color: #1e40af;
-        }
-        .cuota-highlight { font-size: 1.2rem; font-weight: bold; color: var(--primary); display: block; margin: 5px 0; }
-
-        .btn-primary { background: var(--primary); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; }
-        .btn-secondary { background: var(--text-muted); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; }
-        .btn-danger { background: #fee2e2; color: #991b1b; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 5px; }
-        .btn-info { background: #dbeafe; color: #1e40af; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-        .action-row { display: flex; gap: 10px; margin-top: 20px; }
-
-        /* Tablas y Stats */
-        .chart-container { height: 300px; position: relative; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--light); text-align: left; }
-        .badge-method { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
-        .m-debito { background: #dbeafe; color: #1e40af; }
-        .m-efectivo { background: #dcfce7; color: #166534; }
-        .m-nequi { background: #f3e8ff; color: #6b21a8; }
-        .m-credito { background: #fee2e2; color: #991b1b; }
-        
-        @media (max-width: 768px) { .dashboard-grid, .form-grid { grid-template-columns: 1fr; } }
-        
-        .toast { position: fixed; bottom: 20px; right: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 3000; border-left: 5px solid var(--success); }
+        /* Animaciones */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h1><i class="fas fa-wallet"></i> CRM Financiero Control Total</h1>
-            <p class="subtitle">Gestiona Gastos, Ingresos y Deudas de Tarjetas al detalle</p>
-        </div>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
 
-        <!-- Navigation -->
-        <div class="card">
-            <div class="tabs-container">
-                <button class="tab-button active" onclick="switchTab('dashboard', this)">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </button>
-                <button class="tab-button" onclick="switchTab('tarjetas', this)">
-                    <i class="fas fa-credit-card"></i> Mis Tarjetas
-                </button>
-                <button class="tab-button" onclick="switchTab('transacciones', this)">
-                    <i class="fas fa-plus-circle"></i> Nueva Operación
-                </button>
-                <button class="tab-button" onclick="switchTab('estadisticas', this)">
-                    <i class="fas fa-chart-line"></i> Estadísticas
-                </button>
-                <button class="tab-button" onclick="switchTab('historial', this)">
-                    <i class="fas fa-list"></i> Historial
-                </button>
+    <!-- HEADER MOBILE/DESKTOP -->
+    <header class="bg-white border-b px-6 py-4 flex justify-between items-center z-20 shadow-sm shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="bg-primary/10 p-2 rounded-lg">
+                <i class="ph-fill ph-wallet text-primary text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight text-dark">Finanzas<span class="text-primary">Pro</span></h1>
+                <p class="text-[10px] text-gray-400 font-medium tracking-wide">ENTERPRISE EDITION</p>
             </div>
         </div>
+        <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-500">
+            <span class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></span> Conectando...
+        </div>
+    </header>
 
-        <!-- TAB: Dashboard -->
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="dashboard-grid">
-                <div class="stat-card debito">
-                    <div class="stat-info"><p>Saldo Débito</p><p id="saldoDebito">$0</p></div>
-                    <i class="fas fa-university stat-icon"></i>
-                </div>
-                <div class="stat-card efectivo">
-                    <div class="stat-info"><p>Efectivo</p><p id="saldoEfectivo">$0</p></div>
-                    <i class="fas fa-money-bill-wave stat-icon"></i>
-                </div>
-                <div class="stat-card nequi">
-                    <div class="stat-info"><p>Nequi</p><p id="saldoNequi">$0</p></div>
-                    <i class="fas fa-mobile-alt stat-icon"></i>
-                </div>
-                <div class="stat-card total">
-                    <div class="stat-info"><p>Liquidez Total</p><p id="saldoTotal">$0</p></div>
-                    <i class="fas fa-coins stat-icon"></i>
-                </div>
+    <!-- MAIN CONTENT AREA -->
+    <main id="mainContent" class="flex-1 overflow-y-auto p-4 md:p-6 pb-24 hide-scrollbar relative">
+        
+        <!-- SECTION: DASHBOARD -->
+        <section id="view-dashboard" class="space-y-6 animate-fade-in">
+            <!-- Ajustar Saldos -->
+            <div class="flex justify-end">
+                <button onclick="openModal('balanceModal')" class="text-primary text-xs font-semibold flex items-center gap-1 hover:bg-primary/5 px-3 py-1.5 rounded-lg transition">
+                    <i class="ph ph-sliders-horizontal"></i> Calibrar Saldos
+                </button>
             </div>
-            
-            <div class="card">
-                <h2><i class="fas fa-bolt"></i> Estado de Deudas</h2>
-                <div class="dashboard-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">
-                        <div class="stat-info"><p>Deuda Total Tarjetas</p><p id="deudaTotalTarjetas">$0</p></div>
-                        <i class="fas fa-credit-card stat-icon"></i>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Patrimonio -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Patrimonio Líquido</p>
+                        <h3 id="dash-liquid" class="text-2xl font-bold text-emerald-600 mt-1">$0</h3>
+                        <div class="flex gap-2 mt-2 text-[10px] text-gray-400 font-medium">
+                            <span>DEB: <b id="dash-deb" class="text-gray-600">$0</b></span>
+                            <span>•</span>
+                            <span>EFEC: <b id="dash-efe" class="text-gray-600">$0</b></span>
+                        </div>
                     </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);">
-                        <div class="stat-info"><p>Cupo Disponible Global</p><p id="cupoTotal">$0</p></div>
-                        <i class="fas fa-check-circle stat-icon"></i>
+                    <div class="bg-emerald-50 p-3 rounded-xl text-emerald-600">
+                        <i class="ph-fill ph-coins text-2xl"></i>
                     </div>
                 </div>
-                <div style="margin-top:20px;">
-                    <h3>Gastos del Mes por Categoría</h3>
-                    <div class="chart-container"><canvas id="chartDashboard"></canvas></div>
-                </div>
-            </div>
-        </div>
 
-        <!-- TAB: Tarjetas (CRUD) -->
-        <div id="tab-tarjetas" class="tab-content">
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2><i class="fas fa-credit-card"></i> Gestión de Tarjetas</h2>
-                    <button class="btn-primary" style="width:auto;" onclick="openCardModal()">
-                        <i class="fas fa-plus"></i> Nueva Tarjeta
-                    </button>
+                <!-- Deuda -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Deuda Total</p>
+                        <h3 id="dash-debt" class="text-2xl font-bold text-red-500 mt-1">$0</h3>
+                        <p class="text-[10px] text-gray-400 mt-1">Cupo Disponible: <b id="dash-limit" class="text-gray-600">$0</b></p>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-xl text-red-500">
+                        <i class="ph-fill ph-credit-card text-2xl"></i>
+                    </div>
                 </div>
-                
-                <div id="cardsContainer" class="credit-grid">
-                    <div style="text-align:center; grid-column:1/-1; padding:40px; color:#999;">
-                        <i class="fas fa-spinner fa-spin"></i> Cargando tarjetas...
+
+                <!-- Flujo -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Flujo Caja (Mes)</p>
+                        <h3 id="dash-flow" class="text-2xl font-bold text-blue-600 mt-1">$0</h3>
+                        <p class="text-[10px] text-gray-400 mt-1">Ingresos vs Gastos</p>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl text-blue-600">
+                        <i class="ph-fill ph-chart-line-up text-2xl"></i>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB: Nueva Transacción -->
-        <div id="tab-transacciones" class="tab-content">
-            <div class="card">
-                <h2><i class="fas fa-plus-circle"></i> <span id="formTitle">Registrar Movimiento</span></h2>
-                <form id="transactionForm">
-                    <input type="hidden" id="editingId">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <select id="tipo" required onchange="handleTipoChange()">
-                                <option value="gasto">💸 Gasto / Compra</option>
-                                <option value="ingreso">💰 Ingreso</option>
-                                <option value="transferencia">🔄 Transferencia / Pago</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Método de Pago / Origen</label>
-                            <select id="metodoPago" required onchange="handleMetodoChange()">
-                                <option value="debito">💳 Débito (Bancos)</option>
-                                <option value="efectivo">💵 Efectivo</option>
-                                <option value="nequi">📱 Nequi</option>
-                                <option value="credito">💳 Tarjeta de Crédito</option>
-                            </select>
-                        </div>
+            <!-- Chart Section -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="ph-fill ph-chart-pie-slice text-primary"></i> Gastos por Categoría
+                </h3>
+                <div class="h-64 w-full relative">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </section>
 
-                        <!-- Selector Tarjeta Origen -->
-                        <div class="form-group" id="divTarjetaOrigen" style="display:none;">
-                            <label style="color:var(--primary);">Selecciona la Tarjeta</label>
-                            <select id="tarjetaOrigen">
-                                <!-- Se llena dinámicamente -->
-                            </select>
-                        </div>
+        <!-- SECTION: TARJETAS -->
+        <section id="view-cards" class="space-y-6 hidden animate-fade-in">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">Billetera</h2>
+                <button onclick="openModal('cardModal')" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg shadow-primary/30 flex items-center gap-2 active:scale-95 transition">
+                    <i class="ph-bold ph-plus"></i> Nueva Tarjeta
+                </button>
+            </div>
 
-                        <!-- Configuración de Cuotas (Solo Gasto con Tarjeta) -->
-                        <div class="form-group" id="divCuotas" style="display:none;">
-                            <label>Número de Cuotas</label>
-                            <select id="cuotas" onchange="calcularCuota()">
-                                <option value="1">1 Cuota (Sin intereses)</option>
-                                <option value="2">2 Cuotas</option>
-                                <option value="3">3 Cuotas</option>
-                                <option value="6">6 Cuotas</option>
-                                <option value="12">12 Cuotas</option>
-                                <option value="24">24 Cuotas</option>
-                                <option value="36">36 Cuotas</option>
-                            </select>
-                        </div>
+            <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Cards injected via JS -->
+                <div class="col-span-full text-center py-10 text-gray-400">
+                    <i class="ph-duotone ph-spinner animate-spin text-3xl"></i>
+                    <p class="text-sm mt-2">Cargando billetera...</p>
+                </div>
+            </div>
+        </section>
 
-                        <!-- Destino para Transferencias -->
-                        <div class="form-group" id="divMetodoDestino" style="display:none;">
-                            <label>Destino</label>
-                            <select id="metodoDestino" onchange="handleDestinoChange()">
+        <!-- SECTION: HISTORIAL -->
+        <section id="view-history" class="space-y-4 hidden animate-fade-in">
+            <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100 sticky top-0 z-10">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="ph-fill ph-list-dashes text-primary"></i> Historial
+                </h2>
+                <span id="tx-count" class="text-xs bg-gray-100 px-2 py-1 rounded-md font-mono text-gray-500">0 regs</span>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b">
+                            <tr>
+                                <th class="px-4 py-3 whitespace-nowrap">Fecha</th>
+                                <th class="px-4 py-3">Tipo</th>
+                                <th class="px-4 py-3">Detalle</th>
+                                <th class="px-4 py-3">Método</th>
+                                <th class="px-4 py-3 text-right">Monto</th>
+                                <th class="px-4 py-3 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-table-body" class="divide-y divide-gray-100">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FAB (Floating Action Button) -->
+    <button onclick="openModal('transactionModal')" class="fixed bottom-24 right-6 md:bottom-10 md:right-10 bg-dark text-white w-14 h-14 rounded-full shadow-2xl shadow-dark/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all group">
+        <i class="ph-bold ph-plus text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
+    </button>
+
+    <!-- BOTTOM NAVIGATION (Mobile) -->
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t px-6 py-3 pb-safe flex justify-between items-center z-50">
+        <button onclick="switchView('dashboard')" class="nav-btn active flex flex-col items-center gap-1 text-gray-400 hover:text-primary w-16">
+            <i class="ph-fill ph-squares-four text-2xl"></i>
+            <span class="text-[10px] font-medium">Inicio</span>
+        </button>
+        <button onclick="switchView('cards')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-primary w-16">
+            <i class="ph-fill ph-credit-card text-2xl"></i>
+            <span class="text-[10px] font-medium">Tarjetas</span>
+        </button>
+        <div class="w-12"></div> <!-- Spacer for FAB -->
+        <button onclick="switchView('history')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-primary w-16">
+            <i class="ph-fill ph-list-dashes text-2xl"></i>
+            <span class="text-[10px] font-medium">Historial</span>
+        </button>
+        <button onclick="alert('Próximamente')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-primary w-16">
+            <i class="ph-fill ph-chart-bar text-2xl"></i>
+            <span class="text-[10px] font-medium">Stats</span>
+        </button>
+    </nav>
+
+    <!-- MODALS (Hidden by default) -->
+    
+    <!-- 1. Transaction Modal -->
+    <div id="transactionModal" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm hidden items-end md:items-center justify-center p-0 md:p-4">
+        <div class="bg-white w-full md:max-w-md md:rounded-2xl rounded-t-2xl shadow-2xl h-[90vh] md:h-auto flex flex-col animate-fade-in">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 md:rounded-t-2xl">
+                <h3 id="modalTitle" class="font-bold text-gray-800">Registrar Movimiento</h3>
+                <button onclick="closeModal('transactionModal')" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1">
+                <form id="txForm" class="space-y-4">
+                    <input type="hidden" id="txId">
+                    
+                    <!-- Type Selector -->
+                    <div class="grid grid-cols-3 gap-2 bg-gray-100 p-1 rounded-xl">
+                        <button type="button" onclick="setTxType('gasto')" class="type-btn active py-2 rounded-lg text-sm font-medium transition text-center" data-type="gasto">Gasto</button>
+                        <button type="button" onclick="setTxType('ingreso')" class="type-btn py-2 rounded-lg text-sm font-medium transition text-center" data-type="ingreso">Ingreso</button>
+                        <button type="button" onclick="setTxType('transferencia')" class="type-btn py-2 rounded-lg text-sm font-medium transition text-center" data-type="transferencia">Transf.</button>
+                    </div>
+                    <input type="hidden" id="txType" value="gasto">
+
+                    <!-- Method -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Origen</label>
+                            <select id="txMethod" class="w-full border-gray-200 rounded-xl p-3 bg-gray-50 text-sm focus:ring-2 focus:ring-primary outline-none" onchange="handleMethodChange()">
                                 <option value="debito">💳 Débito</option>
                                 <option value="efectivo">💵 Efectivo</option>
                                 <option value="nequi">📱 Nequi</option>
-                                <option value="credito">💳 Pago a Tarjeta</option>
+                                <option value="credito">💳 Crédito</option>
                             </select>
                         </div>
-
-                        <!-- Selector Tarjeta Destino -->
-                        <div class="form-group" id="divTarjetaDestino" style="display:none;">
-                            <label style="color:var(--success);">Tarjeta a Pagar</label>
-                            <select id="tarjetaDestino">
-                                <!-- Se llena dinámicamente -->
-                            </select>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Monto</label>
+                            <input type="number" id="txAmount" class="w-full border-gray-200 rounded-xl p-3 bg-gray-50 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-primary outline-none" placeholder="0" required oninput="calculateInstallment()">
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <label>Monto</label>
-                            <input type="number" id="monto" required oninput="calcularCuota()">
-                            
-                            <!-- Calculadora de Cuotas -->
-                            <div id="infoCuota" class="interest-box">
-                                <span style="font-weight:bold;">Simulación de Compra:</span><br>
-                                Valor Cuota Aprox: <span id="valCuota" class="cuota-highlight">$0</span>
-                                <small>Total Final Estimado: <span id="valTotal">$0</span> (Int: 1.9% M.V.)</small>
+                    <!-- Credit Specifics -->
+                    <div id="creditFields" class="hidden bg-indigo-50 border border-indigo-100 p-3 rounded-xl space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-indigo-800 mb-1 block">Tarjeta / Cupo</label>
+                            <select id="txCard" class="w-full border-indigo-200 rounded-lg p-2 text-sm" onchange="calculateInstallment()"></select>
+                        </div>
+                        <div id="installmentsField" class="flex gap-3">
+                            <div class="w-1/2">
+                                <label class="text-xs font-bold text-indigo-800 mb-1 block">Cuotas</label>
+                                <select id="txInstallments" class="w-full border-indigo-200 rounded-lg p-2 text-sm" onchange="calculateInstallment()">
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                    <option value="6">6</option><option value="12">12</option><option value="24">24</option><option value="36">36</option>
+                                </select>
+                            </div>
+                            <div class="w-1/2 flex flex-col justify-center items-end">
+                                <span class="text-[10px] text-gray-500">Cuota aprox:</span>
+                                <span id="txInstallmentVal" class="font-bold text-indigo-700">$0</span>
+                                <span id="txInterestLabel" class="text-[10px] text-gray-400"></span>
                             </div>
                         </div>
-
-                        <div class="form-group">
-                            <label>Categoría</label>
-                            <select id="categoria" required onchange="cargarSubcategorias()"></select>
-                        </div>
-                        <div class="form-group" id="divSubcat" style="display:none;">
-                            <label>Subcategoría</label>
-                            <select id="subcategoria"></select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Miembro</label>
-                            <select id="miembro" required>
-                                <option value="papa">👨 Papá</option>
-                                <option value="mama">👩 Mamá</option>
-                                <option value="hijo1">👦 Hijo 1</option>
-                                <option value="hijo2">👧 Hija 2</option>
-                                <option value="compartido">👨‍👩‍👧‍👦 Compartido</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label>Descripción</label>
-                            <input type="text" id="descripcion" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Fecha</label>
-                            <input type="date" id="fecha" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <button type="submit" class="btn-primary" id="btnGuardar">Guardar Transacción</button>
-                            <button type="button" class="btn-secondary" id="btnCancelarEdicion" style="display:none; margin-top:10px;" onclick="cancelEdit()">Cancelar Edición</button>
-                        </div>
                     </div>
+
+                    <!-- Transfer Dest -->
+                    <div id="transferFields" class="hidden bg-blue-50 border border-blue-100 p-3 rounded-xl space-y-2">
+                         <label class="text-xs font-bold text-blue-800 mb-1 block">Destino</label>
+                         <select id="txDestMethod" class="w-full border-blue-200 rounded-lg p-2 text-sm" onchange="handleDestChange()">
+                             <option value="debito">Débito</option>
+                             <option value="efectivo">Efectivo</option>
+                             <option value="nequi">Nequi</option>
+                             <option value="credito">Pagar Tarjeta</option>
+                         </select>
+                         <select id="txDestCard" class="w-full border-blue-200 rounded-lg p-2 text-sm hidden"></select>
+                    </div>
+
+                    <!-- Details -->
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Categoría</label>
+                        <select id="txCategory" class="w-full border-gray-200 rounded-xl p-3 bg-gray-50 text-sm outline-none"></select>
+                    </div>
+
+                    <div>
+                         <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Descripción</label>
+                         <input type="text" id="txDesc" class="w-full border-gray-200 rounded-xl p-3 bg-gray-50 text-sm outline-none" placeholder="Ej: Mercado D1">
+                    </div>
+
+                    <input type="date" id="txDate" class="w-full border-gray-200 rounded-xl p-3 bg-gray-50 text-sm outline-none" required>
+
+                    <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 active:scale-[0.98] transition">Guardar Movimiento</button>
                 </form>
-            </div>
-        </div>
-
-        <!-- TAB: Estadísticas -->
-        <div id="tab-estadisticas" class="tab-content">
-             <div class="card">
-                <h2><i class="fas fa-chart-line"></i> Estadísticas Avanzadas</h2>
-                <div class="dashboard-grid">
-                    <div class="stat-card"><div class="stat-info"><p>Ingresos Totales</p><p id="stIngresos">$0</p></div></div>
-                    <div class="stat-card"><div class="stat-info"><p>Gastos Totales</p><p id="stGastos">$0</p></div></div>
-                    <div class="stat-card"><div class="stat-info"><p>Balance Neto</p><p id="stBalance">$0</p></div></div>
-                </div>
-                <div style="margin-top:30px;">
-                    <h3>Evolución de Finanzas</h3>
-                    <div class="chart-container">
-                        <canvas id="chartStats"></canvas>
-                    </div>
-                </div>
-             </div>
-        </div>
-
-        <!-- TAB: Historial -->
-        <div id="tab-historial" class="tab-content">
-            <div class="card">
-                <h2><i class="fas fa-list"></i> Historial</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr><th>Fecha</th><th>Tipo</th><th>Método</th><th>Detalle</th><th>Monto</th><th>Acciones</th></tr>
-                        </thead>
-                        <tbody id="txList"></tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: Crear/Editar Tarjeta -->
-    <div id="cardModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3><i class="fas fa-credit-card"></i> Configurar Tarjeta</h3>
-            <form id="cardForm">
-                <input type="hidden" id="cardId">
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label>Nombre de la Tarjeta</label>
-                    <input type="text" id="cardName" placeholder="Ej: Nu Edward" required>
+    <!-- 2. Card Modal -->
+    <div id="cardModal" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 animate-fade-in">
+            <h3 class="font-bold text-lg text-gray-800 mb-4">Configurar Tarjeta</h3>
+            <form id="cardForm" class="space-y-4">
+                <input type="hidden" id="cardFormId">
+                <input type="text" id="cardFormName" placeholder="Nombre (ej: Nu)" class="w-full border p-3 rounded-xl" required>
+                <input type="text" id="cardFormBank" placeholder="Banco / Franquicia" class="w-full border p-3 rounded-xl">
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-xs text-gray-500">Cupo</label><input type="number" id="cardFormLimit" class="w-full border p-2 rounded-xl" required></div>
+                    <div><label class="text-xs text-gray-500">Deuda Ini.</label><input type="number" id="cardFormDebt" class="w-full border p-2 rounded-xl" value="0"></div>
                 </div>
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label>Franquicia / Banco</label>
-                    <input type="text" id="cardBank" placeholder="Ej: Mastercard">
-                </div>
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label>Cupo Total (Límite)</label>
-                    <input type="number" id="cardLimit" placeholder="0" required>
-                </div>
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label>Deuda Inicial (Saldo que ya debes)</label>
-                    <input type="number" id="cardInitialDebt" placeholder="0" value="0">
-                </div>
-                <div class="form-group" style="margin-bottom:15px;">
-                    <label>Color Identificativo</label>
-                    <input type="color" id="cardColor" value="#820ad1" style="width:100%; height:40px;">
-                </div>
-                <div class="action-row">
-                    <button type="submit" class="btn-primary">Guardar Tarjeta</button>
-                    <button type="button" class="btn-secondary" onclick="closeCardModal()">Cancelar</button>
+                <div><label class="text-xs text-gray-500">Color</label><input type="color" id="cardFormColor" class="w-full h-10 rounded-lg" value="#4F46E5"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeModal('cardModal')" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-medium">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-xl font-bold">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="toastContainer"></div>
+    <!-- 3. Balance Modal -->
+    <div id="balanceModal" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 animate-fade-in">
+            <h3 class="font-bold text-lg text-gray-800 mb-2">Ajustar Saldos Iniciales</h3>
+            <p class="text-xs text-gray-500 mb-4">Ingresa el dinero real que tienes hoy para calibrar el sistema.</p>
+            <form id="balanceForm" class="space-y-3">
+                <div><label class="text-xs font-bold text-gray-500">Bancos (Débito)</label><input type="number" id="balDebito" class="w-full border p-3 rounded-xl font-bold text-gray-800"></div>
+                <div><label class="text-xs font-bold text-gray-500">Efectivo</label><input type="number" id="balEfectivo" class="w-full border p-3 rounded-xl font-bold text-gray-800"></div>
+                <div><label class="text-xs font-bold text-gray-500">Nequi / Digital</label><input type="number" id="balNequi" class="w-full border p-3 rounded-xl font-bold text-gray-800"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeModal('balanceModal')" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-medium">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    <script>
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY",
-            authDomain: "crm-financiero.firebaseapp.com",
-            projectId: "crm-financiero",
-            storageBucket: "crm-financiero.firebasestorage.app",
-            messagingSenderId: "442754442943",
-            appId: "1:442754442943:web:914d5a8ef619d77407880a"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // --- CONFIG & GLOBALS ---
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
 
-        // --- STATE ---
+        let userId = null;
         let cards = [];
         let transactions = [];
-        let charts = {};
+        let initialBalances = { debito: 0, efectivo: 0, nequi: 0 };
+        let chartInstance = null;
 
-        // --- DEFAULT CARDS (Seeding) ---
-        const defaultCards = [
-            { name: "Nu Edward", bank: "Nu Mastercard", limit: 5000000, initialDebt: 0, color: "#820ad1" },
-            { name: "Nu Eli", bank: "Nu Mastercard", limit: 2000000, initialDebt: 0, color: "#820ad1" },
-            { name: "RappiCard", bank: "Rappi Visa", limit: 3000000, initialDebt: 0, color: "#ff4500" },
-            { name: "Falabella Eli", bank: "Banco Falabella", limit: 4000000, initialDebt: 0, color: "#1a9c48" },
-            { name: "Exito", bank: "Tuya Éxito", limit: 1500000, initialDebt: 0, color: "#ffd700" }
-        ];
+        const CATEGORIES = {
+            gasto: ['Vivienda', 'Servicios', 'Alimentación', 'Transporte', 'Educación', 'Salud', 'Personal', 'Entretenimiento', 'Deudas', 'Otros'],
+            ingreso: ['Salario', 'Negocio', 'Inversiones', 'Otros'],
+            transferencia: ['Transferencia']
+        };
 
-        // --- CATEGORÍAS COMPLETAS ---
-        const categorias = {
-            gasto: {
-                'vivienda': ['Arriendo', 'Cuota hipoteca', 'Administración', 'Impuesto predial', 'Reparaciones', 'Muebles y electrodomésticos'],
-                'servicios_publicos': ['Energía eléctrica', 'Agua y alcantarillado', 'Gas natural', 'Internet', 'Telefonía móvil', 'TV por cable/streaming'],
-                'alimentacion': ['Mercado semanal', 'Carnes y pescados', 'Frutas y verduras', 'Panadería', 'Tienda de barrio', 'Domicilios'],
-                'transporte': ['Transporte público', 'Gasolina', 'SOAT', 'Revisión técnico-mecánica', 'Mantenimiento vehículo', 'Parqueadero', 'Peajes', 'Uber/Taxi'],
-                'educacion': ['Pensión escolar', 'Universidad', 'Útiles escolares', 'Uniformes', 'Transporte escolar', 'Cursos/academias', 'Libros'],
-                'salud': ['Medicina prepagada', 'Consultas médicas', 'Medicamentos', 'Odontología', 'Exámenes', 'Óptica', 'EPS copagos'],
-                'vestuario': ['Ropa adultos', 'Ropa niños', 'Calzado', 'Ropa interior', 'Accesorios'],
-                'cuidado_personal': ['Peluquería/barbería', 'Productos de aseo', 'Cosméticos', 'Gym/deporte'],
-                'entretenimiento': ['Restaurantes', 'Cine', 'Paseos/turismo', 'Eventos/conciertos', 'Parques de diversiones', 'Streaming'],
-                'deudas': ['Préstamos bancarios', 'Créditos libre inversión', 'Préstamos familiares', 'Gota a gota'],
-                'seguros': ['Seguro de vida', 'Seguro hogar', 'Seguro vehículo'],
-                'otros': ['Mascotas', 'Regalos', 'Donaciones', 'Imprevistos']
-            },
-            ingreso: {
-                'salario': ['Salario principal', 'Horas extras', 'Bonificaciones', 'Prima', 'Cesantías'],
-                'negocio': ['Ventas', 'Servicios profesionales', 'Comisiones', 'Arriendos'],
-                'inversiones': ['Dividendos', 'Intereses', 'Ganancias de capital'],
-                'otros': ['Subsidios', 'Pensión', 'Regalos']
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                document.getElementById('connectionStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> En línea';
+                initListeners();
+            } else {
+                document.getElementById('connectionStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Desconectado';
+                signInAnonymously(auth).catch(console.error);
             }
-        };
-
-        // --- UI UTILS ---
-        const formatCOP = (val) => '$' + Math.round(val).toLocaleString('es-CO');
-        const showToast = (msg) => {
-            const div = document.createElement('div'); div.className = 'toast'; div.innerHTML = msg;
-            document.getElementById('toastContainer').appendChild(div);
-            setTimeout(() => div.remove(), 3000);
-        };
-        const switchTab = (id, el) => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-'+id).classList.add('active');
-            el.classList.add('active');
-            if(id === 'estadisticas') updateStatistics();
-        };
-
-        // --- CARDS LOGIC (CRUD + Seeding) ---
-        function openCardModal(id = null) {
-            document.getElementById('cardForm').reset();
-            document.getElementById('cardId').value = '';
-            if(id) {
-                const c = cards.find(x => x.id === id);
-                document.getElementById('cardId').value = c.id;
-                document.getElementById('cardName').value = c.name;
-                document.getElementById('cardBank').value = c.bank;
-                document.getElementById('cardLimit').value = c.limit;
-                document.getElementById('cardInitialDebt').value = c.initialDebt;
-                document.getElementById('cardColor').value = c.color;
-            }
-            document.getElementById('cardModal').style.display = 'flex';
-        }
-        function closeCardModal() { document.getElementById('cardModal').style.display = 'none'; }
-
-        document.getElementById('cardForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('cardId').value;
-            const data = {
-                name: document.getElementById('cardName').value,
-                bank: document.getElementById('cardBank').value,
-                limit: parseFloat(document.getElementById('cardLimit').value),
-                initialDebt: parseFloat(document.getElementById('cardInitialDebt').value),
-                color: document.getElementById('cardColor').value
-            };
-
-            try {
-                if(id) await db.collection('cards').doc(id).update(data);
-                else await db.collection('cards').add(data);
-                showToast('Tarjeta guardada');
-                closeCardModal();
-                loadCards();
-            } catch(err) { console.error(err); alert('Error'); }
         });
 
-        async function loadCards() {
-            try {
-                const snap = await db.collection('cards').get();
-                
-                // --- AUTO-SEEDING IF EMPTY ---
-                if(snap.empty) {
-                    console.log("Base de datos de tarjetas vacía. Creando defaults...");
-                    const batch = db.batch();
-                    defaultCards.forEach(dc => {
-                        const ref = db.collection('cards').doc();
-                        batch.set(ref, dc);
-                    });
-                    await batch.commit();
-                    // Recargar después de crear
-                    const newSnap = await db.collection('cards').get();
-                    cards = newSnap.docs.map(d => ({id: d.id, ...d.data()}));
-                } else {
-                    cards = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                }
-
+        function initListeners() {
+            // Balances
+            onSnapshot(doc(db, 'artifacts', appId, 'users', userId, 'config', 'initial_balances'), s => {
+                if(s.exists()) initialBalances = s.data();
+                recalc();
+            });
+            // Cards
+            onSnapshot(collection(db, 'artifacts', appId, 'users', userId, 'cards'), s => {
+                cards = s.docs.map(d => ({id: d.id, ...d.data()}));
                 renderCards();
-                updateCardSelects();
-                calculateData(); 
-            } catch (e) { console.error("Error cargando tarjetas", e); }
+                recalc();
+            });
+            // Transactions (Sorted in client to avoid index requirement on ephemeral env)
+            onSnapshot(collection(db, 'artifacts', appId, 'users', userId, 'transactions'), s => {
+                let raw = s.docs.map(d => ({id: d.id, ...d.data()}));
+                raw.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // Sort desc
+                transactions = raw;
+                document.getElementById('tx-count').innerText = `${transactions.length} regs`;
+                renderHistory();
+                recalc();
+            });
         }
 
+        // --- CORE LOGIC ---
+        function recalc() {
+            let bal = { ...initialBalances };
+            let debts = {};
+            let expensesByCat = {};
+            let income=0, expense=0;
+
+            // Init debt map
+            cards.forEach(c => debts[c.id] = c.initialDebt || 0);
+
+            // Process Transactions
+            transactions.forEach(t => {
+                const m = parseFloat(t.monto) || 0;
+                const method = t.metodo || t.metodoPago;
+                
+                if (t.tipo === 'ingreso') {
+                    income += m;
+                    if(bal[method] !== undefined) bal[method] += m;
+                }
+                else if (t.tipo === 'gasto') {
+                    expense += m;
+                    if(t.categoria) expensesByCat[t.categoria] = (expensesByCat[t.categoria] || 0) + m;
+
+                    if (method === 'credito') {
+                        // Find card by ID or Name (Legacy support)
+                        let c = cards.find(c => c.id === t.cardId) || cards.find(c => c.name === t.tarjetaCredito);
+                        if(c) debts[c.id] = (debts[c.id] || 0) + m;
+                    } else {
+                        if(bal[method] !== undefined) bal[method] -= m;
+                    }
+                }
+                else if (t.tipo === 'transferencia') {
+                    if(bal[method] !== undefined) bal[method] -= m;
+                    
+                    if (t.metodoDestino === 'credito') {
+                        let c = cards.find(c => c.id === t.cardDestId) || cards.find(c => c.name === t.tarjetaDestino);
+                        if(c) debts[c.id] = (debts[c.id] || 0) - m;
+                    } else {
+                         if(bal[t.metodoDestino] !== undefined) bal[t.metodoDestino] += m;
+                    }
+                }
+            });
+
+            // Update UI
+            updateText('dash-deb', bal.debito);
+            updateText('dash-efe', bal.efectivo);
+            updateText('saldoDebito', bal.debito); // Legacy tab
+            updateText('saldoEfectivo', bal.efectivo);
+            updateText('saldoNequi', bal.nequi);
+            updateText('saldoTotal', bal.debito + bal.efectivo + bal.nequi);
+            updateText('dash-liquid', bal.debito + bal.efectivo + bal.nequi);
+            
+            const totalDebt = Object.values(debts).reduce((a,b) => a+b, 0);
+            const totalLimit = cards.reduce((a,b) => a+(b.limit||0), 0);
+            updateText('dash-debt', totalDebt);
+            updateText('dash-limit', totalLimit - totalDebt);
+            updateText('dash-flow', income - expense);
+
+            // Update individual card UI debt
+            cards.forEach(c => {
+                const el = document.getElementById(`debt-${c.id}`);
+                const prog = document.getElementById(`prog-${c.id}`);
+                const avail = document.getElementById(`avail-${c.id}`);
+                if(el) {
+                    const d = debts[c.id] || 0;
+                    el.innerText = formatCOP(d);
+                    if(avail) avail.innerText = formatCOP(c.limit - d);
+                    if(prog) prog.style.width = `${Math.min(100, (d/c.limit)*100)}%`;
+                }
+            });
+
+            renderChart(expensesByCat);
+        }
+
+        // --- RENDERING ---
         function renderCards() {
-            const container = document.getElementById('cardsContainer');
+            const container = document.getElementById('cards-container');
             container.innerHTML = '';
             cards.forEach(c => {
-                const deudaActual = (c.currentDebt || 0);
-                const disponible = c.limit - deudaActual;
-                const porcentaje = c.limit > 0 ? Math.min(100, (deudaActual / c.limit) * 100) : 0;
-                const isYellow = c.color.toLowerCase() === '#ffd700';
-                const textColor = isYellow ? '#333' : '#fff';
-
                 const div = document.createElement('div');
-                div.className = 'credit-card-visual';
-                div.style.background = c.color.includes('gradient') ? c.color : `linear-gradient(135deg, ${c.color} 0%, #333 100%)`;
-                div.style.color = textColor;
+                const isAddi = c.name.toLowerCase().includes('addi');
+                div.className = `relative h-48 rounded-2xl p-5 text-white shadow-lg overflow-hidden transition transform hover:-translate-y-1 group`;
+                div.style.background = c.color.includes('#') ? `linear-gradient(135deg, ${c.color}, #1f2937)` : c.color;
                 
                 div.innerHTML = `
-                    <button class="btn-card-action" onclick="openCardModal('${c.id}')"><i class="fas fa-edit"></i></button>
-                    <div class="card-top">
-                        <div class="card-chip"></div>
-                        <div class="card-brand">${c.bank}</div>
+                    <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="window.editCard('${c.id}')" class="bg-white/20 p-1.5 rounded-full hover:bg-white/40"><i class="ph-bold ph-pencil-simple"></i></button>
+                        <button onclick="window.deleteCard('${c.id}')" class="bg-white/20 p-1.5 rounded-full hover:bg-red-500/80"><i class="ph-bold ph-trash"></i></button>
                     </div>
-                    <div class="card-middle">${c.name}</div>
-                    <div class="card-bottom">
-                        <div class="card-stat-group">
-                            <span class="card-label" style="color:${textColor}">Deuda</span>
-                            <span class="card-val">${formatCOP(deudaActual)}</span>
-                        </div>
-                        <div class="card-stat-group" style="text-align:right;">
-                            <span class="card-label" style="color:${textColor}">Disponible</span>
-                            <span class="card-val">${formatCOP(disponible)}</span>
-                        </div>
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-10 h-6 bg-yellow-300/80 rounded ${isAddi ? 'opacity-0' : ''}"></div>
+                        <span class="font-bold italic opacity-80 text-sm">${c.bank || 'Credito'}</span>
                     </div>
-                    <div class="card-progress-bg"><div class="card-progress-fill" style="width:${porcentaje}%; background:${textColor}"></div></div>
+                    <div class="mb-4">
+                        <h3 class="text-lg font-mono tracking-widest truncate">${c.name}</h3>
+                        ${isAddi ? '<span class="text-[10px] bg-white/20 px-2 py-0.5 rounded text-green-200">0% interés ≤3 cuotas</span>' : ''}
+                    </div>
+                    <div class="flex justify-between items-end text-sm mt-auto">
+                        <div><p class="text-[10px] uppercase opacity-70">Deuda</p><p class="font-bold text-lg" id="debt-${c.id}">$0</p></div>
+                        <div class="text-right"><p class="text-[10px] uppercase opacity-70">Disponible</p><p class="font-medium" id="avail-${c.id}">$0</p></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1.5 bg-black/20"><div id="prog-${c.id}" class="h-full bg-white/90 transition-all duration-500" style="width:0%"></div></div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function updateCardSelects() {
-            const opts = '<option value="">Seleccione...</option>' + cards.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            document.getElementById('tarjetaOrigen').innerHTML = opts;
-            document.getElementById('tarjetaDestino').innerHTML = opts;
-        }
-
-        // --- TRANSACTION FORM LOGIC ---
-        document.getElementById('fecha').valueAsDate = new Date();
-
-        function handleTipoChange() {
-            const t = document.getElementById('tipo').value;
-            const cats = document.getElementById('categoria');
-            
-            document.getElementById('divMetodoDestino').style.display = t === 'transferencia' ? 'block' : 'none';
-            document.getElementById('divTarjetaDestino').style.display = 'none';
-            
-            cats.innerHTML = '<option value="">Seleccione...</option>';
-            if(categorias[t]) {
-                for(let k in categorias[t]) {
-                    cats.innerHTML += `<option value="${k}">${k.replace(/_/g,' ').toUpperCase()}</option>`;
-                }
-            } else if (t === 'transferencia') {
-                cats.innerHTML = '<option value="transferencia">Transferencia</option>';
-            }
-            handleMetodoChange();
-        }
-
-        function handleMetodoChange() {
-            const m = document.getElementById('metodoPago').value;
-            const t = document.getElementById('tipo').value;
-            
-            const isCred = m === 'credito';
-            document.getElementById('divTarjetaOrigen').style.display = isCred ? 'block' : 'none';
-            document.getElementById('tarjetaOrigen').required = isCred;
-            
-            const showCuotas = isCred && t === 'gasto';
-            document.getElementById('divCuotas').style.display = showCuotas ? 'block' : 'none';
-            
-            calcularCuota();
-        }
-
-        function handleDestinoChange() {
-            const m = document.getElementById('metodoDestino').value;
-            const isCred = m === 'credito';
-            document.getElementById('divTarjetaDestino').style.display = isCred ? 'block' : 'none';
-            document.getElementById('tarjetaDestino').required = isCred;
-        }
-
-        function cargarSubcategorias() {
-            const t = document.getElementById('tipo').value;
-            const c = document.getElementById('categoria').value;
-            const sub = document.getElementById('subcategoria');
-            
-            if(categorias[t] && categorias[t][c]) {
-                document.getElementById('divSubcat').style.display = 'block';
-                sub.innerHTML = '<option value="">Seleccione...</option>' + categorias[t][c].map(x => `<option value="${x}">${x}</option>`).join('');
-            } else {
-                document.getElementById('divSubcat').style.display = 'none';
-            }
-        }
-
-        function calcularCuota() {
-            const div = document.getElementById('infoCuota');
-            const show = document.getElementById('divCuotas').style.display === 'block';
-            if(!show) { div.style.display = 'none'; return; }
-
-            const monto = parseFloat(document.getElementById('monto').value) || 0;
-            const cuotas = parseInt(document.getElementById('cuotas').value);
-            
-            if(monto > 0) {
-                let valCuota = 0, total = 0;
-                if (cuotas === 1) {
-                    valCuota = monto; total = monto;
-                } else {
-                    const i = 0.019; // 1.9% MV
-                    valCuota = monto * (i * Math.pow(1+i, cuotas)) / (Math.pow(1+i, cuotas) - 1);
-                    total = valCuota * cuotas;
-                }
-                document.getElementById('valCuota').innerText = formatCOP(valCuota);
-                document.getElementById('valTotal').innerText = formatCOP(total);
-                div.style.display = 'block';
-            } else {
-                div.style.display = 'none';
-            }
-        }
-
-        // --- GESTIÓN DE EDICIÓN DE TRANSACCIÓN ---
-        function editTx(id) {
-            const t = transactions.find(x => x.id === id);
-            if(!t) return;
-
-            document.getElementById('editingId').value = id;
-            document.getElementById('tipo').value = t.tipo;
-            handleTipoChange(); // Update UI categories
-
-            document.getElementById('metodoPago').value = t.metodo || t.metodoPago;
-            handleMetodoChange(); // Update UI fields
-
-            // Set Tarjeta Origen if exists
-            if(t.cardId) document.getElementById('tarjetaOrigen').value = t.cardId;
-            else if(t.tarjetaCredito) {
-                // Try legacy match
-                const c = cards.find(c => c.name === t.tarjetaCredito);
-                if(c) document.getElementById('tarjetaOrigen').value = c.id;
-            }
-
-            // Set Cuotas
-            if(t.cuotas) document.getElementById('cuotas').value = t.cuotas;
-
-            // Set Destino logic
-            if(t.tipo === 'transferencia') {
-                document.getElementById('metodoDestino').value = t.metodoDestino;
-                handleDestinoChange();
-                if(t.cardDestId) document.getElementById('tarjetaDestino').value = t.cardDestId;
-            }
-
-            document.getElementById('monto').value = t.monto;
-            document.getElementById('categoria').value = t.categoria;
-            cargarSubcategorias();
-            if(t.subcategoria) document.getElementById('subcategoria').value = t.subcategoria;
-            
-            document.getElementById('miembro').value = t.miembro;
-            document.getElementById('descripcion').value = t.descripcion;
-            document.getElementById('fecha').value = t.fecha;
-
-            // Change Button State
-            document.getElementById('formTitle').innerText = "Editar Transacción";
-            document.getElementById('btnGuardar').innerText = "Actualizar Transacción";
-            document.getElementById('btnCancelarEdicion').style.display = 'block';
-
-            // Go to tab
-            switchTab('transacciones', document.querySelectorAll('.tab-button')[2]);
-        }
-
-        function cancelEdit() {
-            document.getElementById('transactionForm').reset();
-            document.getElementById('editingId').value = '';
-            document.getElementById('formTitle').innerText = "Registrar Movimiento";
-            document.getElementById('btnGuardar').innerText = "Guardar Transacción";
-            document.getElementById('btnCancelarEdicion').style.display = 'none';
-            document.getElementById('fecha').valueAsDate = new Date();
-            handleTipoChange();
-        }
-
-        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnGuardar');
-            const isEdit = document.getElementById('editingId').value !== '';
-            btn.disabled = true; btn.textContent = 'Procesando...';
-            
-            const data = {
-                tipo: document.getElementById('tipo').value,
-                metodo: document.getElementById('metodoPago').value,
-                monto: parseFloat(document.getElementById('monto').value),
-                categoria: document.getElementById('categoria').value,
-                subcategoria: document.getElementById('subcategoria').value || '',
-                miembro: document.getElementById('miembro').value,
-                descripcion: document.getElementById('descripcion').value,
-                fecha: document.getElementById('fecha').value,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            if(data.metodo === 'credito') {
-                data.cardId = document.getElementById('tarjetaOrigen').value;
-                if(data.tipo === 'gasto') data.cuotas = parseInt(document.getElementById('cuotas').value);
-            }
-            
-            if(data.tipo === 'transferencia') {
-                data.metodoDestino = document.getElementById('metodoDestino').value;
-                if(data.metodoDestino === 'credito') data.cardDestId = document.getElementById('tarjetaDestino').value;
-            }
-
-            try {
-                if(isEdit) {
-                    await db.collection('transactions').doc(document.getElementById('editingId').value).update(data);
-                    showToast('Actualizado correctamente');
-                    cancelEdit();
-                } else {
-                    await db.collection('transactions').add(data);
-                    showToast('Guardado correctamente');
-                    document.getElementById('transactionForm').reset();
-                    document.getElementById('fecha').valueAsDate = new Date();
-                    handleTipoChange();
-                }
-                
-                loadData();
-            } catch(x) { console.error(x); alert('Error'); }
-            btn.disabled = false; btn.textContent = isEdit ? 'Actualizar Transacción' : 'Guardar Transacción';
-        });
-
-        // --- DATA LOADING & CALCS ---
-        async function loadData() {
-            const snap = await db.collection('transactions').orderBy('fecha', 'desc').limit(200).get();
-            transactions = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            
-            if(cards.length === 0) await loadCards();
-            else calculateData();
-            
-            renderTxTable();
-            if(document.getElementById('tab-estadisticas').classList.contains('active')) updateStatistics();
-        }
-
-        function calculateData() {
-            let sDeb = 0, sEfe = 0, sNeq = 0;
-            let gastosMes = {};
-            
-            cards.forEach(c => c.currentDebt = c.initialDebt || 0);
-
-            const now = new Date();
-            const cm = now.getMonth(), cy = now.getFullYear();
-
+        function renderHistory() {
+            const tbody = document.getElementById('tx-table-body');
+            tbody.innerHTML = '';
             transactions.forEach(t => {
-                const m = parseFloat(t.monto);
-                const d = new Date(t.fecha + 'T00:00:00');
-                const isMes = d.getMonth() === cm && d.getFullYear() === cy;
+                const row = document.createElement('tr');
+                const isIngreso = t.tipo === 'ingreso';
+                row.className = 'hover:bg-gray-50 transition-colors group border-b border-gray-50';
                 
-                const tTipo = t.tipo;
-                const tMetodo = t.metodo || t.metodoPago; 
-                const tMetDest = t.metodoDestino;
-                const tCardId = t.cardId; 
-                const tLegacyCard = t.tarjetaCredito;
-
-                if(tTipo === 'ingreso') {
-                    if(tMetodo === 'debito') sDeb += m;
-                    else if(tMetodo === 'efectivo') sEfe += m;
-                    else if(tMetodo === 'nequi') sNeq += m;
-                }
-                else if(tTipo === 'gasto') {
-                    if(tMetodo === 'credito') {
-                        let card = null;
-                        if(tCardId) card = cards.find(x => x.id === tCardId);
-                        else if(tLegacyCard) card = cards.find(x => x.name === tLegacyCard);
-                        if(card) card.currentDebt += m;
-                    } else {
-                        if(tMetodo === 'debito') sDeb -= m;
-                        else if(tMetodo === 'efectivo') sEfe -= m;
-                        else if(tMetodo === 'nequi') sNeq -= m;
-                    }
-                    if(isMes) gastosMes[t.categoria] = (gastosMes[t.categoria] || 0) + m;
-                }
-                else if(tTipo === 'transferencia') {
-                    if(tMetodo === 'debito') sDeb -= m;
-                    else if(tMetodo === 'efectivo') sEfe -= m;
-                    else if(tMetodo === 'nequi') sNeq -= m;
-                    
-                    if(tMetDest === 'credito') {
-                        let cardDest = null;
-                        if(t.cardDestId) cardDest = cards.find(x => x.id === t.cardDestId);
-                        else if(t.tarjetaDestino) cardDest = cards.find(x => x.name === t.tarjetaDestino);
-                        if(cardDest) cardDest.currentDebt -= m;
-                    } else {
-                        if(tMetDest === 'debito') sDeb += m;
-                        else if(tMetDest === 'efectivo') sEfe += m;
-                        else if(tMetDest === 'nequi') sNeq += m;
-                    }
-                }
-            });
-
-            document.getElementById('saldoDebito').innerText = formatCOP(sDeb);
-            document.getElementById('saldoEfectivo').innerText = formatCOP(sEfe);
-            document.getElementById('saldoNequi').innerText = formatCOP(sNeq);
-            document.getElementById('saldoTotal').innerText = formatCOP(sDeb+sEfe+sNeq);
-
-            renderCards();
-            
-            const totalDeuda = cards.reduce((acc, c) => acc + (c.currentDebt||0), 0);
-            const totalCupo = cards.reduce((acc, c) => acc + (c.limit||0), 0);
-            document.getElementById('deudaTotalTarjetas').innerText = formatCOP(totalDeuda);
-            document.getElementById('cupoTotal').innerText = formatCOP(totalCupo - totalDeuda);
-
-            const ctx = document.getElementById('chartDashboard');
-            if(charts.dash) charts.dash.destroy();
-            charts.dash = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    labels: Object.keys(gastosMes), 
-                    datasets: [{ data: Object.values(gastosMes), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF'] }] 
-                },
-                options: { responsive:true, maintainAspectRatio:false }
-            });
-        }
-
-        function renderTxTable() {
-            const b = document.getElementById('txList'); b.innerHTML = '';
-            transactions.forEach(t => {
-                const tMetodo = t.metodo || t.metodoPago || '?';
-                let metodoStr = `<span class="badge-method m-${tMetodo}">${tMetodo.toUpperCase()}</span>`;
+                let methodBadge = `<span class="px-2 py-1 rounded text-xs font-bold ${t.metodo==='credito'?'bg-purple-100 text-purple-700':'bg-gray-100 text-gray-600'}">${t.metodo||t.metodoPago}</span>`;
                 
-                if(tMetodo === 'credito') {
-                    let cName = 'Desconocida';
-                    if(t.cardId) {
-                        const c = cards.find(x => x.id === t.cardId);
-                        if(c) cName = c.name;
-                    } else if (t.tarjetaCredito) {
-                        cName = t.tarjetaCredito;
-                    }
-                    metodoStr = `<span class="badge-method m-credito">💳 ${cName}</span>`;
-                    if(t.cuotas) metodoStr += ` <small>(${t.cuotas}x)</small>`;
-                }
-
-                const r = `<tr>
-                    <td>${t.fecha}</td>
-                    <td style="font-weight:bold;">${t.tipo.toUpperCase()}</td>
-                    <td>${metodoStr}</td>
-                    <td>${t.categoria} <br><small style="color:#666">${t.descripcion}</small></td>
-                    <td style="font-weight:bold;">${formatCOP(t.monto)}</td>
-                    <td>
-                        <button class="btn-info" onclick="editTx('${t.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-danger" onclick="delTx('${t.id}')"><i class="fas fa-trash"></i></button>
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-500">${t.fecha}</td>
+                    <td class="px-4 py-3"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${isIngreso?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${t.tipo}</span></td>
+                    <td class="px-4 py-3"><div class="font-medium text-gray-900">${t.categoria}</div><div class="text-xs text-gray-400">${t.descripcion}</div></td>
+                    <td class="px-4 py-3">${methodBadge}</td>
+                    <td class="px-4 py-3 text-right font-bold ${isIngreso?'text-green-600':'text-gray-700'}">${formatCOP(t.monto)}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="window.editTx('${t.id}')" class="text-blue-400 hover:text-blue-600 mx-1"><i class="ph-bold ph-pencil-simple"></i></button>
+                        <button onclick="window.deleteTx('${t.id}')" class="text-red-300 hover:text-red-500 mx-1"><i class="ph-bold ph-trash"></i></button>
                     </td>
-                </tr>`;
-                b.innerHTML += r;
+                `;
+                tbody.appendChild(row);
             });
         }
 
-        window.delTx = async (id) => {
-            if(confirm('Eliminar?')) {
-                await db.collection('transactions').doc(id).delete();
-                loadData();
+        function renderChart(data) {
+            const ctx = document.getElementById('mainChart');
+            if(!ctx) return;
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{ data: Object.values(data), backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true } } } }
+            });
+        }
+
+        // --- UI HELPERS ---
+        window.formatCOP = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
+        const updateText = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = window.formatCOP(val); };
+        
+        // --- INTERACTION HANDLERS ---
+        window.switchView = (view) => {
+            document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('text-primary', 'active'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            
+            // Desktop logic
+            document.getElementById('tab-dashboard').style.display = view === 'dashboard' ? 'block' : 'none';
+            document.getElementById('tab-tarjetas').style.display = view === 'cards' ? 'block' : 'none';
+            document.getElementById('tab-historial').style.display = view === 'history' ? 'block' : 'none';
+            document.getElementById('tab-transacciones').style.display = 'none'; // Modal only
+            document.getElementById('tab-estadisticas').style.display = 'none';
+        };
+
+        // --- MODAL LOGIC ---
+        window.openModal = (id) => {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+            if(id === 'transactionModal') {
+                // Populate Selects
+                const cardSel = document.getElementById('txCard');
+                cardSel.innerHTML = '<option value="">Seleccione...</option>' + cards.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                const destCardSel = document.getElementById('txDestCard');
+                destCardSel.innerHTML = cardSel.innerHTML;
+                // Default to gasto
+                window.setTxType('gasto');
+                document.getElementById('txDate').valueAsDate = new Date();
+            }
+            if(id === 'balanceModal') {
+                document.getElementById('balDebito').value = initialBalances.debito;
+                document.getElementById('balEfectivo').value = initialBalances.efectivo;
+                document.getElementById('balNequi').value = initialBalances.nequi;
+            }
+        };
+        window.closeModal = (id) => {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+            // Reset forms
+            if(id === 'transactionModal') {
+                document.getElementById('txForm').reset();
+                document.getElementById('txId').value = '';
             }
         };
 
-        function updateStatistics() {
-            let i=0, g=0;
-            let labels = [];
-            let dataIncome = [];
-            let dataExpense = [];
+        // --- FORM HANDLERS ---
+        window.setTxType = (type) => {
+            document.getElementById('txType').value = type;
+            document.querySelectorAll('.type-btn').forEach(b => {
+                if(b.dataset.type === type) { b.classList.add('bg-white', 'text-primary', 'shadow-sm'); } 
+                else { b.classList.remove('bg-white', 'text-primary', 'shadow-sm'); b.classList.add('text-gray-500'); }
+            });
+            // Update Categories
+            const catSel = document.getElementById('txCategory');
+            catSel.innerHTML = '<option value="">Seleccione...</option>';
+            (CATEGORIES[type] || []).forEach(c => catSel.innerHTML += `<option>${c}</option>`);
             
-            // Agrupar por mes
-            let monthStats = {};
-
-            transactions.forEach(t => {
-                if(t.tipo === 'ingreso' || t.tipo === 'gasto') {
-                    let month = t.fecha.substring(0, 7); // YYYY-MM
-                    if(!monthStats[month]) monthStats[month] = { i: 0, g: 0 };
-                    
-                    if(t.tipo === 'ingreso') {
-                        i += t.monto;
-                        monthStats[month].i += t.monto;
-                    }
-                    if(t.tipo === 'gasto') {
-                        g += t.monto;
-                        monthStats[month].g += t.monto;
-                    }
-                }
-            });
-
-            // Preparar datos para Chart
-            let sortedMonths = Object.keys(monthStats).sort();
-            sortedMonths.forEach(m => {
-                labels.push(m);
-                dataIncome.push(monthStats[m].i);
-                dataExpense.push(monthStats[m].g);
-            });
-
-            document.getElementById('stIngresos').innerText = formatCOP(i);
-            document.getElementById('stGastos').innerText = formatCOP(g);
-            document.getElementById('stBalance').innerText = formatCOP(i-g);
-
-            // Render Chart Stats
-            const ctx = document.getElementById('chartStats');
-            if(charts.advStats) charts.advStats.destroy();
+            // Toggle Fields
+            document.getElementById('creditFields').classList.add('hidden');
+            document.getElementById('transferFields').classList.add('hidden');
             
-            charts.advStats = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Ingresos', data: dataIncome, backgroundColor: '#4ade80' },
-                        { label: 'Gastos', data: dataExpense, backgroundColor: '#f87171' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+            if(type === 'transferencia') document.getElementById('transferFields').classList.remove('hidden');
+            else window.handleMethodChange();
+        };
 
-        // Init
-        loadCards();
-        loadData();
-        handleTipoChange();
+        window.handleMethodChange = () => {
+            const m = document.getElementById('txMethod').value;
+            const type = document.getElementById('txType').value;
+            const isCred = m === 'credito';
+            
+            if(isCred) document.getElementById('creditFields').classList.remove('hidden');
+            else document.getElementById('creditFields').classList.add('hidden');
 
+            // Show installments only for expense + credit
+            const instDiv = document.getElementById('installmentsField');
+            if(isCred && type === 'gasto') instDiv.classList.remove('hidden');
+            else instDiv.classList.add('hidden');
+            
+            window.calculateInstallment();
+        };
+
+        window.handleDestChange = () => {
+            const m = document.getElementById('txDestMethod').value;
+            const cardSel = document.getElementById('txDestCard');
+            if(m === 'credito') cardSel.classList.remove('hidden');
+            else cardSel.classList.add('hidden');
+        };
+
+        window.calculateInstallment = () => {
+            const m = parseFloat(document.getElementById('txAmount').value) || 0;
+            const c = parseInt(document.getElementById('txInstallments').value);
+            const cardId = document.getElementById('txCard').value;
+            const card = cards.find(x => x.id === cardId);
+            const isAddi = card && card.name.toLowerCase().includes('addi');
+            
+            if (m > 0) {
+                let rate = (isAddi && c <= 3) ? 0 : 0.019;
+                let val = 0;
+                if (c === 1 || rate === 0) val = m / c;
+                else val = m * (rate * Math.pow(1+rate, c)) / (Math.pow(1+rate, c) - 1);
+                
+                document.getElementById('txInstallmentVal').innerText = formatCOP(val);
+                document.getElementById('txInterestLabel').innerText = rate === 0 ? 'Sin interés' : '1.9% M.V.';
+            }
+        };
+
+        // --- SAVE & DELETE ACTIONS ---
+        document.getElementById('balanceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!userId) return;
+            const d = {
+                debito: parseFloat(document.getElementById('balDebito').value)||0,
+                efectivo: parseFloat(document.getElementById('balEfectivo').value)||0,
+                nequi: parseFloat(document.getElementById('balNequi').value)||0
+            };
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'config', 'initial_balances'), d);
+            closeModal('balanceModal');
+        });
+
+        document.getElementById('cardForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('cardFormId').value;
+            const data = {
+                name: document.getElementById('cardFormName').value,
+                bank: document.getElementById('cardFormBank').value,
+                limit: parseFloat(document.getElementById('cardFormLimit').value),
+                initialDebt: parseFloat(document.getElementById('cardFormDebt').value),
+                color: document.getElementById('cardFormColor').value
+            };
+            const col = collection(db, 'artifacts', appId, 'users', userId, 'cards');
+            if(id) await updateDoc(doc(col, id), data); else await addDoc(col, data);
+            closeModal('cardModal');
+        });
+
+        document.getElementById('txForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('txId').value;
+            const data = {
+                tipo: document.getElementById('txType').value,
+                metodo: document.getElementById('txMethod').value,
+                monto: parseFloat(document.getElementById('txAmount').value),
+                categoria: document.getElementById('txCategory').value,
+                descripcion: document.getElementById('txDesc').value,
+                fecha: document.getElementById('txDate').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            if(data.metodo === 'credito') {
+                data.cardId = document.getElementById('txCard').value;
+                if(data.tipo === 'gasto') data.cuotas = parseInt(document.getElementById('txInstallments').value);
+            }
+            if(data.tipo === 'transferencia') {
+                data.metodoDestino = document.getElementById('txDestMethod').value;
+                if(data.metodoDestino === 'credito') data.cardDestId = document.getElementById('txDestCard').value;
+            }
+
+            const col = collection(db, 'artifacts', appId, 'users', userId, 'transactions');
+            if(id) await updateDoc(doc(col, id), data); else await addDoc(col, data);
+            closeModal('transactionModal');
+        });
+
+        window.deleteTx = async(id) => { if(confirm('¿Borrar movimiento?')) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'transactions', id)); };
+        window.deleteCard = async(id) => { if(confirm('¿Borrar tarjeta?')) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'cards', id)); };
+
+        // --- EDIT LOADERS ---
+        window.editCard = (id) => {
+            const c = cards.find(x => x.id === id);
+            if(!c) return;
+            document.getElementById('cardFormId').value = c.id;
+            document.getElementById('cardFormName').value = c.name;
+            document.getElementById('cardFormBank').value = c.bank;
+            document.getElementById('cardFormLimit').value = c.limit;
+            document.getElementById('cardFormDebt').value = c.initialDebt;
+            document.getElementById('cardFormColor').value = c.color;
+            openModal('cardModal');
+        };
+
+        window.editTx = (id) => {
+            const t = transactions.find(x => x.id === id);
+            if(!t) return;
+            openModal('transactionModal');
+            // Pre-fill logic
+            window.setTxType(t.tipo);
+            document.getElementById('txId').value = t.id;
+            document.getElementById('txMethod').value = t.metodo || t.metodoPago;
+            window.handleMethodChange();
+            if(t.cardId) document.getElementById('txCard').value = t.cardId;
+            if(t.cuotas) document.getElementById('txInstallments').value = t.cuotas;
+            if(t.tipo === 'transferencia') {
+                document.getElementById('txDestMethod').value = t.metodoDestino;
+                window.handleDestChange();
+                if(t.cardDestId) document.getElementById('txDestCard').value = t.cardDestId;
+            }
+            document.getElementById('txAmount').value = t.monto;
+            document.getElementById('txCategory').value = t.categoria;
+            document.getElementById('txDesc').value = t.descripcion;
+            document.getElementById('txDate').value = t.fecha;
+            window.calculateInstallment();
+        };
+        
+        // Default View
+        window.switchView('dashboard');
     </script>
 </body>
 </html>
