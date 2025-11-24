@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Financiero - Addi Especial</title>
+    <title>CRM Financiero - Control Total Tarjetas</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         :root {
             --primary: #667eea;
+            --primary-dark: #5a67d8;
             --secondary: #764ba2;
+            --accent: #f093fb;
             --success: #4ade80;
             --danger: #dc2626;
             --warning: #fbbf24;
@@ -17,6 +19,7 @@
             --light: #f8fafc;
             --dark: #1e293b;
             --text: #374151;
+            --text-muted: #6b7280;
             --white: #ffffff;
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
             --border-radius: 12px;
@@ -26,7 +29,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             padding: 20px;
             min-height: 100vh;
@@ -44,101 +47,105 @@
             animation: fadeIn 0.5s ease-out;
         }
 
-        h1, h2 { color: var(--dark); margin-bottom: 15px; }
+        h1, h2, h3 { color: var(--dark); margin-bottom: 15px; }
         h1 { font-size: 2.5rem; text-align: center; }
-        .subtitle { text-align: center; color: #6b7280; }
+        .subtitle { text-align: center; color: var(--text-muted); }
 
         /* Tabs */
         .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
         .tab-button {
             padding: 12px 25px; border: none; border-radius: var(--border-radius);
-            font-weight: 600; cursor: pointer; background: var(--white); color: var(--text); 
-            transition: 0.3s; display: flex; align-items: center; gap: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            background: var(--white); color: var(--text); border: 1px solid var(--light);
+            transition: var(--transition); display: flex; align-items: center; gap: 8px;
         }
-        .tab-button.active { background: var(--primary); color: var(--white); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .tab-button.active {
+            background: var(--primary); color: var(--white); border-color: var(--primary);
+        }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Dashboard Stats */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px;
+        }
         .stat-card {
             background: var(--white); border-radius: var(--border-radius); padding: 25px;
-            display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); color: white;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow); color: var(--white);
         }
-        .stat-card.debito { background: linear-gradient(135deg, #4ade80, #16a34a); }
-        .stat-card.efectivo { background: linear-gradient(135deg, #60a5fa, #2563eb); }
-        .stat-card.nequi { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
-        .stat-card.total { background: linear-gradient(135deg, #fbbf24, #ea580c); }
+        .stat-card.debito { background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%); }
+        .stat-card.efectivo { background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%); }
+        .stat-card.nequi { background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); }
+        .stat-card.total { background: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%); }
+
+        .stat-info p:first-child { font-size: 0.9rem; opacity: 0.9; }
         .stat-info p:last-child { font-size: 2rem; font-weight: bold; }
         .stat-icon { font-size: 3rem; opacity: 0.5; }
 
-        /* Tarjetas Visuales */
+        /* Credit Cards Dinámicas */
         .credit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-bottom: 25px; }
         .credit-card-visual {
             border-radius: 16px; padding: 25px; color: white; position: relative; height: 220px;
             display: flex; flex-direction: column; justify-content: space-between;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3); transition: transform 0.3s; overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); transition: transform 0.3s ease;
+            background-size: cover; overflow: hidden;
         }
         .credit-card-visual:hover { transform: translateY(-5px); }
         .card-top { display: flex; justify-content: space-between; z-index: 2; }
-        .card-chip { width: 40px; height: 30px; background: linear-gradient(135deg, #e2e2e2, #a1a1a1); border-radius: 5px; }
-        .card-brand { font-weight: bold; font-style: italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .card-middle { font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; z-index: 2; margin-top: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .card-chip { width: 40px; height: 30px; background: linear-gradient(135deg, #e2e2e2 0%, #a1a1a1 100%); border-radius: 5px; }
+        .card-brand { font-weight: bold; font-style: italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .card-middle { font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; z-index: 2; margin-top: 10px; }
         .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; margin-top: auto; }
+        .card-stat-group { display: flex; flex-direction: column; }
         .card-label { font-size: 0.7rem; opacity: 0.9; text-transform: uppercase; }
-        .card-val { font-weight: bold; font-size: 1.3rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        
-        /* Botones Acción Tarjeta */
-        .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 10; opacity: 0; transition: 0.3s; }
-        .credit-card-visual:hover .card-actions { opacity: 1; }
-        .btn-icon-card {
-            background: rgba(0,0,0,0.4); color: white; border: none; border-radius: 50%;
-            width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
-        }
-        .btn-icon-card:hover { background: rgba(0,0,0,0.8); transform: scale(1.1); }
-        .btn-icon-card.delete:hover { background: #dc2626; }
-
-        .card-progress-bg { position: absolute; bottom: 0; left: 0; height: 6px; width: 100%; background: rgba(255,255,255,0.3); }
+        .card-val { font-weight: bold; font-size: 1.3rem; }
+        .card-progress-bg { position: absolute; bottom: 0; left: 0; height: 5px; width: 100%; background: rgba(255,255,255,0.3); }
         .card-progress-fill { height: 100%; background: #fff; transition: width 0.5s; }
+        .btn-card-action { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); border: none; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: none; z-index: 10; transition: 0.2s; }
+        .btn-card-action:hover { background: rgba(0,0,0,0.6); }
+        .credit-card-visual:hover .btn-card-action { display: block; }
 
         /* Forms */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group.full-width { grid-column: 1 / -1; }
         label { font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
-        input, select { padding: 12px; border: 2px solid var(--light); border-radius: 8px; font-size: 1rem; }
-        
-        /* Interest Box */
-        .interest-box {
-            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; margin-top: 10px;
-            display: none; font-size: 0.9rem; color: #1e40af; animation: fadeIn 0.3s;
-        }
-        .addi-promo {
-            background: #d1fae5; color: #065f46; border: 1px solid #34d399; padding: 10px; border-radius: 8px;
-            margin-top: 10px; display: flex; align-items: center; gap: 10px; font-weight: 600;
-        }
-
-        .btn-primary { background: var(--primary); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
-        .btn-secondary { background: #9ca3af; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; }
+        input, select { padding: 12px; border: 2px solid var(--light); border-radius: var(--border-radius); }
         
         /* Modal */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
             display: none; justify-content: center; align-items: center; z-index: 2000;
         }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; animation: slideUp 0.3s; }
+        .modal-content { background: white; padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Interest Estimator */
+        .interest-box {
+            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; margin-top: 10px;
+            display: none; font-size: 0.9rem; color: #1e40af;
+        }
+        .cuota-highlight { font-size: 1.2rem; font-weight: bold; color: var(--primary); display: block; margin: 5px 0; }
+
+        .btn-primary { background: var(--primary); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; }
+        .btn-secondary { background: var(--text-muted); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; }
+        .btn-danger { background: #fee2e2; color: #991b1b; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 5px; }
+        .btn-info { background: #dbeafe; color: #1e40af; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
         .action-row { display: flex; gap: 10px; margin-top: 20px; }
 
-        /* Tablas */
-        .table-container { overflow-x: auto; }
+        /* Tablas y Stats */
+        .chart-container { height: 300px; position: relative; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; border-bottom: 1px solid var(--light); text-align: left; }
         .badge-method { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
         .m-debito { background: #dbeafe; color: #1e40af; }
+        .m-efectivo { background: #dcfce7; color: #166534; }
+        .m-nequi { background: #f3e8ff; color: #6b21a8; }
         .m-credito { background: #fee2e2; color: #991b1b; }
+        
+        @media (max-width: 768px) { .dashboard-grid, .form-grid { grid-template-columns: 1fr; } }
         
         .toast { position: fixed; bottom: 20px; right: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 3000; border-left: 5px solid var(--success); }
     </style>
@@ -146,18 +153,18 @@
 <body>
     <div class="container">
         <div class="card">
-            <h1><i class="fas fa-wallet"></i> CRM Financiero & Addi</h1>
-            <p class="subtitle">Gestión Inteligente de Cupos, Gastos y Deudas</p>
+            <h1><i class="fas fa-wallet"></i> CRM Financiero Control Total</h1>
+            <p class="subtitle">Gestiona Gastos, Ingresos y Deudas de Tarjetas al detalle</p>
         </div>
 
-        <!-- Menú -->
+        <!-- Navigation -->
         <div class="card">
             <div class="tabs-container">
                 <button class="tab-button active" onclick="switchTab('dashboard', this)">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </button>
                 <button class="tab-button" onclick="switchTab('tarjetas', this)">
-                    <i class="fas fa-credit-card"></i> Mis Tarjetas & Addi
+                    <i class="fas fa-credit-card"></i> Mis Tarjetas
                 </button>
                 <button class="tab-button" onclick="switchTab('transacciones', this)">
                     <i class="fas fa-plus-circle"></i> Nueva Operación
@@ -174,26 +181,39 @@
         <!-- TAB: Dashboard -->
         <div id="tab-dashboard" class="tab-content active">
             <div class="dashboard-grid">
-                <div class="stat-card debito"><div class="stat-info"><p>Saldo Débito</p><p id="saldoDebito">$0</p></div><i class="fas fa-university stat-icon"></i></div>
-                <div class="stat-card efectivo"><div class="stat-info"><p>Efectivo</p><p id="saldoEfectivo">$0</p></div><i class="fas fa-money-bill-wave stat-icon"></i></div>
-                <div class="stat-card nequi"><div class="stat-info"><p>Nequi</p><p id="saldoNequi">$0</p></div><i class="fas fa-mobile-alt stat-icon"></i></div>
-                <div class="stat-card total"><div class="stat-info"><p>Liquidez Total</p><p id="saldoTotal">$0</p></div><i class="fas fa-coins stat-icon"></i></div>
+                <div class="stat-card debito">
+                    <div class="stat-info"><p>Saldo Débito</p><p id="saldoDebito">$0</p></div>
+                    <i class="fas fa-university stat-icon"></i>
+                </div>
+                <div class="stat-card efectivo">
+                    <div class="stat-info"><p>Efectivo</p><p id="saldoEfectivo">$0</p></div>
+                    <i class="fas fa-money-bill-wave stat-icon"></i>
+                </div>
+                <div class="stat-card nequi">
+                    <div class="stat-info"><p>Nequi</p><p id="saldoNequi">$0</p></div>
+                    <i class="fas fa-mobile-alt stat-icon"></i>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-info"><p>Liquidez Total</p><p id="saldoTotal">$0</p></div>
+                    <i class="fas fa-coins stat-icon"></i>
+                </div>
             </div>
             
             <div class="card">
                 <h2><i class="fas fa-bolt"></i> Estado de Deudas</h2>
                 <div class="dashboard-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
-                        <div class="stat-info"><p>Deuda Total</p><p id="deudaTotalTarjetas">$0</p></div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">
+                        <div class="stat-info"><p>Deuda Total Tarjetas</p><p id="deudaTotalTarjetas">$0</p></div>
                         <i class="fas fa-credit-card stat-icon"></i>
                     </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #4338ca);">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);">
                         <div class="stat-info"><p>Cupo Disponible Global</p><p id="cupoTotal">$0</p></div>
                         <i class="fas fa-check-circle stat-icon"></i>
                     </div>
                 </div>
-                <div style="margin-top:20px; height: 300px; position: relative;">
-                    <canvas id="chartDashboard"></canvas>
+                <div style="margin-top:20px;">
+                    <h3>Gastos del Mes por Categoría</h3>
+                    <div class="chart-container"><canvas id="chartDashboard"></canvas></div>
                 </div>
             </div>
         </div>
@@ -202,15 +222,15 @@
         <div id="tab-tarjetas" class="tab-content">
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2><i class="fas fa-credit-card"></i> Billetera de Cupos</h2>
+                    <h2><i class="fas fa-credit-card"></i> Gestión de Tarjetas</h2>
                     <button class="btn-primary" style="width:auto;" onclick="openCardModal()">
-                        <i class="fas fa-plus"></i> Nuevo Cupo/Tarjeta
+                        <i class="fas fa-plus"></i> Nueva Tarjeta
                     </button>
                 </div>
                 
                 <div id="cardsContainer" class="credit-grid">
                     <div style="text-align:center; grid-column:1/-1; padding:40px; color:#999;">
-                        <i class="fas fa-spinner fa-spin"></i> Cargando billetera...
+                        <i class="fas fa-spinner fa-spin"></i> Cargando tarjetas...
                     </div>
                 </div>
             </div>
@@ -238,23 +258,23 @@
                                 <option value="debito">💳 Débito (Bancos)</option>
                                 <option value="efectivo">💵 Efectivo</option>
                                 <option value="nequi">📱 Nequi</option>
-                                <option value="credito">💳 Crédito / Cupo Addi</option>
+                                <option value="credito">💳 Tarjeta de Crédito</option>
                             </select>
                         </div>
 
                         <!-- Selector Tarjeta Origen -->
                         <div class="form-group" id="divTarjetaOrigen" style="display:none;">
-                            <label style="color:var(--primary);">Selecciona Tarjeta o Addi</label>
-                            <select id="tarjetaOrigen" onchange="calcularCuota()">
+                            <label style="color:var(--primary);">Selecciona la Tarjeta</label>
+                            <select id="tarjetaOrigen">
                                 <!-- Se llena dinámicamente -->
                             </select>
                         </div>
 
-                        <!-- Configuración de Cuotas -->
+                        <!-- Configuración de Cuotas (Solo Gasto con Tarjeta) -->
                         <div class="form-group" id="divCuotas" style="display:none;">
                             <label>Número de Cuotas</label>
                             <select id="cuotas" onchange="calcularCuota()">
-                                <option value="1">1 Cuota (Sin interés)</option>
+                                <option value="1">1 Cuota (Sin intereses)</option>
                                 <option value="2">2 Cuotas</option>
                                 <option value="3">3 Cuotas</option>
                                 <option value="6">6 Cuotas</option>
@@ -264,41 +284,44 @@
                             </select>
                         </div>
 
-                        <!-- Destino Transferencia -->
+                        <!-- Destino para Transferencias -->
                         <div class="form-group" id="divMetodoDestino" style="display:none;">
                             <label>Destino</label>
                             <select id="metodoDestino" onchange="handleDestinoChange()">
                                 <option value="debito">💳 Débito</option>
                                 <option value="efectivo">💵 Efectivo</option>
                                 <option value="nequi">📱 Nequi</option>
-                                <option value="credito">💳 Pago a Deuda</option>
+                                <option value="credito">💳 Pago a Tarjeta</option>
                             </select>
                         </div>
 
+                        <!-- Selector Tarjeta Destino -->
                         <div class="form-group" id="divTarjetaDestino" style="display:none;">
-                            <label style="color:var(--success);">Deuda a Pagar</label>
-                            <select id="tarjetaDestino"></select>
+                            <label style="color:var(--success);">Tarjeta a Pagar</label>
+                            <select id="tarjetaDestino">
+                                <!-- Se llena dinámicamente -->
+                            </select>
                         </div>
 
                         <div class="form-group">
                             <label>Monto</label>
                             <input type="number" id="monto" required oninput="calcularCuota()">
                             
-                            <!-- Alerta ADDI -->
-                            <div id="addiPromo" class="addi-promo" style="display:none;">
-                                <i class="fas fa-check-circle"></i> ¡Genial! 0% de Interés aplicado con Addi (≤3 cuotas).
-                            </div>
-
+                            <!-- Calculadora de Cuotas -->
                             <div id="infoCuota" class="interest-box">
-                                <span style="font-weight:bold;">Simulación:</span><br>
-                                Cuota Mensual: <span id="valCuota" class="cuota-highlight">$0</span>
-                                <div id="interesInfo" style="font-size:0.85rem; margin-top:5px;"></div>
+                                <span style="font-weight:bold;">Simulación de Compra:</span><br>
+                                Valor Cuota Aprox: <span id="valCuota" class="cuota-highlight">$0</span>
+                                <small>Total Final Estimado: <span id="valTotal">$0</span> (Int: 1.9% M.V.)</small>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label>Categoría</label>
-                            <select id="categoria" required></select>
+                            <select id="categoria" required onchange="cargarSubcategorias()"></select>
+                        </div>
+                        <div class="form-group" id="divSubcat" style="display:none;">
+                            <label>Subcategoría</label>
+                            <select id="subcategoria"></select>
                         </div>
 
                         <div class="form-group">
@@ -321,7 +344,7 @@
                             <input type="date" id="fecha" required>
                         </div>
                         <div class="form-group full-width">
-                            <button type="submit" class="btn-primary" id="btnGuardar">Guardar</button>
+                            <button type="submit" class="btn-primary" id="btnGuardar">Guardar Transacción</button>
                             <button type="button" class="btn-secondary" id="btnCancelarEdicion" style="display:none; margin-top:10px;" onclick="cancelEdit()">Cancelar Edición</button>
                         </div>
                     </div>
@@ -334,12 +357,15 @@
              <div class="card">
                 <h2><i class="fas fa-chart-line"></i> Estadísticas Avanzadas</h2>
                 <div class="dashboard-grid">
-                    <div class="stat-card"><div class="stat-info"><p>Ingresos</p><p id="stIngresos">$0</p></div></div>
-                    <div class="stat-card"><div class="stat-info"><p>Gastos</p><p id="stGastos">$0</p></div></div>
-                    <div class="stat-card"><div class="stat-info"><p>Balance</p><p id="stBalance">$0</p></div></div>
+                    <div class="stat-card"><div class="stat-info"><p>Ingresos Totales</p><p id="stIngresos">$0</p></div></div>
+                    <div class="stat-card"><div class="stat-info"><p>Gastos Totales</p><p id="stGastos">$0</p></div></div>
+                    <div class="stat-card"><div class="stat-info"><p>Balance Neto</p><p id="stBalance">$0</p></div></div>
                 </div>
-                <div style="margin-top:30px; height: 300px; position: relative;">
-                    <canvas id="chartStats"></canvas>
+                <div style="margin-top:30px;">
+                    <h3>Evolución de Finanzas</h3>
+                    <div class="chart-container">
+                        <canvas id="chartStats"></canvas>
+                    </div>
                 </div>
              </div>
         </div>
@@ -363,31 +389,31 @@
     <!-- MODAL: Crear/Editar Tarjeta -->
     <div id="cardModal" class="modal-overlay">
         <div class="modal-content">
-            <h3><i class="fas fa-credit-card"></i> Configurar Cupo</h3>
+            <h3><i class="fas fa-credit-card"></i> Configurar Tarjeta</h3>
             <form id="cardForm">
                 <input type="hidden" id="cardId">
                 <div class="form-group" style="margin-bottom:15px;">
-                    <label>Nombre (Ej: Nu, Addi)</label>
-                    <input type="text" id="cardName" required>
+                    <label>Nombre de la Tarjeta</label>
+                    <input type="text" id="cardName" placeholder="Ej: Nu Edward" required>
                 </div>
                 <div class="form-group" style="margin-bottom:15px;">
-                    <label>Franquicia / Tipo</label>
-                    <input type="text" id="cardBank" placeholder="Ej: Visa, Crédito Digital">
+                    <label>Franquicia / Banco</label>
+                    <input type="text" id="cardBank" placeholder="Ej: Mastercard">
                 </div>
                 <div class="form-group" style="margin-bottom:15px;">
-                    <label>Cupo Total</label>
+                    <label>Cupo Total (Límite)</label>
                     <input type="number" id="cardLimit" placeholder="0" required>
                 </div>
                 <div class="form-group" style="margin-bottom:15px;">
-                    <label>Deuda Inicial</label>
+                    <label>Deuda Inicial (Saldo que ya debes)</label>
                     <input type="number" id="cardInitialDebt" placeholder="0" value="0">
                 </div>
                 <div class="form-group" style="margin-bottom:15px;">
-                    <label>Color</label>
-                    <input type="color" id="cardColor" value="#667eea" style="width:100%; height:40px;">
+                    <label>Color Identificativo</label>
+                    <input type="color" id="cardColor" value="#820ad1" style="width:100%; height:40px;">
                 </div>
                 <div class="action-row">
-                    <button type="submit" class="btn-primary">Guardar</button>
+                    <button type="submit" class="btn-primary">Guardar Tarjeta</button>
                     <button type="button" class="btn-secondary" onclick="closeCardModal()">Cancelar</button>
                 </div>
             </form>
@@ -401,6 +427,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY",
             authDomain: "crm-financiero.firebaseapp.com",
@@ -412,53 +439,71 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // --- STATE ---
         let cards = [];
         let transactions = [];
         let charts = {};
 
-        // --- DEFAULT CARDS INCLUYENDO ADDI CON 6M ---
+        // --- DEFAULT CARDS (Seeding) ---
         const defaultCards = [
             { name: "Nu Edward", bank: "Nu Mastercard", limit: 5000000, initialDebt: 0, color: "#820ad1" },
             { name: "Nu Eli", bank: "Nu Mastercard", limit: 2000000, initialDebt: 0, color: "#820ad1" },
             { name: "RappiCard", bank: "Rappi Visa", limit: 3000000, initialDebt: 0, color: "#ff4500" },
             { name: "Falabella Eli", bank: "Banco Falabella", limit: 4000000, initialDebt: 0, color: "#1a9c48" },
-            { name: "Exito", bank: "Tuya Éxito", limit: 1500000, initialDebt: 0, color: "#ffd700" },
-            { name: "Addi", bank: "Cupo Digital", limit: 6000000, initialDebt: 0, color: "#20c997" } // Addi 6M
+            { name: "Exito", bank: "Tuya Éxito", limit: 1500000, initialDebt: 0, color: "#ffd700" }
         ];
 
+        // --- CATEGORÍAS COMPLETAS ---
         const categorias = {
-            gasto: ['Vivienda', 'Servicios Públicos', 'Alimentación', 'Transporte', 'Educación', 'Salud', 'Vestuario', 'Cuidado Personal', 'Entretenimiento', 'Deudas', 'Seguros', 'Otros'],
-            ingreso: ['Salario', 'Negocio Independiente', 'Inversiones', 'Otros']
+            gasto: {
+                'vivienda': ['Arriendo', 'Cuota hipoteca', 'Administración', 'Impuesto predial', 'Reparaciones', 'Muebles y electrodomésticos'],
+                'servicios_publicos': ['Energía eléctrica', 'Agua y alcantarillado', 'Gas natural', 'Internet', 'Telefonía móvil', 'TV por cable/streaming'],
+                'alimentacion': ['Mercado semanal', 'Carnes y pescados', 'Frutas y verduras', 'Panadería', 'Tienda de barrio', 'Domicilios'],
+                'transporte': ['Transporte público', 'Gasolina', 'SOAT', 'Revisión técnico-mecánica', 'Mantenimiento vehículo', 'Parqueadero', 'Peajes', 'Uber/Taxi'],
+                'educacion': ['Pensión escolar', 'Universidad', 'Útiles escolares', 'Uniformes', 'Transporte escolar', 'Cursos/academias', 'Libros'],
+                'salud': ['Medicina prepagada', 'Consultas médicas', 'Medicamentos', 'Odontología', 'Exámenes', 'Óptica', 'EPS copagos'],
+                'vestuario': ['Ropa adultos', 'Ropa niños', 'Calzado', 'Ropa interior', 'Accesorios'],
+                'cuidado_personal': ['Peluquería/barbería', 'Productos de aseo', 'Cosméticos', 'Gym/deporte'],
+                'entretenimiento': ['Restaurantes', 'Cine', 'Paseos/turismo', 'Eventos/conciertos', 'Parques de diversiones', 'Streaming'],
+                'deudas': ['Préstamos bancarios', 'Créditos libre inversión', 'Préstamos familiares', 'Gota a gota'],
+                'seguros': ['Seguro de vida', 'Seguro hogar', 'Seguro vehículo'],
+                'otros': ['Mascotas', 'Regalos', 'Donaciones', 'Imprevistos']
+            },
+            ingreso: {
+                'salario': ['Salario principal', 'Horas extras', 'Bonificaciones', 'Prima', 'Cesantías'],
+                'negocio': ['Ventas', 'Servicios profesionales', 'Comisiones', 'Arriendos'],
+                'inversiones': ['Dividendos', 'Intereses', 'Ganancias de capital'],
+                'otros': ['Subsidios', 'Pensión', 'Regalos']
+            }
         };
 
+        // --- UI UTILS ---
         const formatCOP = (val) => '$' + Math.round(val).toLocaleString('es-CO');
         const showToast = (msg) => {
-            const d = document.createElement('div'); d.className = 'toast'; d.innerText = msg;
-            document.getElementById('toastContainer').appendChild(d);
-            setTimeout(() => d.remove(), 3000);
+            const div = document.createElement('div'); div.className = 'toast'; div.innerHTML = msg;
+            document.getElementById('toastContainer').appendChild(div);
+            setTimeout(() => div.remove(), 3000);
         };
         const switchTab = (id, el) => {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-'+id).classList.add('active');
             el.classList.add('active');
-            if(id==='estadisticas') updateStatistics();
+            if(id === 'estadisticas') updateStatistics();
         };
 
-        // --- CRUD TARJETAS ---
+        // --- CARDS LOGIC (CRUD + Seeding) ---
         function openCardModal(id = null) {
             document.getElementById('cardForm').reset();
             document.getElementById('cardId').value = '';
             if(id) {
                 const c = cards.find(x => x.id === id);
-                if(c) {
-                    document.getElementById('cardId').value = c.id;
-                    document.getElementById('cardName').value = c.name;
-                    document.getElementById('cardBank').value = c.bank;
-                    document.getElementById('cardLimit').value = c.limit;
-                    document.getElementById('cardInitialDebt').value = c.initialDebt;
-                    document.getElementById('cardColor').value = c.color;
-                }
+                document.getElementById('cardId').value = c.id;
+                document.getElementById('cardName').value = c.name;
+                document.getElementById('cardBank').value = c.bank;
+                document.getElementById('cardLimit').value = c.limit;
+                document.getElementById('cardInitialDebt').value = c.initialDebt;
+                document.getElementById('cardColor').value = c.color;
             }
             document.getElementById('cardModal').style.display = 'flex';
         }
@@ -476,78 +521,73 @@
             };
 
             try {
-                if(id) {
-                    await db.collection('cards').doc(id).update(data);
-                    showToast('Tarjeta actualizada');
-                } else {
-                    await db.collection('cards').add(data);
-                    showToast('Tarjeta creada');
-                }
+                if(id) await db.collection('cards').doc(id).update(data);
+                else await db.collection('cards').add(data);
+                showToast('Tarjeta guardada');
                 closeCardModal();
                 loadCards();
-            } catch(err) { console.error(err); alert('Error al guardar'); }
+            } catch(err) { console.error(err); alert('Error'); }
         });
 
-        window.deleteCard = async (id) => {
-            if(!confirm('¿Eliminar esta tarjeta?')) return;
-            try {
-                await db.collection('cards').doc(id).delete();
-                showToast('Tarjeta eliminada');
-                loadCards();
-            } catch(e) { showToast('Error eliminando tarjeta'); }
-        }
-
         async function loadCards() {
-            const snap = await db.collection('cards').get();
-            if(snap.empty) {
-                const batch = db.batch();
-                defaultCards.forEach(dc => {
-                    const ref = db.collection('cards').doc();
-                    batch.set(ref, dc);
-                });
-                await batch.commit();
-                return loadCards();
-            }
-            cards = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            renderCards();
-            updateCardSelects();
-            calculateData(); 
+            try {
+                const snap = await db.collection('cards').get();
+                
+                // --- AUTO-SEEDING IF EMPTY ---
+                if(snap.empty) {
+                    console.log("Base de datos de tarjetas vacía. Creando defaults...");
+                    const batch = db.batch();
+                    defaultCards.forEach(dc => {
+                        const ref = db.collection('cards').doc();
+                        batch.set(ref, dc);
+                    });
+                    await batch.commit();
+                    // Recargar después de crear
+                    const newSnap = await db.collection('cards').get();
+                    cards = newSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                } else {
+                    cards = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                }
+
+                renderCards();
+                updateCardSelects();
+                calculateData(); 
+            } catch (e) { console.error("Error cargando tarjetas", e); }
         }
 
         function renderCards() {
             const container = document.getElementById('cardsContainer');
             container.innerHTML = '';
             cards.forEach(c => {
-                const deuda = (c.currentDebt || 0);
-                const disponible = c.limit - deuda;
-                const porcentaje = c.limit > 0 ? Math.min(100, (deuda / c.limit) * 100) : 0;
-                const isAddi = c.name.toLowerCase().includes('addi');
+                const deudaActual = (c.currentDebt || 0);
+                const disponible = c.limit - deudaActual;
+                const porcentaje = c.limit > 0 ? Math.min(100, (deudaActual / c.limit) * 100) : 0;
+                const isYellow = c.color.toLowerCase() === '#ffd700';
+                const textColor = isYellow ? '#333' : '#fff';
 
                 const div = document.createElement('div');
                 div.className = 'credit-card-visual';
-                div.style.background = c.color.includes('gradient') ? c.color : `linear-gradient(135deg, ${c.color}, #111)`;
+                div.style.background = c.color.includes('gradient') ? c.color : `linear-gradient(135deg, ${c.color} 0%, #333 100%)`;
+                div.style.color = textColor;
                 
                 div.innerHTML = `
-                    <div class="card-actions">
-                        <button class="btn-icon-card" onclick="openCardModal('${c.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon-card delete" onclick="deleteCard('${c.id}')"><i class="fas fa-trash"></i></button>
-                    </div>
+                    <button class="btn-card-action" onclick="openCardModal('${c.id}')"><i class="fas fa-edit"></i></button>
                     <div class="card-top">
-                        <div class="card-chip" style="opacity:${isAddi?0:1}"></div>
+                        <div class="card-chip"></div>
                         <div class="card-brand">${c.bank}</div>
                     </div>
                     <div class="card-middle">${c.name}</div>
                     <div class="card-bottom">
                         <div class="card-stat-group">
-                            <span class="card-label" style="color:white">Deuda</span>
-                            <span class="card-val">${formatCOP(deuda)}</span>
+                            <span class="card-label" style="color:${textColor}">Deuda</span>
+                            <span class="card-val">${formatCOP(deudaActual)}</span>
                         </div>
                         <div class="card-stat-group" style="text-align:right;">
-                            <span class="card-label" style="color:white">Disponible</span>
+                            <span class="card-label" style="color:${textColor}">Disponible</span>
                             <span class="card-val">${formatCOP(disponible)}</span>
                         </div>
                     </div>
-                    <div class="card-progress-bg"><div class="card-progress-fill" style="width:${porcentaje}%"></div></div>
+                    <div class="card-progress-bg"><div class="card-progress-fill" style="width:${porcentaje}%; background:${textColor}"></div></div>
                 `;
                 container.appendChild(div);
             });
@@ -559,28 +599,38 @@
             document.getElementById('tarjetaDestino').innerHTML = opts;
         }
 
-        // --- TRANSACTION LOGIC ---
+        // --- TRANSACTION FORM LOGIC ---
         document.getElementById('fecha').valueAsDate = new Date();
 
         function handleTipoChange() {
             const t = document.getElementById('tipo').value;
-            const c = document.getElementById('categoria');
+            const cats = document.getElementById('categoria');
+            
             document.getElementById('divMetodoDestino').style.display = t === 'transferencia' ? 'block' : 'none';
             document.getElementById('divTarjetaDestino').style.display = 'none';
             
-            c.innerHTML = '<option value="">Seleccione...</option>';
-            if(categorias[t]) categorias[t].forEach(x => c.innerHTML+=`<option value="${x}">${x}</option>`);
-            else if(t==='transferencia') c.innerHTML = '<option value="Transferencia">Transferencia</option>';
+            cats.innerHTML = '<option value="">Seleccione...</option>';
+            if(categorias[t]) {
+                for(let k in categorias[t]) {
+                    cats.innerHTML += `<option value="${k}">${k.replace(/_/g,' ').toUpperCase()}</option>`;
+                }
+            } else if (t === 'transferencia') {
+                cats.innerHTML = '<option value="transferencia">Transferencia</option>';
+            }
             handleMetodoChange();
         }
 
         function handleMetodoChange() {
             const m = document.getElementById('metodoPago').value;
             const t = document.getElementById('tipo').value;
+            
             const isCred = m === 'credito';
             document.getElementById('divTarjetaOrigen').style.display = isCred ? 'block' : 'none';
             document.getElementById('tarjetaOrigen').required = isCred;
-            document.getElementById('divCuotas').style.display = (isCred && t === 'gasto') ? 'block' : 'none';
+            
+            const showCuotas = isCred && t === 'gasto';
+            document.getElementById('divCuotas').style.display = showCuotas ? 'block' : 'none';
+            
             calcularCuota();
         }
 
@@ -591,89 +641,97 @@
             document.getElementById('tarjetaDestino').required = isCred;
         }
 
-        // --- LÓGICA ESPECIAL DE INTERÉS ADDI ---
-        function calcularCuota() {
-            const div = document.getElementById('infoCuota');
-            const promo = document.getElementById('addiPromo');
-            const show = document.getElementById('divCuotas').style.display === 'block';
+        function cargarSubcategorias() {
+            const t = document.getElementById('tipo').value;
+            const c = document.getElementById('categoria').value;
+            const sub = document.getElementById('subcategoria');
             
-            if(!show) { div.style.display = 'none'; promo.style.display = 'none'; return; }
-
-            const monto = parseFloat(document.getElementById('monto').value) || 0;
-            const cuotas = parseInt(document.getElementById('cuotas').value);
-            const cardId = document.getElementById('tarjetaOrigen').value;
-            
-            const card = cards.find(c => c.id === cardId);
-            const isAddi = card && card.name.toLowerCase().includes('addi');
-
-            if(monto > 0) {
-                let valCuota = 0, total = 0;
-                let tasa = 0.019; // Default 1.9%
-                let applyAddiPromo = false;
-
-                // REGLA ADDI: 0% si cuotas <= 3
-                if (isAddi && cuotas <= 3) {
-                    tasa = 0;
-                    applyAddiPromo = true;
-                }
-
-                if (cuotas === 1 || tasa === 0) {
-                    total = monto;
-                    valCuota = monto / cuotas;
-                } else {
-                    valCuota = monto * (tasa * Math.pow(1+tasa, cuotas)) / (Math.pow(1+tasa, cuotas) - 1);
-                    total = valCuota * cuotas;
-                }
-                
-                document.getElementById('valCuota').innerText = formatCOP(valCuota);
-                
-                const info = document.getElementById('interesInfo');
-                if(tasa === 0) info.innerHTML = 'Total Final: <b>'+formatCOP(total)+'</b> (Sin Intereses)';
-                else info.innerHTML = 'Total con Intereses (1.9%): <b>'+formatCOP(total)+'</b>';
-
-                div.style.display = 'block';
-                promo.style.display = applyAddiPromo ? 'flex' : 'none';
+            if(categorias[t] && categorias[t][c]) {
+                document.getElementById('divSubcat').style.display = 'block';
+                sub.innerHTML = '<option value="">Seleccione...</option>' + categorias[t][c].map(x => `<option value="${x}">${x}</option>`).join('');
             } else {
-                div.style.display = 'none';
-                promo.style.display = 'none';
+                document.getElementById('divSubcat').style.display = 'none';
             }
         }
 
-        // --- CRUD TRANSACCIONES ---
+        function calcularCuota() {
+            const div = document.getElementById('infoCuota');
+            const show = document.getElementById('divCuotas').style.display === 'block';
+            if(!show) { div.style.display = 'none'; return; }
+
+            const monto = parseFloat(document.getElementById('monto').value) || 0;
+            const cuotas = parseInt(document.getElementById('cuotas').value);
+            
+            if(monto > 0) {
+                let valCuota = 0, total = 0;
+                if (cuotas === 1) {
+                    valCuota = monto; total = monto;
+                } else {
+                    const i = 0.019; // 1.9% MV
+                    valCuota = monto * (i * Math.pow(1+i, cuotas)) / (Math.pow(1+i, cuotas) - 1);
+                    total = valCuota * cuotas;
+                }
+                document.getElementById('valCuota').innerText = formatCOP(valCuota);
+                document.getElementById('valTotal').innerText = formatCOP(total);
+                div.style.display = 'block';
+            } else {
+                div.style.display = 'none';
+            }
+        }
+
+        // --- GESTIÓN DE EDICIÓN DE TRANSACCIÓN ---
         function editTx(id) {
             const t = transactions.find(x => x.id === id);
             if(!t) return;
+
             document.getElementById('editingId').value = id;
-            document.getElementById('tipo').value = t.tipo; handleTipoChange();
-            document.getElementById('metodoPago').value = t.metodo || t.metodoPago; handleMetodoChange();
-            
+            document.getElementById('tipo').value = t.tipo;
+            handleTipoChange(); // Update UI categories
+
+            document.getElementById('metodoPago').value = t.metodo || t.metodoPago;
+            handleMetodoChange(); // Update UI fields
+
+            // Set Tarjeta Origen if exists
             if(t.cardId) document.getElementById('tarjetaOrigen').value = t.cardId;
-            else if(t.tarjetaCredito) { /* Legacy */ }
-            
+            else if(t.tarjetaCredito) {
+                // Try legacy match
+                const c = cards.find(c => c.name === t.tarjetaCredito);
+                if(c) document.getElementById('tarjetaOrigen').value = c.id;
+            }
+
+            // Set Cuotas
             if(t.cuotas) document.getElementById('cuotas').value = t.cuotas;
+
+            // Set Destino logic
             if(t.tipo === 'transferencia') {
-                document.getElementById('metodoDestino').value = t.metodoDestino; handleDestinoChange();
+                document.getElementById('metodoDestino').value = t.metodoDestino;
+                handleDestinoChange();
                 if(t.cardDestId) document.getElementById('tarjetaDestino').value = t.cardDestId;
             }
 
             document.getElementById('monto').value = t.monto;
             document.getElementById('categoria').value = t.categoria;
+            cargarSubcategorias();
+            if(t.subcategoria) document.getElementById('subcategoria').value = t.subcategoria;
+            
             document.getElementById('miembro').value = t.miembro;
             document.getElementById('descripcion').value = t.descripcion;
             document.getElementById('fecha').value = t.fecha;
 
+            // Change Button State
             document.getElementById('formTitle').innerText = "Editar Transacción";
-            document.getElementById('btnGuardar').innerText = "Actualizar";
+            document.getElementById('btnGuardar').innerText = "Actualizar Transacción";
             document.getElementById('btnCancelarEdicion').style.display = 'block';
+
+            // Go to tab
             switchTab('transacciones', document.querySelectorAll('.tab-button')[2]);
-            calcularCuota();
         }
 
         function cancelEdit() {
             document.getElementById('transactionForm').reset();
             document.getElementById('editingId').value = '';
             document.getElementById('formTitle').innerText = "Registrar Movimiento";
-            document.getElementById('btnGuardar').innerText = "Guardar";
+            document.getElementById('btnGuardar').innerText = "Guardar Transacción";
             document.getElementById('btnCancelarEdicion').style.display = 'none';
             document.getElementById('fecha').valueAsDate = new Date();
             handleTipoChange();
@@ -682,89 +740,113 @@
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnGuardar');
-            const editId = document.getElementById('editingId').value;
-            btn.disabled = true; btn.innerText = "Procesando...";
-
+            const isEdit = document.getElementById('editingId').value !== '';
+            btn.disabled = true; btn.textContent = 'Procesando...';
+            
             const data = {
                 tipo: document.getElementById('tipo').value,
                 metodo: document.getElementById('metodoPago').value,
                 monto: parseFloat(document.getElementById('monto').value),
                 categoria: document.getElementById('categoria').value,
+                subcategoria: document.getElementById('subcategoria').value || '',
                 miembro: document.getElementById('miembro').value,
                 descripcion: document.getElementById('descripcion').value,
                 fecha: document.getElementById('fecha').value,
-                timestamp: new Date()
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             if(data.metodo === 'credito') {
                 data.cardId = document.getElementById('tarjetaOrigen').value;
                 if(data.tipo === 'gasto') data.cuotas = parseInt(document.getElementById('cuotas').value);
             }
+            
             if(data.tipo === 'transferencia') {
                 data.metodoDestino = document.getElementById('metodoDestino').value;
                 if(data.metodoDestino === 'credito') data.cardDestId = document.getElementById('tarjetaDestino').value;
             }
 
             try {
-                if(editId) {
-                    await db.collection('transactions').doc(editId).update(data);
-                    showToast('Actualizado');
+                if(isEdit) {
+                    await db.collection('transactions').doc(document.getElementById('editingId').value).update(data);
+                    showToast('Actualizado correctamente');
                     cancelEdit();
                 } else {
                     await db.collection('transactions').add(data);
-                    showToast('Guardado');
+                    showToast('Guardado correctamente');
                     document.getElementById('transactionForm').reset();
                     document.getElementById('fecha').valueAsDate = new Date();
                     handleTipoChange();
                 }
+                
                 loadData();
-            } catch(e) { console.error(e); alert('Error'); }
-            btn.disabled = false; btn.innerText = editId ? "Actualizar" : "Guardar";
+            } catch(x) { console.error(x); alert('Error'); }
+            btn.disabled = false; btn.textContent = isEdit ? 'Actualizar Transacción' : 'Guardar Transacción';
         });
 
+        // --- DATA LOADING & CALCS ---
         async function loadData() {
-            const snap = await db.collection('transactions').orderBy('fecha', 'desc').limit(150).get();
+            const snap = await db.collection('transactions').orderBy('fecha', 'desc').limit(200).get();
             transactions = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            
             if(cards.length === 0) await loadCards();
             else calculateData();
+            
             renderTxTable();
             if(document.getElementById('tab-estadisticas').classList.contains('active')) updateStatistics();
         }
 
         function calculateData() {
-            let sDeb=0, sEfe=0, sNeq=0;
-            let gastosCat = {};
+            let sDeb = 0, sEfe = 0, sNeq = 0;
+            let gastosMes = {};
+            
             cards.forEach(c => c.currentDebt = c.initialDebt || 0);
+
+            const now = new Date();
+            const cm = now.getMonth(), cy = now.getFullYear();
 
             transactions.forEach(t => {
                 const m = parseFloat(t.monto);
-                const tMetodo = t.metodo || t.metodoPago;
-                const tCardId = t.cardId;
+                const d = new Date(t.fecha + 'T00:00:00');
+                const isMes = d.getMonth() === cm && d.getFullYear() === cy;
                 
-                if(t.tipo==='ingreso') {
-                    if(tMetodo==='debito') sDeb+=m;
-                    else if(tMetodo==='efectivo') sEfe+=m;
-                    else if(tMetodo==='nequi') sNeq+=m;
+                const tTipo = t.tipo;
+                const tMetodo = t.metodo || t.metodoPago; 
+                const tMetDest = t.metodoDestino;
+                const tCardId = t.cardId; 
+                const tLegacyCard = t.tarjetaCredito;
+
+                if(tTipo === 'ingreso') {
+                    if(tMetodo === 'debito') sDeb += m;
+                    else if(tMetodo === 'efectivo') sEfe += m;
+                    else if(tMetodo === 'nequi') sNeq += m;
                 }
-                else if(t.tipo==='gasto') {
-                    if(tMetodo==='credito') {
-                        let c = cards.find(x => x.id === tCardId) || cards.find(x => x.name === t.tarjetaCredito);
-                        if(c) c.currentDebt += m;
+                else if(tTipo === 'gasto') {
+                    if(tMetodo === 'credito') {
+                        let card = null;
+                        if(tCardId) card = cards.find(x => x.id === tCardId);
+                        else if(tLegacyCard) card = cards.find(x => x.name === tLegacyCard);
+                        if(card) card.currentDebt += m;
                     } else {
-                        if(tMetodo==='debito') sDeb-=m;
-                        else if(tMetodo==='efectivo') sEfe-=m;
-                        else if(tMetodo==='nequi') sNeq-=m;
+                        if(tMetodo === 'debito') sDeb -= m;
+                        else if(tMetodo === 'efectivo') sEfe -= m;
+                        else if(tMetodo === 'nequi') sNeq -= m;
                     }
-                    gastosCat[t.categoria] = (gastosCat[t.categoria] || 0) + m;
+                    if(isMes) gastosMes[t.categoria] = (gastosMes[t.categoria] || 0) + m;
                 }
-                else if(t.tipo==='transferencia') {
-                    if(tMetodo==='debito') sDeb-=m; else if(tMetodo==='efectivo') sEfe-=m; else if(tMetodo==='nequi') sNeq-=m;
+                else if(tTipo === 'transferencia') {
+                    if(tMetodo === 'debito') sDeb -= m;
+                    else if(tMetodo === 'efectivo') sEfe -= m;
+                    else if(tMetodo === 'nequi') sNeq -= m;
                     
-                    if(t.metodoDestino==='credito') {
-                         let c = cards.find(x => x.id === t.cardDestId) || cards.find(x => x.name === t.tarjetaDestino);
-                         if(c) c.currentDebt -= m;
+                    if(tMetDest === 'credito') {
+                        let cardDest = null;
+                        if(t.cardDestId) cardDest = cards.find(x => x.id === t.cardDestId);
+                        else if(t.tarjetaDestino) cardDest = cards.find(x => x.name === t.tarjetaDestino);
+                        if(cardDest) cardDest.currentDebt -= m;
                     } else {
-                        if(t.metodoDestino==='debito') sDeb+=m; else if(t.metodoDestino==='efectivo') sEfe+=m; else if(t.metodoDestino==='nequi') sNeq+=m;
+                        if(tMetDest === 'debito') sDeb += m;
+                        else if(tMetDest === 'efectivo') sEfe += m;
+                        else if(tMetDest === 'nequi') sNeq += m;
                     }
                 }
             });
@@ -773,11 +855,11 @@
             document.getElementById('saldoEfectivo').innerText = formatCOP(sEfe);
             document.getElementById('saldoNequi').innerText = formatCOP(sNeq);
             document.getElementById('saldoTotal').innerText = formatCOP(sDeb+sEfe+sNeq);
-            
-            renderCards();
 
-            const totalDeuda = cards.reduce((a,c)=>a+(c.currentDebt||0),0);
-            const totalCupo = cards.reduce((a,c)=>a+(c.limit||0),0);
+            renderCards();
+            
+            const totalDeuda = cards.reduce((acc, c) => acc + (c.currentDebt||0), 0);
+            const totalCupo = cards.reduce((acc, c) => acc + (c.limit||0), 0);
             document.getElementById('deudaTotalTarjetas').innerText = formatCOP(totalDeuda);
             document.getElementById('cupoTotal').innerText = formatCOP(totalCupo - totalDeuda);
 
@@ -785,7 +867,10 @@
             if(charts.dash) charts.dash.destroy();
             charts.dash = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: Object.keys(gastosCat), datasets: [{ data: Object.values(gastosCat), backgroundColor: ['#4ade80','#f87171','#60a5fa','#fbbf24','#a78bfa'] }] },
+                data: { 
+                    labels: Object.keys(gastosMes), 
+                    datasets: [{ data: Object.values(gastosMes), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF'] }] 
+                },
                 options: { responsive:true, maintainAspectRatio:false }
             });
         }
@@ -794,63 +879,93 @@
             const b = document.getElementById('txList'); b.innerHTML = '';
             transactions.forEach(t => {
                 const tMetodo = t.metodo || t.metodoPago || '?';
-                let mStr = `<span class="badge-method m-${tMetodo}">${tMetodo.toUpperCase()}</span>`;
-                if(tMetodo==='credito') {
-                    let name = 'Desconocida';
-                    if(t.cardId) { const c = cards.find(x=>x.id===t.cardId); if(c) name=c.name; }
-                    else if(t.tarjetaCredito) name=t.tarjetaCredito;
-                    mStr = `<span class="badge-method m-credito">💳 ${name}</span>`;
-                    if(t.cuotas) mStr += ` <small>(${t.cuotas}x)</small>`;
-                }
+                let metodoStr = `<span class="badge-method m-${tMetodo}">${tMetodo.toUpperCase()}</span>`;
                 
-                const row = `<tr>
+                if(tMetodo === 'credito') {
+                    let cName = 'Desconocida';
+                    if(t.cardId) {
+                        const c = cards.find(x => x.id === t.cardId);
+                        if(c) cName = c.name;
+                    } else if (t.tarjetaCredito) {
+                        cName = t.tarjetaCredito;
+                    }
+                    metodoStr = `<span class="badge-method m-credito">💳 ${cName}</span>`;
+                    if(t.cuotas) metodoStr += ` <small>(${t.cuotas}x)</small>`;
+                }
+
+                const r = `<tr>
                     <td>${t.fecha}</td>
-                    <td style="font-weight:bold">${t.tipo.toUpperCase()}</td>
-                    <td>${mStr}</td>
-                    <td>${t.categoria} <small style="color:#666">${t.descripcion}</small></td>
-                    <td>${formatCOP(t.monto)}</td>
+                    <td style="font-weight:bold;">${t.tipo.toUpperCase()}</td>
+                    <td>${metodoStr}</td>
+                    <td>${t.categoria} <br><small style="color:#666">${t.descripcion}</small></td>
+                    <td style="font-weight:bold;">${formatCOP(t.monto)}</td>
                     <td>
-                        <button class="btn-icon-card" style="background:#dbeafe; color:#1e40af; width:30px; height:30px; display:inline-flex;" onclick="editTx('${t.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon-card" style="background:#fee2e2; color:#991b1b; width:30px; height:30px; display:inline-flex;" onclick="delTx('${t.id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn-info" onclick="editTx('${t.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-danger" onclick="delTx('${t.id}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
-                b.innerHTML += row;
+                b.innerHTML += r;
             });
         }
 
-        window.delTx = async(id)=>{ if(confirm('Eliminar?')) { await db.collection('transactions').doc(id).delete(); loadData(); }};
+        window.delTx = async (id) => {
+            if(confirm('Eliminar?')) {
+                await db.collection('transactions').doc(id).delete();
+                loadData();
+            }
+        };
 
         function updateStatistics() {
             let i=0, g=0;
-            let labels = [], dI = [], dG = [];
-            let monthly = {};
+            let labels = [];
+            let dataIncome = [];
+            let dataExpense = [];
             
+            // Agrupar por mes
+            let monthStats = {};
+
             transactions.forEach(t => {
-                if(t.tipo==='ingreso') i+=t.monto;
-                if(t.tipo==='gasto') g+=t.monto;
-                
-                if(t.tipo==='ingreso' || t.tipo==='gasto') {
-                    let m = t.fecha.substring(0,7);
-                    if(!monthly[m]) monthly[m]={i:0,g:0};
-                    if(t.tipo==='ingreso') monthly[m].i+=t.monto;
-                    else monthly[m].g+=t.monto;
+                if(t.tipo === 'ingreso' || t.tipo === 'gasto') {
+                    let month = t.fecha.substring(0, 7); // YYYY-MM
+                    if(!monthStats[month]) monthStats[month] = { i: 0, g: 0 };
+                    
+                    if(t.tipo === 'ingreso') {
+                        i += t.monto;
+                        monthStats[month].i += t.monto;
+                    }
+                    if(t.tipo === 'gasto') {
+                        g += t.monto;
+                        monthStats[month].g += t.monto;
+                    }
                 }
             });
-            
-            Object.keys(monthly).sort().forEach(m => {
-                labels.push(m); dI.push(monthly[m].i); dG.push(monthly[m].g);
+
+            // Preparar datos para Chart
+            let sortedMonths = Object.keys(monthStats).sort();
+            sortedMonths.forEach(m => {
+                labels.push(m);
+                dataIncome.push(monthStats[m].i);
+                dataExpense.push(monthStats[m].g);
             });
 
             document.getElementById('stIngresos').innerText = formatCOP(i);
             document.getElementById('stGastos').innerText = formatCOP(g);
             document.getElementById('stBalance').innerText = formatCOP(i-g);
 
+            // Render Chart Stats
             const ctx = document.getElementById('chartStats');
-            if(charts.stats) charts.stats.destroy();
-            charts.stats = new Chart(ctx, {
+            if(charts.advStats) charts.advStats.destroy();
+            
+            charts.advStats = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: labels, datasets: [{label:'Ingresos', data:dI, backgroundColor:'#4ade80'}, {label:'Gastos', data:dG, backgroundColor:'#f87171'}] },
-                options: { responsive:true, maintainAspectRatio:false }
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Ingresos', data: dataIncome, backgroundColor: '#4ade80' },
+                        { label: 'Gastos', data: dataExpense, backgroundColor: '#f87171' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
@@ -858,6 +973,7 @@
         loadCards();
         loadData();
         handleTipoChange();
+
     </script>
 </body>
 </html>
