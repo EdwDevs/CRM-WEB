@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v2.6.1 - Fix Editar</title>
+    <title>CRM Financiero v2.7.1 - Fix Modal</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
@@ -170,6 +170,7 @@
             .content-container { padding: 16px; }
             .hero-amount { font-size: 2rem; }
             .top-header { padding: 0 16px; }
+            .history-filters { flex-direction: column; }
         }
 
         /* --- FORM STYLES --- */
@@ -186,6 +187,17 @@
         button { border: none; font-family: inherit; cursor: pointer; }
         .btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
         .btn-cancel { background: #e5e7eb; color: var(--text-main); padding: 12px 24px; border-radius: 10px; font-weight: 600; }
+
+        /* --- HISTORY FILTERS --- */
+        .history-filters {
+            display: flex; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;
+        }
+        .filter-input {
+            padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;
+        }
+        .search-box { flex: 2; }
+        .type-box { flex: 1; }
+        .date-box { flex: 1; }
 
         /* UTILS */
         .hidden { display: none !important; }
@@ -242,10 +254,9 @@
 </head>
 <body>
 
-    <!-- SIDEBAR (Desktop) -->
     <nav class="sidebar">
         <div class="brand">
-            <i class="fas fa-wallet"></i> CRM v2.6.1
+            <i class="fas fa-wallet"></i> CRM v2.7.1
         </div>
         <div class="nav-links">
             <div class="nav-item active" onclick="switchView('dashboard', this)">
@@ -266,7 +277,6 @@
         </div>
     </nav>
 
-    <!-- MOBILE BOTTOM NAV -->
     <nav class="mobile-nav">
         <button class="mob-link active" onclick="switchView('dashboard', this)">
             <i class="fas fa-home"></i> <span>Inicio</span>
@@ -282,17 +292,13 @@
         </button>
     </nav>
 
-    <!-- FLOATING ACTION BUTTON (FAB) -->
     <button class="fab" onclick="goToAddTransaction()">
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- MAIN CONTENT -->
     <div class="main-wrapper">
-        <!-- Sticky Top Header -->
         <header class="top-header">
             <div class="page-title" id="pageTitle">Resumen Financiero</div>
-            <!-- Global Date Filter inside Header -->
             <div class="date-filter-pill">
                 <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
                 <input type="month" id="dashboardMonth" onchange="updateDashboardView()">
@@ -301,10 +307,8 @@
 
         <div class="content-container">
             
-            <!-- VIEW: DASHBOARD -->
             <div id="view-dashboard" class="tab-content active">
                 
-                <!-- Hero Card: Total Balance -->
                 <div class="hero-balance">
                     <div class="hero-title">Patrimonio Líquido Total</div>
                     <div class="hero-amount" id="saldoTotal">$ 0</div>
@@ -313,7 +317,6 @@
                     </div>
                 </div>
 
-                <!-- Mini Stats Row -->
                 <div class="stats-grid">
                     <div class="mini-stat">
                         <div class="mini-label"><i class="fas fa-university" style="color: #6366f1;"></i> Débito</div>
@@ -329,7 +332,6 @@
                     </div>
                 </div>
 
-                <!-- Monthly Flow -->
                 <h3 style="margin-bottom: 15px; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Flujo del Mes (<span id="lblPeriodoResumen">Actual</span>)</h3>
                 <div class="stats-grid">
                     <div class="mini-stat income">
@@ -346,7 +348,6 @@
                     </div>
                 </div>
 
-                <!-- Credit Cards Section -->
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                         <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
@@ -363,7 +364,6 @@
                 </div>
             </div>
 
-            <!-- VIEW: TRANSACCIONES (Form) -->
             <div id="view-transacciones" class="tab-content">
                 <div class="card">
                     <h2 style="margin-bottom: 20px;" id="formTitle">Nueva Transacción</h2>
@@ -382,7 +382,6 @@
                                 </select>
                             </div>
 
-                            <!-- Bloques Condicionales (Credito / Pago) -->
                             <div id="creditConfig" class="form-group full-width hidden" style="background: #fff1f2; padding: 15px; border-radius: 12px; border: 1px solid #fda4af;">
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                     <div class="form-group">
@@ -465,7 +464,6 @@
                 </div>
             </div>
 
-            <!-- VIEW: ESTADISTICAS -->
             <div id="view-estadisticas" class="tab-content">
                 <div class="card">
                     <h3>Tendencia Financiera (6 Meses)</h3>
@@ -481,9 +479,23 @@
                 </div>
             </div>
 
-            <!-- VIEW: HISTORIAL -->
             <div id="view-historial" class="tab-content">
                 <div class="card">
+                    <h3 style="margin-bottom: 15px;">Historial de Movimientos</h3>
+                    
+                    <div class="history-filters">
+                        <input type="text" id="historySearch" class="filter-input search-box" placeholder="Buscar por descripción, categoría..." oninput="renderHistory()">
+                        <select id="historyType" class="filter-input type-box" onchange="renderHistory()">
+                            <option value="all">Todos los Tipos</option>
+                            <option value="gasto">Gastos</option>
+                            <option value="ingreso">Ingresos</option>
+                            <option value="credito">Créditos</option>
+                            <option value="pago_tarjeta">Abonos TC</option>
+                            <option value="transferencia">Transferencias</option>
+                        </select>
+                        <input type="month" id="historyMonth" class="filter-input date-box" onchange="renderHistory()">
+                    </div>
+
                     <div class="table-container">
                         <table>
                             <thead>
@@ -502,13 +514,7 @@
                 </div>
             </div>
 
-        </div> <!-- End Content Container -->
-    </div> <!-- End Main Wrapper -->
-
-    <!-- --- MODALES (Ocultos por defecto) --- -->
-    
-    <!-- Modal Simulación Crédito -->
-    <div class="modal-overlay hidden" id="creditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+        </div> </div> <div class="modal-overlay" id="creditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
         <div class="modal-content">
             <h3 class="modal-title">Confirmar Crédito</h3>
             <div class="modal-details" style="margin-top:15px;">
@@ -523,8 +529,7 @@
         </div>
     </div>
 
-    <!-- Modal Gestión Tarjetas -->
-    <div class="modal-overlay hidden" id="quotaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div class="modal-overlay" id="quotaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3 class="modal-title">Gestión Tarjetas</h3>
@@ -550,7 +555,6 @@
 
     <div id="toastContainer"></div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -569,7 +573,7 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.firestore();
 
-        // VARIABLES Y LOGICA (Misma v2.5)
+        // VARIABLES Y LOGICA
         let transactions = [];
         let cardsList = [];
         let editingTransactionId = null;
@@ -579,7 +583,7 @@
         let globalDeudaPorTarjeta = {};
         let currentViewDate = new Date();
 
-        // Categorías
+        // Categorías (Misma estructura)
         const categorias = {
             gasto: {
                 'vivienda': { icon: '🏠', subcategorias: ['Arriendo', 'Cuota hipoteca', 'Administración', 'Impuesto predial', 'Reparaciones', 'Muebles y electrodomésticos'] },
@@ -610,6 +614,7 @@
             document.getElementById('dashboardMonth').value = `${yyyy}-${mm}`;
             document.getElementById('fecha').valueAsDate = today;
             
+            // Initial hide logic (already hidden by css display:none but ensure logic)
             document.getElementById('creditModal').style.display = 'none';
             document.getElementById('quotaModal').style.display = 'none';
 
@@ -704,6 +709,7 @@
         // CARD MANAGEMENT MODAL UI
         function openQuotaModal() {
             renderQuotaCards(); resetCardForm();
+            // FIX: Removed .hidden class conflict, now just toggles display
             document.getElementById('quotaModal').style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -1007,10 +1013,37 @@
             });
         }
 
+        // --- NEW: ADVANCED HISTORY FILTERING ---
         function renderHistory() {
-            const b = document.getElementById('transactionList');
-            b.innerHTML = '';
-            transactions.slice(0, 50).forEach(t => { 
+            const tbody = document.getElementById('transactionList');
+            tbody.innerHTML = '';
+
+            // 1. Get Filters
+            const searchText = document.getElementById('historySearch').value.toLowerCase();
+            const filterType = document.getElementById('historyType').value;
+            const filterMonth = document.getElementById('historyMonth').value; // YYYY-MM
+
+            // 2. Filter Logic
+            let filtered = transactions.filter(t => {
+                const textMatch = t.descripcion.toLowerCase().includes(searchText) || 
+                                  (t.categoria && t.categoria.toLowerCase().includes(searchText)) ||
+                                  (t.subcategoria && t.subcategoria.toLowerCase().includes(searchText));
+                
+                const typeMatch = filterType === 'all' || t.tipo === filterType;
+                
+                let dateMatch = true;
+                if (filterMonth) {
+                    dateMatch = t.fecha.startsWith(filterMonth);
+                }
+
+                return textMatch && typeMatch && dateMatch;
+            });
+
+            // 3. Render (Limit to 50 unless filtering specifically)
+            const isFiltering = searchText || filterType !== 'all' || filterMonth;
+            const toShow = isFiltering ? filtered : filtered.slice(0, 50);
+
+            toShow.forEach(t => { 
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-';
                 if(t.tipo==='transferencia') { color='text-main'; symbol=''; }
@@ -1027,33 +1060,34 @@
                         <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
-                b.appendChild(tr);
+                tbody.appendChild(tr);
             });
+
+            if(toShow.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">No se encontraron resultados</td></tr>';
+            }
         }
 
-        // --- EDIT LOGIC (RESTORED) ---
+        // --- EDIT LOGIC (PRESERVED) ---
         window.editTransaction = function(id) {
             const t = transactions.find(x => x.id === id);
             if (!t) return;
             
             editingTransactionId = id;
             
-            // 1. Switch to Form View
             switchView('transacciones', document.querySelector('.sidebar .nav-item:nth-child(2)'));
             
-            // 2. Set Values
             document.getElementById('tipo').value = t.tipo;
-            handleTipoChange(); // Refresh visibility
+            handleTipoChange(); 
             
             const mInput = document.getElementById('monto');
             mInput.value = t.monto;
-            formatCurrencyInput(mInput); // Apply mask
+            formatCurrencyInput(mInput);
 
             document.getElementById('descripcion').value = t.descripcion;
             document.getElementById('fecha').value = t.fecha;
             document.getElementById('miembro').value = t.miembro;
 
-            // 3. Conditionals
             if (t.tipo === 'credito') {
                 document.getElementById('tarjetaCredito').value = t.metodoPago;
                 document.getElementById('cuotas').value = t.cuotas;
@@ -1065,12 +1099,10 @@
                 if(t.tipo === 'transferencia') document.getElementById('metodoDestino').value = t.metodoDestino;
             }
 
-            // 4. Update UI Text
             document.getElementById('formTitle').textContent = 'Editar Transacción';
             document.getElementById('btnSubmitText').textContent = 'Actualizar Transacción';
             document.getElementById('btnCancelar').classList.remove('hidden');
 
-            // 5. Load Categories (Delayed to allow DOM update)
             setTimeout(() => {
                 document.getElementById('categoria').value = t.categoria;
                 const event = new Event('change');
