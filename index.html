@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Financiero Familiar v2.2 - Control Cupos</title>
+    <title>CRM Financiero Familiar v2.4 - Full Firestore</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
@@ -17,6 +17,7 @@
             --warning: #fbbf24;
             --info: #60a5fa;
             --credit: #e11d48;
+            --payment: #059669;
             --light: #f8fafc;
             --dark: #1e293b;
             --text: #374151;
@@ -132,7 +133,6 @@
         .btn-primary { background: var(--primary); color: var(--white); flex: 1; }
         .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
         .btn-cancel { background: var(--text-muted); color: var(--white); display: none; }
-        .btn-export { background: var(--success); color: var(--white); }
         .btn-edit { background: var(--info); color: var(--white); padding: 8px 15px; border-radius: 8px; margin-right: 5px; }
         .btn-delete { background: var(--danger); color: var(--white); padding: 8px 15px; border-radius: 8px; }
 
@@ -145,6 +145,7 @@
         .tipo-gasto { color: var(--danger); font-weight: 600; }
         .tipo-transferencia { color: var(--info); font-weight: 600; }
         .tipo-credito { color: var(--credit); font-weight: 600; }
+        .tipo-pago { color: var(--payment); font-weight: 600; }
 
         /* Modal Styles */
         .modal-overlay {
@@ -153,7 +154,7 @@
             z-index: 1000; backdrop-filter: blur(4px);
         }
         .modal-content {
-            background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px;
+            background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 600px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s ease-out;
             max-height: 90vh; overflow-y: auto;
         }
@@ -166,17 +167,22 @@
         .btn-confirm { background: var(--credit); color: white; flex: 1; }
         .btn-confirm:hover { background: #be123c; }
 
-        /* NEW: Quota Management Styles */
+        /* Quota & Card Management Styles */
         .quota-card {
             border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px;
-            background: #fff; transition: all 0.2s;
+            background: #fff; transition: all 0.2s; display: flex; flex-direction: column; gap: 10px;
         }
         .quota-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .quota-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .quota-name { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-        .quota-input { width: 140px; padding: 5px; font-size: 0.9rem; text-align: right; border: 1px solid #ddd; border-radius: 4px; }
         
-        .progress-container { height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin: 8px 0; position: relative; }
+        .quota-header { display: flex; justify-content: space-between; align-items: center; }
+        .quota-name { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .quota-actions button {
+            background: none; border: none; cursor: pointer; font-size: 1rem; padding: 5px; transition: color 0.2s;
+        }
+        .btn-icon-edit { color: var(--info); }
+        .btn-icon-delete { color: var(--danger); }
+        
+        .progress-container { height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; width: 100%; }
         .progress-bar { height: 100%; transition: width 0.5s ease; border-radius: 6px; }
         .progress-bar.good { background: var(--success); }
         .progress-bar.warning { background: var(--warning); }
@@ -185,6 +191,11 @@
         .quota-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); }
         .val-debt { color: var(--credit); font-weight: 600; }
         .val-avail { color: var(--success); font-weight: 600; }
+
+        .add-card-form {
+            background: var(--light); padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
+        }
 
         /* Utilities */
         .hidden { display: none !important; }
@@ -200,6 +211,7 @@
         @media (max-width: 768px) {
             .dashboard-grid, .form-grid { grid-template-columns: 1fr; }
             .button-group { flex-direction: column; }
+            .add-card-form { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -207,8 +219,8 @@
     <div class="container">
         <!-- Header -->
         <div class="card">
-            <h1><i class="fas fa-wallet"></i> CRM Financiero V2.2</h1>
-            <p class="subtitle">Gestión de patrimonio, gastos y control de deudas TC 💳</p>
+            <h1><i class="fas fa-wallet"></i> CRM Financiero V2.4</h1>
+            <p class="subtitle">Gestión integral con Persistencia en Nube ☁️</p>
         </div>
 
         <!-- Tabs -->
@@ -257,10 +269,10 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap;">
                     <h2><i class="fas fa-money-check-alt"></i> Estado de Tarjetas de Crédito</h2>
                     <button class="btn-primary" style="padding: 8px 15px; font-size: 0.9rem; max-width: 250px;" onclick="openQuotaModal()">
-                        <i class="fas fa-eye"></i> Ver Disponibilidad y Cupos
+                        <i class="fas fa-cog"></i> Gestionar Tarjetas y Cupos
                     </button>
                 </div>
-                <p class="subtitle" style="text-align: left;">Deuda acumulada (Compras + Intereses calculados)</p>
+                <p class="subtitle" style="text-align: left;">Deuda acumulada actual (Compras - Abonos)</p>
                 
                 <div class="dashboard-grid" style="margin-bottom: 0;">
                     <div class="stat-card credito-total">
@@ -273,7 +285,6 @@
                 </div>
 
                 <div class="cards-status-grid" id="cardsBreakdown">
-                    <!-- Se llena con JS -->
                     <div class="loading"><div class="spinner"></div></div>
                 </div>
             </div>
@@ -309,34 +320,45 @@
                             <select id="tipo" required onchange="handleTipoChange()">
                                 <option value="gasto">💸 Gasto (Salida inmediata)</option>
                                 <option value="ingreso">💰 Ingreso</option>
-                                <option value="credito">💳 Compra con Crédito (Deuda)</option>
+                                <option value="credito">💳 Compra con Crédito (Aumenta Deuda)</option>
+                                <option value="pago_tarjeta">📉 Abono / Pago Tarjeta (Disminuye Deuda)</option>
                                 <option value="transferencia">🔄 Transferencia</option>
                             </select>
                         </div>
 
-                        <!-- Configuración Crédito -->
+                        <!-- 1. Configuración Nueva Deuda (Solo Credito) -->
                         <div id="creditConfig" class="form-group hidden" style="grid-column: 1 / -1; background: #fff1f2; padding: 15px; border-radius: 8px; border: 1px solid #fecdd3; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                             <div class="form-group">
-                                <label style="color: var(--credit);">Tarjeta</label>
+                                <label style="color: var(--credit);">Tarjeta a Usar</label>
                                 <select id="tarjetaCredito">
-                                    <option value="Exito">Exito</option>
-                                    <option value="Nu Eli">Nu Eli</option>
-                                    <option value="Nu Edward">Nu Edward</option>
-                                    <option value="Falabella">Falabella</option>
-                                    <option value="RappiCard">RappiCard</option>
-                                    <option value="Addi">Addi (Cupo Libre)</option>
+                                    <!-- Se llena dinamicamente -->
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label style="color: var(--credit);">Cuotas</label>
                                 <input type="number" id="cuotas" min="1" max="36" value="1" placeholder="Número de cuotas">
-                                <small style="color: var(--text-muted); font-size: 0.75rem;">Addi a 3 cuotas o menos = 0% interés</small>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Si es Addi a 3 cuotas o menos = 0% interés</small>
                             </div>
                         </div>
 
-                        <!-- Método Pago (Para no crédito) -->
+                        <!-- 2. Configuración Pago de Tarjeta (Solo Pago) -->
+                        <div id="divPagoTarjeta" class="form-group hidden" style="grid-column: 1 / -1; background: #ecfdf5; padding: 15px; border-radius: 8px; border: 1px solid #a7f3d0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="form-group">
+                                <label style="color: var(--payment); font-weight:bold;">Tarjeta a Pagar (Disminuir deuda)</label>
+                                <select id="tarjetaDestinoPago">
+                                    <!-- Se llena dinamicamente -->
+                                </select>
+                            </div>
+                            <div class="form-group" style="justify-content:center;">
+                                <p style="font-size: 0.8rem; color: #047857;">
+                                    <i class="fas fa-info-circle"></i> Este valor se restará de la deuda acumulada de la tarjeta seleccionada y saldrá de tus fondos líquidos.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Método Pago (Origen del dinero) -->
                         <div class="form-group" id="metodoPagoDiv">
-                            <label>Método de Pago</label>
+                            <label id="lblMetodoPago">Método de Pago</label>
                             <select id="metodoPago">
                                 <option value="debito">💳 Débito</option>
                                 <option value="efectivo">💵 Efectivo</option>
@@ -489,24 +511,39 @@
         </div>
     </div>
 
-    <!-- NUEVO: MODAL DE CUPOS Y DISPONIBILIDAD -->
+    <!-- MODAL DE CUPOS Y GESTION (CRUD) -->
     <div class="modal-overlay" id="quotaModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <span class="modal-title"><i class="fas fa-chart-bar"></i> Cupos y Disponibilidad</span>
+                <span class="modal-title"><i class="fas fa-tasks"></i> Gestión de Tarjetas</span>
                 <button onclick="closeModal('quotaModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             
-            <div style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">
-                <i class="fas fa-info-circle"></i> Configura el "Cupo Asignado" para ver cuánto te queda disponible en cada tarjeta. Los datos se guardan en tu dispositivo.
+            <!-- Formulario Agregar/Editar Tarjeta -->
+            <div class="add-card-form">
+                <div class="form-group">
+                    <label style="font-size: 0.8rem;">Nombre Tarjeta</label>
+                    <input type="text" id="cardNameInput" placeholder="Ej: Visa Gold">
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 0.8rem;">Cupo Total</label>
+                    <input type="number" id="cardQuotaInput" placeholder="0">
+                </div>
+                <button class="btn-primary" onclick="saveCard()" id="btnSaveCard"><i class="fas fa-plus"></i></button>
+                <input type="hidden" id="editCardId">
+            </div>
+
+            <div style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.8rem; text-align:center;">
+                <i class="fas fa-cloud"></i> Datos sincronizados con Firestore Database
             </div>
 
             <div id="quotaListContainer">
-                <!-- Se llena dinámicamente -->
+                <!-- Se llena dinámicamente con las tarjetas -->
+                <div class="loading"><div class="spinner"></div></div>
             </div>
 
             <div class="modal-actions">
-                <button type="button" class="btn-primary" onclick="closeModal('quotaModal')">Cerrar</button>
+                <button type="button" class="btn-cancel" style="background: #999; display: block;" onclick="closeModal('quotaModal')">Cerrar</button>
             </div>
         </div>
     </div>
@@ -530,20 +567,20 @@
             measurementId: "G-5EBSSNG8P9"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
 
         // --- VARIABLES GLOBALES ---
         let transactions = [];
+        let cardsList = []; // Ahora las tarjetas vienen de DB
         let editingTransactionId = null;
         let chartInstance = null;
         let tempTransactionData = null;
-        let globalDeudaPorTarjeta = {}; // Para compartir el cálculo de deuda con el modal
-
-        // --- CONFIGURACIÓN DE DATOS ---
-        const tarjetasConfig = ['Exito', 'Nu Eli', 'Nu Edward', 'Falabella', 'RappiCard', 'Addi'];
+        let globalDeudaPorTarjeta = {};
         
-        // Categorías (Estructura completa original)
+        // Categorías
         const categorias = {
             gasto: {
                 'vivienda': { icon: '🏠', subcategorias: ['Arriendo', 'Cuota hipoteca', 'Administración', 'Impuesto predial', 'Reparaciones', 'Muebles y electrodomésticos'] },
@@ -555,7 +592,7 @@
                 'vestuario': { icon: '👕', subcategorias: ['Ropa adultos', 'Ropa niños', 'Calzado', 'Ropa interior', 'Accesorios'] },
                 'cuidado_personal': { icon: '💄', subcategorias: ['Peluquería/barbería', 'Productos de aseo', 'Cosméticos', 'Gym/deporte'] },
                 'entretenimiento': { icon: '🎬', subcategorias: ['Restaurantes', 'Cine', 'Paseos/turismo', 'Eventos/conciertos', 'Parques de diversiones', 'Streaming (Netflix, etc.)'] },
-                'deudas': { icon: '💳', subcategorias: ['Tarjetas de crédito', 'Préstamos bancarios', 'Créditos de libre inversión', 'Préstamos familiares', 'Gota a gota'] },
+                'deudas': { icon: '💳', subcategorias: ['Préstamos bancarios', 'Créditos de libre inversión', 'Préstamos familiares', 'Gota a gota'] }, 
                 'seguros': { icon: '🛡️', subcategorias: ['Seguro de vida', 'Seguro hogar', 'Seguro vehículo', 'SOAT'] },
                 'otros': { icon: '📦', subcategorias: ['Mascotas', 'Regalos', 'Donaciones/diezmos', 'Imprevistos', 'Otros gastos'] }
             },
@@ -570,80 +607,165 @@
         // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha').valueAsDate = new Date();
-            handleTipoChange();
-            loadTransactions();
-            initQuotasConfig(); // Inicializar localStorage de cupos
+            loadCards(); // Primero cargar tarjetas, luego transacciones
         });
 
-        // --- NUEVA LÓGICA DE CUPOS (QUOTAS) ---
-        function initQuotasConfig() {
-            if (!localStorage.getItem('crm_quotas')) {
-                const defaultQuotas = {};
-                tarjetasConfig.forEach(t => defaultQuotas[t] = 0);
-                localStorage.setItem('crm_quotas', JSON.stringify(defaultQuotas));
+        // --- GESTIÓN DE TARJETAS (FIRESTORE CRUD) ---
+        async function loadCards() {
+            try {
+                const snapshot = await db.collection('cards').orderBy('name').get();
+                cardsList = [];
+                snapshot.forEach(doc => {
+                    cardsList.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Si está vacío (primera vez), creamos las default
+                if (cardsList.length === 0) {
+                    await seedDefaultCards();
+                    return; // seed volverá a llamar a loadCards
+                }
+
+                populateCardSelects();
+                loadTransactions(); // Cargar transacciones DESPUÉS de tener las tarjetas
+            } catch (error) {
+                console.error("Error cargando tarjetas", error);
+                showToast("Error conectando BD Tarjetas", "error");
             }
         }
 
-        function getQuotas() {
-            return JSON.parse(localStorage.getItem('crm_quotas') || '{}');
+        async function seedDefaultCards() {
+            const defaults = ['Exito', 'Nu Eli', 'Nu Edward', 'Falabella', 'RappiCard', 'Addi'];
+            const batch = db.batch();
+            defaults.forEach(name => {
+                const ref = db.collection('cards').doc();
+                batch.set(ref, { name: name, quota: 0 });
+            });
+            await batch.commit();
+            loadCards();
         }
 
-        function saveQuotaLimit(tarjeta, valor) {
-            const current = getQuotas();
-            current[tarjeta] = parseFloat(valor) || 0;
-            localStorage.setItem('crm_quotas', JSON.stringify(current));
-            renderQuotaCards(); // Re-renderizar para actualizar barras
+        function populateCardSelects() {
+            const selectCredito = document.getElementById('tarjetaCredito');
+            const selectPago = document.getElementById('tarjetaDestinoPago');
+            selectCredito.innerHTML = '';
+            selectPago.innerHTML = '';
+
+            cardsList.forEach(c => {
+                // Opción para Select de Compras
+                let opt1 = document.createElement('option');
+                opt1.value = c.name;
+                opt1.textContent = c.name;
+                selectCredito.appendChild(opt1);
+
+                // Opción para Select de Pagos
+                let opt2 = document.createElement('option');
+                opt2.value = c.name;
+                opt2.textContent = c.name;
+                selectPago.appendChild(opt2);
+            });
         }
 
+        // --- FUNCIONES DEL MODAL DE GESTION (CRUD) ---
         function openQuotaModal() {
-            renderQuotaCards();
+            renderQuotaCards(); // Muestra lista actual
+            resetCardForm();
             document.getElementById('quotaModal').style.display = 'flex';
+        }
+
+        function resetCardForm() {
+            document.getElementById('cardNameInput').value = '';
+            document.getElementById('cardQuotaInput').value = '';
+            document.getElementById('editCardId').value = '';
+            document.getElementById('btnSaveCard').innerHTML = '<i class="fas fa-plus"></i>';
+            document.getElementById('btnSaveCard').classList.remove('btn-edit');
+            document.getElementById('btnSaveCard').classList.add('btn-primary');
+        }
+
+        async function saveCard() {
+            const name = document.getElementById('cardNameInput').value.trim();
+            const quota = parseFloat(document.getElementById('cardQuotaInput').value);
+            const id = document.getElementById('editCardId').value;
+
+            if (!name) { showToast("El nombre es requerido", "error"); return; }
+            if (isNaN(quota)) { showToast("El cupo debe ser número", "error"); return; }
+
+            try {
+                if (id) {
+                    // Actualizar
+                    await db.collection('cards').doc(id).update({ name, quota });
+                    showToast("Tarjeta actualizada", "success");
+                } else {
+                    // Crear
+                    await db.collection('cards').add({ name, quota });
+                    showToast("Tarjeta creada", "success");
+                }
+                resetCardForm();
+                loadCards(); // Recargar todo
+                setTimeout(renderQuotaCards, 500); // Refrescar modal
+            } catch (e) {
+                showToast("Error guardando tarjeta", "error");
+            }
+        }
+
+        async function deleteCard(id) {
+            if (!confirm("¿Seguro eliminar esta tarjeta? No borrará el historial de transacciones, pero no podrás seleccionarla en el futuro.")) return;
+            try {
+                await db.collection('cards').doc(id).delete();
+                showToast("Tarjeta eliminada", "success");
+                loadCards();
+                setTimeout(renderQuotaCards, 500);
+            } catch (e) { showToast("Error al eliminar", "error"); }
+        }
+
+        function editCard(id, name, quota) {
+            document.getElementById('cardNameInput').value = name;
+            document.getElementById('cardQuotaInput').value = quota;
+            document.getElementById('editCardId').value = id;
+            const btn = document.getElementById('btnSaveCard');
+            btn.innerHTML = '<i class="fas fa-save"></i>';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-edit');
         }
 
         function renderQuotaCards() {
             const container = document.getElementById('quotaListContainer');
             container.innerHTML = '';
             
-            const quotas = getQuotas();
-            const deudas = globalDeudaPorTarjeta; // Usamos la deuda calculada en updateDashboard
+            const deudas = globalDeudaPorTarjeta;
 
-            tarjetasConfig.forEach(card => {
-                const assigned = quotas[card] || 0;
-                const debt = deudas[card] || 0;
+            cardsList.forEach(card => {
+                const assigned = card.quota || 0;
+                const debt = deudas[card.name] || 0; // Buscamos deuda por Nombre de tarjeta
                 const available = assigned - debt;
                 
-                // Cálculo porcentaje para la barra
                 let percentUsed = 0;
                 if (assigned > 0) {
                     percentUsed = (debt / assigned) * 100;
                     if (percentUsed > 100) percentUsed = 100;
                 }
 
-                // Color barra
                 let barClass = 'good';
                 if (percentUsed > 50) barClass = 'warning';
                 if (percentUsed > 80) barClass = 'danger';
-
-                // Icono tarjeta
-                let iconClass = 'fa-credit-card';
-                if (card === 'Addi' || card === 'Nequi') iconClass = 'fa-mobile-alt';
 
                 const div = document.createElement('div');
                 div.className = 'quota-card';
                 div.innerHTML = `
                     <div class="quota-header">
                         <div class="quota-name">
-                            <i class="fas ${iconClass}" style="color: var(--primary);"></i> ${card}
+                            <i class="fas fa-credit-card" style="color: var(--primary);"></i> ${card.name}
                         </div>
-                        <div>
-                            <span style="font-size:0.8rem; color:#666;">Cupo Asignado:</span>
-                            <input type="number" class="quota-input" 
-                                value="${assigned}" 
-                                onchange="saveQuotaLimit('${card}', this.value)" 
-                                placeholder="0">
+                        <div class="quota-actions">
+                            <button class="btn-icon-edit" onclick="editCard('${card.id}', '${card.name}', '${assigned}')"><i class="fas fa-pencil-alt"></i></button>
+                            <button class="btn-icon-delete" onclick="deleteCard('${card.id}')"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                     
+                    <div style="font-size:0.85rem; color:#666; display:flex; justify-content:space-between;">
+                         <span>Cupo: <strong>${formatMoney(assigned)}</strong></span>
+                         <span>Uso: ${Math.round(percentUsed)}%</span>
+                    </div>
+
                     <div class="progress-container">
                         <div class="progress-bar ${barClass}" style="width: ${percentUsed}%"></div>
                     </div>
@@ -661,50 +783,70 @@
         function handleTipoChange() {
             const tipo = document.getElementById('tipo').value;
             const creditConfig = document.getElementById('creditConfig');
+            const pagoTCConfig = document.getElementById('divPagoTarjeta');
             const metodoPagoDiv = document.getElementById('metodoPagoDiv');
             const metodoDestinoDiv = document.getElementById('metodoDestinoDiv');
             const categoriaSelect = document.getElementById('categoria');
             
             creditConfig.classList.add('hidden');
+            pagoTCConfig.classList.add('hidden');
             metodoPagoDiv.classList.remove('hidden');
             metodoDestinoDiv.classList.add('hidden');
+            document.getElementById('lblMetodoPago').textContent = "Método de Pago";
+
+            document.getElementById('tarjetaCredito').required = false;
+            document.getElementById('cuotas').required = false;
+            document.getElementById('tarjetaDestinoPago').required = false;
+            document.getElementById('metodoPago').required = true;
             
             if (tipo === 'credito') {
                 creditConfig.classList.remove('hidden');
                 creditConfig.style.display = 'grid';
-                metodoPagoDiv.classList.add('hidden');
+                metodoPagoDiv.classList.add('hidden'); 
                 document.getElementById('tarjetaCredito').required = true;
                 document.getElementById('cuotas').required = true;
                 document.getElementById('metodoPago').required = false;
-            } else if (tipo === 'transferencia') {
+            } 
+            else if (tipo === 'pago_tarjeta') {
+                pagoTCConfig.classList.remove('hidden');
+                pagoTCConfig.style.display = 'grid';
+                document.getElementById('tarjetaDestinoPago').required = true;
+                document.getElementById('lblMetodoPago').textContent = "Pagar desde (Origen)";
+            }
+            else if (tipo === 'transferencia') {
                 metodoDestinoDiv.classList.remove('hidden');
-                document.getElementById('tarjetaCredito').required = false;
-                document.getElementById('cuotas').required = false;
-                document.getElementById('metodoPago').required = true;
-            } else {
-                document.getElementById('tarjetaCredito').required = false;
-                document.getElementById('cuotas').required = false;
-                document.getElementById('metodoPago').required = true;
             }
 
-            // Cargar Categorías
             categoriaSelect.innerHTML = '<option value="">Seleccione...</option>';
             document.getElementById('subcategoriaDiv').classList.add('hidden');
             
-            let tipoCategoria = tipo;
-            if (tipo === 'credito') tipoCategoria = 'gasto';
-
-            if (tipo === 'transferencia') {
-                categoriaSelect.innerHTML = '<option value="transferencia">Transferencia Interna</option>';
-                categoriaSelect.value = 'transferencia';
-            } else if (categorias[tipoCategoria]) {
-                const cats = categorias[tipoCategoria];
-                for (let key in cats) {
-                    let opt = document.createElement('option');
-                    opt.value = key;
-                    opt.textContent = `${cats[key].icon} ${key.replace(/_/g, ' ').toUpperCase()}`;
-                    categoriaSelect.appendChild(opt);
+            if (tipo === 'credito') {
+                loadCategoriesToSelect(categorias['gasto'], categoriaSelect);
+            } else if (tipo === 'pago_tarjeta') {
+                let opt = document.createElement('option');
+                opt.value = 'pago_tc';
+                opt.textContent = '💳 Abono a Capital / Pago Cuota';
+                opt.selected = true;
+                categoriaSelect.appendChild(opt);
+            } else if (tipo === 'transferencia') {
+                let opt = document.createElement('option');
+                opt.value = 'transferencia';
+                opt.textContent = '🔄 Transferencia Interna';
+                opt.selected = true;
+                categoriaSelect.appendChild(opt);
+            } else {
+                if (categorias[tipo]) {
+                    loadCategoriesToSelect(categorias[tipo], categoriaSelect);
                 }
+            }
+        }
+
+        function loadCategoriesToSelect(catsObj, selectElement) {
+            for (let key in catsObj) {
+                let opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = `${catsObj[key].icon} ${key.replace(/_/g, ' ').toUpperCase()}`;
+                selectElement.appendChild(opt);
             }
         }
 
@@ -717,7 +859,12 @@
             const subDiv = document.getElementById('subcategoriaDiv');
             const subSelect = document.getElementById('subcategoria');
             
-            if (tipo !== 'transferencia' && cat && categorias[tipoCategoria] && categorias[tipoCategoria][cat]) {
+            if (tipo === 'pago_tarjeta' || tipo === 'transferencia') {
+                subDiv.classList.add('hidden');
+                return;
+            }
+
+            if (cat && categorias[tipoCategoria] && categorias[tipoCategoria][cat]) {
                 subDiv.classList.remove('hidden');
                 subSelect.innerHTML = '<option value="">Seleccione...</option>';
                 const subcategoriasList = categorias[tipoCategoria][cat].subcategorias || [];
@@ -734,7 +881,8 @@
 
         // --- CÁLCULO FINANCIERO ---
         function calcularCredito(monto, cuotas, tarjeta) {
-            if (tarjeta === 'Addi' && cuotas <= 3) {
+            // Nota: Podrías querer hacer que las tarjetas 0% sean configurables en el futuro
+            if (tarjeta.toLowerCase().includes('addi') && cuotas <= 3) {
                 return { cuota: monto / cuotas, interesTotal: 0, totalDeuda: monto };
             }
             const tasaMensual = 0.019; // 1.9% M.V.
@@ -781,7 +929,15 @@
 
                 tempTransactionData = data;
                 showCreditModal(data, calculo);
-            } else {
+            } 
+            else if (tipo === 'pago_tarjeta') {
+                data.metodoPago = document.getElementById('metodoPago').value;
+                data.tarjetaDestino = document.getElementById('tarjetaDestinoPago').value;
+                data.esCredito = false;
+                data.esAbono = true;
+                saveTransaction(data);
+            }
+            else {
                 data.metodoPago = document.getElementById('metodoPago').value;
                 if(tipo === 'transferencia') data.metodoDestino = document.getElementById('metodoDestino').value;
                 data.esCredito = false;
@@ -795,7 +951,7 @@
             document.getElementById('modalMonto').textContent = formatMoney(data.monto);
             document.getElementById('modalCuotas').textContent = data.cuotas;
             
-            if(data.metodoPago === 'Addi' && data.cuotas <= 3) {
+            if(data.metodoPago.toLowerCase().includes('addi') && data.cuotas <= 3) {
                 document.getElementById('modalTasa').textContent = "0% (Beneficio Addi)";
                 document.getElementById('modalTasa').style.color = "var(--success)";
             } else {
@@ -848,14 +1004,16 @@
                 renderHistory();
                 renderCharts();
             } catch (e) {
-                console.error("Error cargando", e);
+                console.error("Error cargando transactions", e);
             }
         }
 
         function updateDashboard() {
             let sDebito = 0, sEfectivo = 0, sNequi = 0;
             let deudaPorTarjeta = {};
-            tarjetasConfig.forEach(t => deudaPorTarjeta[t] = 0);
+            
+            // Inicializar deudas con las tarjetas cargadas de la DB
+            cardsList.forEach(c => deudaPorTarjeta[c.name] = 0);
 
             let totalIngresosMes = 0;
             let totalGastosMes = 0;
@@ -867,7 +1025,19 @@
                 const tDate = new Date(t.fecha);
                 const isThisMonth = tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
 
-                if (!t.esCredito) {
+                if (t.tipo === 'pago_tarjeta') {
+                    // Restar Saldo
+                    if (t.metodoPago === 'debito') sDebito -= monto;
+                    if (t.metodoPago === 'efectivo') sEfectivo -= monto;
+                    if (t.metodoPago === 'nequi') sNequi -= monto;
+
+                    // Restar Deuda
+                    // Si la tarjeta ya no existe en cardsList, aun asi calculamos su deuda historica si es necesaria,
+                    // pero para el dashboard visual solo mostraremos las activas luego.
+                    if (deudaPorTarjeta[t.tarjetaDestino] === undefined) deudaPorTarjeta[t.tarjetaDestino] = 0;
+                    deudaPorTarjeta[t.tarjetaDestino] -= monto;
+
+                } else if (!t.esCredito) {
                     if (t.tipo === 'ingreso') {
                         if (t.metodoPago === 'debito') sDebito += monto;
                         if (t.metodoPago === 'efectivo') sEfectivo += monto;
@@ -887,14 +1057,15 @@
                         if (t.metodoDestino === 'nequi') sNequi += monto;
                     }
                 } else {
-                    if (deudaPorTarjeta[t.metodoPago] !== undefined) {
-                        deudaPorTarjeta[t.metodoPago] += (t.totalDeuda || monto);
-                    }
+                    // Credito
+                    const cardName = t.metodoPago;
+                    if (deudaPorTarjeta[cardName] === undefined) deudaPorTarjeta[cardName] = 0;
+                    deudaPorTarjeta[cardName] += (t.totalDeuda || monto);
+                    
                     if (isThisMonth) totalGastosMes += monto;
                 }
             });
 
-            // Guardamos la deuda calculada globalmente para el modal de cupos
             globalDeudaPorTarjeta = deudaPorTarjeta;
 
             document.getElementById('saldoDebito').textContent = formatMoney(sDebito);
@@ -910,18 +1081,29 @@
             containerTarjetas.innerHTML = '';
             let deudaTotalGlobal = 0;
 
-            Object.keys(deudaPorTarjeta).forEach(cardName => {
-                const deuda = deudaPorTarjeta[cardName];
-                deudaTotalGlobal += deuda;
-                if (deuda > 0) {
+            // Renderizar solo las tarjetas activas y aquellas con deuda aunque no esten activas (edge case)
+            const tarjetasAmostrar = new Set([...cardsList.map(c => c.name), ...Object.keys(deudaPorTarjeta)]);
+            
+            tarjetasAmostrar.forEach(cardName => {
+                const deuda = deudaPorTarjeta[cardName] || 0;
+                // Mostrar solo si hay deuda o si es una tarjeta configurada en el sistema
+                // Si la deuda es 0 y no esta en config, no mostrar.
+                const existsInConfig = cardsList.find(c => c.name === cardName);
+
+                if (deuda !== 0 || existsInConfig) {
+                    if(deuda !== 0) deudaTotalGlobal += deuda;
+                    
+                    // Si no existe en config (fue borrada) mostrarla en gris o normal
                     const cardDiv = document.createElement('div');
                     cardDiv.className = 'card-status-item';
-                    cardDiv.innerHTML = `<div class="card-name">${cardName}</div><div class="card-debt">${formatMoney(deuda)}</div>`;
+                    cardDiv.innerHTML = `<div class="card-name">${cardName} ${!existsInConfig ? '(Archivada)' : ''}</div><div class="card-debt">${formatMoney(deuda)}</div>`;
                     containerTarjetas.appendChild(cardDiv);
                 }
             });
             
-            if(deudaTotalGlobal === 0) containerTarjetas.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: #aaa;">¡Felicitaciones! No tienes deudas registradas.</p>';
+            if(Object.keys(deudaPorTarjeta).length === 0 && deudaTotalGlobal === 0) {
+                containerTarjetas.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: #aaa;">No hay tarjetas activas.</p>';
+            }
             document.getElementById('deudaTotalTC').textContent = formatMoney(deudaTotalGlobal);
         }
 
@@ -930,15 +1112,19 @@
             tbody.innerHTML = '';
             transactions.forEach(t => {
                 const row = document.createElement('tr');
-                let tipoClass = t.tipo === 'ingreso' ? 'tipo-ingreso' : (t.tipo === 'credito' ? 'tipo-credito' : (t.tipo === 'transferencia' ? 'tipo-transferencia' : 'tipo-gasto'));
-                let tipoIcon = t.tipo === 'ingreso' ? '💰' : (t.tipo === 'credito' ? '💳' : (t.tipo === 'transferencia' ? '🔄' : '💸'));
-                let metodoDisplay = t.metodoPago;
-                if(t.esCredito) metodoDisplay = `${t.metodoPago} (${t.cuotas} cuotas)`;
-                else if(t.tipo === 'transferencia') metodoDisplay = `${t.metodoPago} → ${t.metodoDestino}`;
+                let tipoClass = '';
+                let tipoIcon = '';
+                let metodoDisplay = '';
+
+                if (t.tipo === 'ingreso') { tipoClass = 'tipo-ingreso'; tipoIcon = '💰'; metodoDisplay = t.metodoPago; }
+                else if (t.tipo === 'credito') { tipoClass = 'tipo-credito'; tipoIcon = '💳'; metodoDisplay = `${t.metodoPago} (${t.cuotas} cuotas)`; }
+                else if (t.tipo === 'transferencia') { tipoClass = 'tipo-transferencia'; tipoIcon = '🔄'; metodoDisplay = `${t.metodoPago} → ${t.metodoDestino}`; }
+                else if (t.tipo === 'pago_tarjeta') { tipoClass = 'tipo-pago'; tipoIcon = '📉'; metodoDisplay = `${t.metodoPago} → ${t.tarjetaDestino}`; }
+                else { tipoClass = 'tipo-gasto'; tipoIcon = '💸'; metodoDisplay = t.metodoPago; }
 
                 row.innerHTML = `
                     <td>${t.fecha}</td>
-                    <td class="${tipoClass}">${tipoIcon} ${t.tipo.toUpperCase()}</td>
+                    <td class="${tipoClass}">${tipoIcon} ${t.tipo.replace('_', ' ').toUpperCase()}</td>
                     <td>${metodoDisplay}</td>
                     <td>${t.categoria ? t.categoria.replace(/_/g, ' ') : '-'}</td>
                     <td>${t.subcategoria || '-'}</td>
@@ -1005,24 +1191,31 @@
             if (!t) return;
             editingTransactionId = id;
             document.getElementById('tipo').value = t.tipo;
-            handleTipoChange();
+            handleTipoChange(); 
+            
             document.getElementById('monto').value = t.monto;
             document.getElementById('descripcion').value = t.descripcion;
             document.getElementById('fecha').value = t.fecha;
             document.getElementById('miembro').value = t.miembro;
+            
+            if (t.tipo === 'credito') {
+                document.getElementById('tarjetaCredito').value = t.metodoPago;
+                document.getElementById('cuotas').value = t.cuotas;
+            } else if (t.tipo === 'pago_tarjeta') {
+                document.getElementById('metodoPago').value = t.metodoPago;
+                document.getElementById('tarjetaDestinoPago').value = t.tarjetaDestino;
+            } else {
+                document.getElementById('metodoPago').value = t.metodoPago;
+                if(t.tipo === 'transferencia') document.getElementById('metodoDestino').value = t.metodoDestino;
+            }
+
             setTimeout(() => {
                 document.getElementById('categoria').value = t.categoria;
                 const event = new Event('change');
                 document.getElementById('categoria').dispatchEvent(event);
                 setTimeout(() => { document.getElementById('subcategoria').value = t.subcategoria; }, 50);
             }, 100);
-            if (t.tipo === 'credito') {
-                document.getElementById('tarjetaCredito').value = t.metodoPago;
-                document.getElementById('cuotas').value = t.cuotas;
-            } else {
-                document.getElementById('metodoPago').value = t.metodoPago;
-                if(t.tipo === 'transferencia') document.getElementById('metodoDestino').value = t.metodoDestino;
-            }
+
             document.getElementById('formTitle').textContent = 'Editar Transacción';
             document.getElementById('btnSubmitText').textContent = 'Actualizar';
             document.getElementById('btnCancelar').style.display = 'block';
