@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v2.8 - Daily Focus</title>
+    <title>CRM Financiero v3.0 - AI Agent</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Markdown Parser for AI Response -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         :root {
@@ -15,13 +17,12 @@
             --surface: #ffffff;
             --text-main: #1f2937;
             --text-light: #6b7280;
-            
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
             --info: #3b82f6;
             --credit: #ec4899;
-            
+            --ai-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --radius: 16px;
             --nav-width: 260px;
@@ -39,7 +40,7 @@
             display: flex;
         }
 
-        /* --- SIDEBAR (Desktop) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             width: var(--nav-width);
             background: var(--surface);
@@ -59,7 +60,7 @@
             font-size: 1.25rem; font-weight: 800; color: var(--primary);
             border-bottom: 1px solid #f3f4f6;
         }
-        .brand i { margin-right: 10px; font-size: 1.5rem; }
+        .brand span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         .nav-links { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 8px; }
         
@@ -71,29 +72,24 @@
         }
         .nav-item:hover { background: #f9fafb; color: var(--primary); }
         .nav-item.active { background: #e0e7ff; color: var(--primary); font-weight: 600; }
-        .nav-item i { width: 24px; text-align: center; }
+        
+        /* Special AI Nav Item */
+        .nav-item.ai-nav { color: #8b5cf6; }
+        .nav-item.ai-nav.active { background: #f3e8ff; color: #7c3aed; }
+        .nav-item.ai-nav i { color: #a855f7; }
 
-        /* --- MAIN CONTENT AREA --- */
+        /* --- MAIN CONTENT --- */
         .main-wrapper {
-            flex: 1;
-            margin-left: var(--nav-width);
-            height: 100vh;
-            overflow-y: auto;
-            position: relative;
-            padding-bottom: 80px;
+            flex: 1; margin-left: var(--nav-width); height: 100vh; overflow-y: auto; position: relative; padding-bottom: 80px;
         }
 
         .top-header {
-            height: var(--header-height);
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px);
-            position: sticky; top: 0; z-index: 40;
-            display: flex; justify-content: space-between; align-items: center;
+            height: var(--header-height); background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 40; display: flex; justify-content: space-between; align-items: center;
             padding: 0 24px; border-bottom: 1px solid #e5e7eb;
         }
         .page-title { font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
         
-        /* Dashboard Month Filter */
         .date-filter-pill {
             background: white; border: 1px solid #e5e7eb; padding: 6px 12px;
             border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
@@ -103,10 +99,9 @@
 
         .content-container { padding: 24px; max-width: 1200px; margin: 0 auto; }
 
-        /* --- CARDS & WIDGETS --- */
+        /* --- UI COMPONENTS --- */
         .card {
-            background: var(--surface); border-radius: var(--radius);
-            padding: 24px; margin-bottom: 24px;
+            background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
             box-shadow: var(--shadow-sm); border: 1px solid #f3f4f6;
         }
 
@@ -117,18 +112,14 @@
             margin-bottom: 24px; position: relative; overflow: hidden;
         }
         .hero-balance::after {
-            content: ''; position: absolute; right: -20px; top: -20px;
-            width: 150px; height: 150px; background: rgba(255,255,255,0.1);
-            border-radius: 50%;
+            content: ''; position: absolute; right: -20px; top: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;
         }
         .hero-title { font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px; }
         .hero-amount { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        
         .mini-stat {
-            background: white; padding: 20px; border-radius: var(--radius);
-            box-shadow: var(--shadow-sm); border: 1px solid #f3f4f6;
+            background: white; padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid #f3f4f6;
             display: flex; flex-direction: column; justify-content: center;
         }
         .mini-label { font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
@@ -136,19 +127,47 @@
         .mini-stat.debt .mini-value { color: var(--danger); }
         .mini-stat.income .mini-value { color: var(--success); }
 
-        /* --- FAB --- */
-        .fab {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 60px; height: 60px; border-radius: 50%;
-            background: var(--primary); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.5rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-            cursor: pointer; z-index: 100; transition: transform 0.2s; border: none;
+        /* --- AI AGENT VIEW STYLES --- */
+        .ai-welcome-card {
+            background: var(--ai-gradient); color: white; padding: 30px; border-radius: var(--radius);
+            text-align: center; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
         }
-        .fab:hover { transform: scale(1.1); }
-        .fab:active { transform: scale(0.95); }
+        .ai-welcome-card h2 { font-size: 2rem; margin-bottom: 10px; }
+        .ai-welcome-card p { opacity: 0.9; font-size: 1.1rem; max-width: 600px; margin: 0 auto 20px auto; }
+        
+        .btn-ai-action {
+            background: white; color: #7c3aed; padding: 15px 35px; border-radius: 30px;
+            font-weight: 800; border: none; cursor: pointer; font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-ai-action:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+        .btn-ai-action i { font-size: 1.2rem; }
 
-        /* --- MOBILE BOTTOM NAV --- */
+        .ai-response-container {
+            display: none; /* Hidden by default */
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        .ai-loading {
+            display: none; flex-direction: column; align-items: center; padding: 40px; text-align: center;
+        }
+        .ai-spinner {
+            width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top-color: #8b5cf6;
+            border-radius: 50%; animation: spin 1s infinite linear; margin-bottom: 15px;
+        }
+        .ai-loading-text { color: var(--text-light); font-weight: 500; animation: pulse 1.5s infinite; }
+
+        /* Markdown Content Styling within AI Card */
+        .ai-content { line-height: 1.7; color: var(--text-main); font-size: 1.05rem; }
+        .ai-content h1, .ai-content h2, .ai-content h3 { margin-top: 20px; margin-bottom: 10px; color: #111827; }
+        .ai-content p { margin-bottom: 15px; }
+        .ai-content ul { margin-bottom: 15px; padding-left: 20px; }
+        .ai-content li { margin-bottom: 5px; }
+        .ai-content strong { color: #4c1d95; font-weight: 700; }
+        .ai-content blockquote { border-left: 4px solid #8b5cf6; padding-left: 15px; color: #6b7280; font-style: italic; background: #f5f3ff; padding: 10px 15px; border-radius: 0 8px 8px 0; }
+
+        /* --- MOBILE NAV --- */
         .mobile-nav {
             display: none; position: fixed; bottom: 0; left: 0; width: 100%;
             background: white; height: 65px; border-top: 1px solid #eee;
@@ -161,127 +180,92 @@
         }
         .mob-link i { font-size: 1.2rem; }
         .mob-link.active { color: var(--primary); font-weight: 600; }
+        .mob-link.ai-mob { color: #a855f7; } /* AI color hint */
+        .mob-link.ai-mob.active { color: #7c3aed; }
 
-        /* --- RESPONSIVE DESIGN --- */
+        /* --- FAB --- */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%;
+            background: var(--primary); color: white; display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 100; transition: transform 0.2s; border: none;
+        }
+        .fab:hover { transform: scale(1.1); }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main-wrapper { margin-left: 0; padding-bottom: 90px; }
             .mobile-nav { display: flex; }
             .fab { bottom: 85px; right: 20px; }
             .content-container { padding: 16px; }
-            .hero-amount { font-size: 2rem; }
-            .top-header { padding: 0 16px; }
             .history-filters { flex-direction: column; }
             .day-summary { flex-direction: column; text-align: center; }
         }
 
-        /* --- FORM STYLES --- */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        label { font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
-        input, select {
-            padding: 12px; border: 1px solid #d1d5db; border-radius: 10px;
-            font-size: 1rem; background: #f9fafb; outline: none; transition: border 0.2s;
-        }
-        input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        
-        button { border: none; font-family: inherit; cursor: pointer; }
-        .btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
-        .btn-cancel { background: #e5e7eb; color: var(--text-main); padding: 12px 24px; border-radius: 10px; font-weight: 600; }
-
-        /* --- NEW: DAILY HISTORY NAVIGATOR --- */
-        .date-nav-container {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;
-        }
-        .nav-btn {
-            width: 40px; height: 40px; border-radius: 50%; background: white; border: 1px solid #d1d5db;
-            display: flex; align-items: center; justify-content: center; color: var(--primary);
-            transition: all 0.2s;
-        }
-        .nav-btn:hover { background: var(--primary); color: white; }
-        
-        .current-date-display {
-            text-align: center; flex: 1;
-        }
-        .date-label { font-weight: 800; font-size: 1.1rem; color: var(--text-main); text-transform: capitalize; }
-        .date-sublabel { font-size: 0.8rem; color: var(--text-light); cursor: pointer; text-decoration: underline; }
-        
-        /* Hidden date input for picker functionality */
-        #historyDatePicker { position: absolute; opacity: 0; width: 1px; height: 1px; }
-
-        .day-summary {
-            display: flex; gap: 15px; margin-bottom: 20px; justify-content: center;
-        }
-        .summary-pill {
-            background: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #eee;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .summary-pill.inc { color: var(--success); background: #f0fdf4; border-color: #bbf7d0; }
-        .summary-pill.exp { color: var(--danger); background: #fef2f2; border-color: #fecaca; }
-
-        .history-filters {
-            display: flex; gap: 10px; margin-bottom: 15px; 
-        }
-        .filter-input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
-        .search-box { flex: 1; }
-
-        /* UTILS & TABLES */
+        /* --- UTILS --- */
         .hidden { display: none !important; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Form, Table, Filters Styling from v2.8 maintained */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        label { font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+        input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; background: #f9fafb; outline: none; }
+        button { border: none; font-family: inherit; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
+        .btn-cancel { background: #e5e7eb; color: var(--text-main); padding: 12px 24px; border-radius: 10px; font-weight: 600; }
+        
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th { text-align: left; padding: 16px; color: var(--text-light); font-weight: 600; border-bottom: 1px solid #eee; }
         td { padding: 16px; border-bottom: 1px solid #f3f4f6; }
-        .btn-icon-action { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; margin-right: 5px; transition: transform 0.2s; }
-        .btn-icon-action:hover { transform: scale(1.1); }
-
+        
         .text-success { color: var(--success); font-weight: 600; }
         .text-danger { color: var(--danger); font-weight: 600; }
         .text-credit { color: var(--credit); font-weight: 600; }
-        .loading { display: flex; justify-content: center; padding: 40px; }
-        .spinner { width: 30px; height: 30px; border: 3px solid #e5e7eb; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Modals */
-        .modal-overlay { z-index: 2000; }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 600px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s ease-out;
-            max-height: 90vh; overflow-y: auto;
-        }
-        .modal-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; }
-        .modal-details { margin-bottom: 20px; background: #f9fafb; padding: 15px; border-radius: 8px; }
-        .modal-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; }
-        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-confirm { background: var(--credit); color: white; flex: 1; padding: 10px; border-radius: 8px; font-weight: bold;}
-
-        /* Quota Cards */
-        .quota-card {
-            border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 10px;
-            display: flex; flex-direction: column; gap: 5px;
-        }
-        .quota-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-main); }
-        .quota-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-light); }
+        .date-nav-container { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .nav-btn { width: 40px; height: 40px; border-radius: 50%; background: white; border: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; color: var(--primary); transition: all 0.2s; }
+        .current-date-display { text-align: center; flex: 1; }
+        .date-label { font-weight: 800; font-size: 1.1rem; color: var(--text-main); text-transform: capitalize; }
+        .date-sublabel { font-size: 0.8rem; color: var(--text-light); cursor: pointer; text-decoration: underline; }
+        #historyDatePicker { position: absolute; opacity: 0; width: 1px; height: 1px; }
         
-        .card-status-item { margin-bottom: 10px; padding: 15px; background: #fff; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .card-status-item .card-name { font-weight: 600; }
-        .card-status-item .card-debt { color: var(--danger); font-weight: 700; }
+        .day-summary { display: flex; gap: 15px; margin-bottom: 20px; justify-content: center; }
+        .summary-pill { background: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+        .summary-pill.inc { color: var(--success); background: #f0fdf4; border-color: #bbf7d0; }
+        .summary-pill.exp { color: var(--danger); background: #fef2f2; border-color: #fecaca; }
+        
+        .history-filters { display: flex; gap: 10px; margin-bottom: 15px; }
+        .filter-input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+        .search-box { flex: 1; }
 
+        .modal-overlay { z-index: 2000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); animation: slideUp 0.3s ease-out; }
+        
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; z-index: 3000; }
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
+        
+        .quota-card { border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .quota-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-main); }
+        .quota-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-light); }
+        .card-status-item { margin-bottom: 10px; padding: 15px; background: #fff; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .card-status-item .card-name { font-weight: 600; }
+        .card-status-item .card-debt { color: var(--danger); font-weight: 700; }
+        .btn-icon-action { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; margin-right: 5px; transition: transform 0.2s; }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR (Desktop) -->
+    <!-- SIDEBAR -->
     <nav class="sidebar">
         <div class="brand">
-            <i class="fas fa-wallet"></i> CRM v2.8
+            <i class="fas fa-wallet"></i> CRM <span>v3.0 AI</span>
         </div>
         <div class="nav-links">
             <div class="nav-item active" onclick="switchView('dashboard', this)">
@@ -296,13 +280,17 @@
             <div class="nav-item" onclick="switchView('historial', this)">
                 <i class="fas fa-list"></i> Historial
             </div>
+            <!-- NEW AI ITEM -->
+            <div class="nav-item ai-nav" onclick="switchView('asistente', this)">
+                <i class="fas fa-robot"></i> Asistente IA
+            </div>
         </div>
         <div style="padding: 24px; font-size: 0.75rem; color: #9ca3af; text-align: center;">
             Familia & Finanzas © 2025
         </div>
     </nav>
 
-    <!-- MOBILE BOTTOM NAV -->
+    <!-- MOBILE NAV -->
     <nav class="mobile-nav">
         <button class="mob-link active" onclick="switchView('dashboard', this)">
             <i class="fas fa-home"></i> <span>Inicio</span>
@@ -310,24 +298,23 @@
         <button class="mob-link" onclick="switchView('transacciones', this)">
             <i class="fas fa-exchange-alt"></i> <span>Trans.</span>
         </button>
-        <button class="mob-link" onclick="switchView('estadisticas', this)">
-            <i class="fas fa-chart-pie"></i> <span>Stats</span>
+        <button class="mob-link ai-mob" onclick="switchView('asistente', this)">
+            <i class="fas fa-robot"></i> <span>IA</span>
         </button>
         <button class="mob-link" onclick="switchView('historial', this)">
             <i class="fas fa-list"></i> <span>Hist.</span>
         </button>
     </nav>
 
-    <!-- FLOATING ACTION BUTTON (FAB) -->
+    <!-- FAB -->
     <button class="fab" onclick="goToAddTransaction()">
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN WRAPPER -->
     <div class="main-wrapper">
         <header class="top-header">
             <div class="page-title" id="pageTitle">Resumen Financiero</div>
-            <!-- Dashboard Month Filter -->
             <div class="date-filter-pill" id="headerDateFilter">
                 <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
                 <input type="month" id="dashboardMonth" onchange="updateDashboardView()">
@@ -345,133 +332,92 @@
                         <i class="fas fa-info-circle"></i> Suma de Nequi, Bancos y Efectivo
                     </div>
                 </div>
-
+                <!-- Stats Logic maintained -->
                 <div class="stats-grid">
-                    <div class="mini-stat">
-                        <div class="mini-label"><i class="fas fa-university" style="color: #6366f1;"></i> Débito</div>
-                        <div class="mini-value" id="saldoDebito">$0</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-label"><i class="fas fa-money-bill-wave" style="color: #10b981;"></i> Efectivo</div>
-                        <div class="mini-value" id="saldoEfectivo">$0</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-label"><i class="fas fa-mobile-alt" style="color: #ec4899;"></i> Nequi</div>
-                        <div class="mini-value" id="saldoNequi">$0</div>
-                    </div>
+                    <div class="mini-stat"><div class="mini-label"><i class="fas fa-university" style="color: #6366f1;"></i> Débito</div><div class="mini-value" id="saldoDebito">$0</div></div>
+                    <div class="mini-stat"><div class="mini-label"><i class="fas fa-money-bill-wave" style="color: #10b981;"></i> Efectivo</div><div class="mini-value" id="saldoEfectivo">$0</div></div>
+                    <div class="mini-stat"><div class="mini-label"><i class="fas fa-mobile-alt" style="color: #ec4899;"></i> Nequi</div><div class="mini-value" id="saldoNequi">$0</div></div>
                 </div>
-
                 <h3 style="margin-bottom: 15px; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Flujo del Mes (<span id="lblPeriodoResumen">Actual</span>)</h3>
                 <div class="stats-grid">
-                    <div class="mini-stat income">
-                        <div class="mini-label">Ingresos</div>
-                        <div class="mini-value" id="totalIngresosMes">$0</div>
-                    </div>
-                    <div class="mini-stat debt">
-                        <div class="mini-label">Gastos + Compras TC</div>
-                        <div class="mini-value" id="totalGastosMes">$0</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-label">Balance Neto</div>
-                        <div class="mini-value" id="balanceMes" style="color: var(--primary);">$0</div>
-                    </div>
+                    <div class="mini-stat income"><div class="mini-label">Ingresos</div><div class="mini-value" id="totalIngresosMes">$0</div></div>
+                    <div class="mini-stat debt"><div class="mini-label">Gastos + Compras TC</div><div class="mini-value" id="totalGastosMes">$0</div></div>
+                    <div class="mini-stat"><div class="mini-label">Balance Neto</div><div class="mini-value" id="balanceMes" style="color: var(--primary);">$0</div></div>
                 </div>
-
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                         <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
-                        <button onclick="openQuotaModal()" style="background: var(--bg-body); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; width: auto;">
-                            <i class="fas fa-cog"></i> Gestionar
-                        </button>
+                        <button onclick="openQuotaModal()" style="background: var(--bg-body); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; width: auto;"><i class="fas fa-cog"></i> Gestionar</button>
                     </div>
                     <div class="hero-amount" id="deudaTotalTC" style="color: var(--danger); font-size: 1.8rem; margin-bottom: 15px;">$0</div>
-                    <div id="cardsBreakdown">
-                        <div class="loading"><div class="spinner"></div></div>
+                    <div id="cardsBreakdown"><div style="text-align:center; padding:20px;">Cargando...</div></div>
+                </div>
+            </div>
+
+            <!-- VIEW: ASISTENTE IA (NEW) -->
+            <div id="view-asistente" class="tab-content">
+                <div class="ai-welcome-card">
+                    <h2><i class="fas fa-brain"></i> Agente Financiero IA</h2>
+                    <p>Analizo tus transacciones, deudas y flujo de caja en tiempo real para ofrecerte estrategias personalizadas, alertas de riesgo y tips de ahorro.</p>
+                    <button class="btn-ai-action" onclick="generateAIAnalysis()">
+                        <i class="fas fa-magic"></i> Generar Análisis Ahora
+                    </button>
+                </div>
+
+                <div id="aiLoading" class="ai-loading">
+                    <div class="ai-spinner"></div>
+                    <div class="ai-loading-text">Analizando perfil financiero...</div>
+                    <small style="color: #9ca3af; margin-top: 5px;">Esto puede tomar unos segundos</small>
+                </div>
+
+                <div id="aiResultContainer" class="ai-response-container">
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:20px;">
+                            <h3 style="margin:0; color: #4c1d95;"><i class="fas fa-file-medical-alt"></i> Reporte Estratégico</h3>
+                            <span style="font-size:0.8rem; color:#6b7280;" id="aiTimestamp">Recién generado</span>
+                        </div>
+                        <div id="aiContentBody" class="ai-content">
+                            <!-- Markdown content goes here -->
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: TRANSACCIONES (Form) -->
+            <!-- VIEW: TRANSACCIONES -->
             <div id="view-transacciones" class="tab-content">
                 <div class="card">
                     <h2 style="margin-bottom: 20px;" id="formTitle">Nueva Transacción</h2>
                     <form id="transactionForm">
                         <input type="hidden" id="editingId" value="">
-                        <!-- Form Fields as before -->
                         <div class="form-grid">
                             <div class="form-group full-width">
                                 <label>Tipo de Movimiento</label>
                                 <select id="tipo" required onchange="handleTipoChange()" style="font-weight: 600;">
-                                    <option value="gasto">💸 Gasto (Salida Dinero)</option>
-                                    <option value="ingreso">💰 Ingreso (Entrada Dinero)</option>
-                                    <option value="credito">💳 Compra a Crédito (Genera Deuda)</option>
-                                    <option value="pago_tarjeta">📉 Pagar Tarjeta (Baja Deuda)</option>
-                                    <option value="transferencia">🔄 Transferencia entre Cuentas</option>
+                                    <option value="gasto">💸 Gasto</option>
+                                    <option value="ingreso">💰 Ingreso</option>
+                                    <option value="credito">💳 Crédito</option>
+                                    <option value="pago_tarjeta">📉 Abono TC</option>
+                                    <option value="transferencia">🔄 Transferencia</option>
                                 </select>
                             </div>
+                            <!-- Dynamic Fields -->
                             <div id="creditConfig" class="form-group full-width hidden" style="background: #fff1f2; padding: 15px; border-radius: 12px; border: 1px solid #fda4af;">
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                    <div class="form-group">
-                                        <label style="color: var(--danger);">Tarjeta</label>
-                                        <select id="tarjetaCredito"></select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label style="color: var(--danger);">Cuotas</label>
-                                        <input type="number" id="cuotas" min="1" max="36" value="1">
-                                    </div>
+                                    <div class="form-group"><label style="color: var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div>
+                                    <div class="form-group"><label style="color: var(--danger);">Cuotas</label><input type="number" id="cuotas" min="1" max="36" value="1"></div>
                                 </div>
                             </div>
                             <div id="divPagoTarjeta" class="form-group full-width hidden" style="background: #ecfdf5; padding: 15px; border-radius: 12px; border: 1px solid #6ee7b7;">
-                                <div class="form-group">
-                                    <label style="color: var(--success);">Tarjeta a Pagar</label>
-                                    <select id="tarjetaDestinoPago"></select>
-                                </div>
+                                <div class="form-group"><label style="color: var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div>
                             </div>
-                            <div class="form-group" id="metodoPagoDiv">
-                                <label id="lblMetodoPago">Método de Pago</label>
-                                <select id="metodoPago">
-                                    <option value="debito">Débito</option>
-                                    <option value="efectivo">Efectivo</option>
-                                    <option value="nequi">Nequi</option>
-                                </select>
-                            </div>
-                            <div class="form-group hidden" id="metodoDestinoDiv">
-                                <label>Cuenta Destino</label>
-                                <select id="metodoDestino">
-                                    <option value="debito">Débito</option>
-                                    <option value="efectivo">Efectivo</option>
-                                    <option value="nequi">Nequi</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Monto</label>
-                                <input type="text" id="monto" placeholder="$ 0" required oninput="formatCurrencyInput(this)" style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">
-                            </div>
-                            <div class="form-group">
-                                <label>Categoría</label>
-                                <select id="categoria" required><option value="">Seleccione...</option></select>
-                            </div>
-                            <div class="form-group hidden" id="subcategoriaDiv">
-                                <label>Subcategoría</label>
-                                <select id="subcategoria"></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Responsable</label>
-                                <select id="miembro" required>
-                                    <option value="papa">Papá</option>
-                                    <option value="mama">Mamá</option>
-                                    <option value="hijo1">Hijo/a 1</option>
-                                    <option value="compartido">Compartido</option>
-                                </select>
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Descripción</label>
-                                <input type="text" id="descripcion" placeholder="¿En qué gastaste?" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Fecha</label>
-                                <input type="date" id="fecha" required>
-                            </div>
+                            <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método de Pago</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
+                            <div class="form-group hidden" id="metodoDestinoDiv"><label>Cuenta Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
+                            <div class="form-group"><label>Monto</label><input type="text" id="monto" placeholder="$ 0" required oninput="formatCurrencyInput(this)" style="font-size: 1.2rem; font-weight: bold; color: var(--primary);"></div>
+                            <div class="form-group"><label>Categoría</label><select id="categoria" required><option value="">Seleccione...</option></select></div>
+                            <div class="form-group hidden" id="subcategoriaDiv"><label>Subcategoría</label><select id="subcategoria"></select></div>
+                            <div class="form-group"><label>Responsable</label><select id="miembro" required><option value="papa">Papá</option><option value="mama">Mamá</option><option value="hijo1">Hijo/a 1</option><option value="compartido">Compartido</option></select></div>
+                            <div class="form-group full-width"><label>Descripción</label><input type="text" id="descripcion" placeholder="Detalle" required></div>
+                            <div class="form-group"><label>Fecha</label><input type="date" id="fecha" required></div>
                         </div>
                         <div style="margin-top: 25px; display: flex; gap: 10px;">
                             <button type="button" onclick="preSubmit()" class="btn-primary" id="btnSubmitText">Guardar Transacción</button>
@@ -483,26 +429,14 @@
 
             <!-- VIEW: ESTADISTICAS -->
             <div id="view-estadisticas" class="tab-content">
-                <div class="card">
-                    <h3>Tendencia Financiera (6 Meses)</h3>
-                    <div style="height: 300px; position: relative;">
-                        <canvas id="chartTendencias"></canvas>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>Distribución de Gastos</h3>
-                    <div style="height: 350px; position: relative;">
-                        <canvas id="chartCategorias"></canvas>
-                    </div>
-                </div>
+                <div class="card"><h3>Tendencia Financiera (6 Meses)</h3><div style="height: 300px; position: relative;"><canvas id="chartTendencias"></canvas></div></div>
+                <div class="card"><h3>Distribución de Gastos</h3><div style="height: 350px; position: relative;"><canvas id="chartCategorias"></canvas></div></div>
             </div>
 
-            <!-- VIEW: HISTORIAL (Daily View) -->
+            <!-- VIEW: HISTORIAL (Daily) -->
             <div id="view-historial" class="tab-content">
                 <div class="card">
                     <h3 style="margin-bottom: 15px; text-align:center;">Agenda Financiera</h3>
-                    
-                    <!-- NEW: Daily Navigation Bar -->
                     <div class="date-nav-container">
                         <button class="nav-btn" onclick="changeDay(-1)"><i class="fas fa-chevron-left"></i></button>
                         <div class="current-date-display" onclick="document.getElementById('historyDatePicker').showPicker()">
@@ -512,56 +446,31 @@
                         </div>
                         <button class="nav-btn" onclick="changeDay(1)"><i class="fas fa-chevron-right"></i></button>
                     </div>
-
-                    <!-- NEW: Daily Summary -->
                     <div class="day-summary">
-                        <div class="summary-pill inc">
-                            <i class="fas fa-arrow-down"></i>
-                            <span id="valDailyInc">$0</span>
-                        </div>
-                        <div class="summary-pill exp">
-                            <i class="fas fa-arrow-up"></i>
-                            <span id="valDailyExp">$0</span>
-                        </div>
+                        <div class="summary-pill inc"><i class="fas fa-arrow-down"></i><span id="valDailyInc">$0</span></div>
+                        <div class="summary-pill exp"><i class="fas fa-arrow-up"></i><span id="valDailyExp">$0</span></div>
                     </div>
-                    
-                    <!-- Text & Type Filters -->
                     <div class="history-filters">
-                        <input type="text" id="historySearch" class="filter-input search-box" placeholder="Buscar descripción..." oninput="renderHistory()">
-                        <select id="historyType" class="filter-input" style="flex:1;" onchange="renderHistory()">
-                            <option value="all">Todo</option>
-                            <option value="gasto">Gastos</option>
-                            <option value="ingreso">Ingresos</option>
-                            <option value="credito">Crédito</option>
-                        </select>
+                        <input type="text" id="historySearch" class="filter-input search-box" placeholder="Buscar..." oninput="renderHistory()">
+                        <select id="historyType" class="filter-input" style="flex:1;" onchange="renderHistory()"><option value="all">Todo</option><option value="gasto">Gastos</option><option value="ingreso">Ingresos</option><option value="credito">Crédito</option></select>
                     </div>
-
                     <div class="table-container">
                         <table>
-                            <thead>
-                                <tr>
-                                    <!-- Fecha column removed as it's redundant in daily view -->
-                                    <th>Tipo</th>
-                                    <th>Cat.</th>
-                                    <th>Desc.</th>
-                                    <th>Monto</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Tipo</th><th>Cat.</th><th>Desc.</th><th>Monto</th><th></th></tr></thead>
                             <tbody id="transactionList"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-        </div> <!-- End Content Container -->
-    </div> <!-- End Main Wrapper -->
+        </div>
+    </div>
 
-    <!-- MODALES (Fix: Sin clase hidden) -->
-    <div class="modal-overlay" id="creditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <!-- MODALES -->
+    <div class="modal-overlay" id="creditModal" style="display:none;">
         <div class="modal-content">
             <h3 class="modal-title">Confirmar Crédito</h3>
-            <div class="modal-details" style="margin-top:15px;">
+            <div class="modal-details">
                 <div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div>
                 <div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div>
                 <div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div>
@@ -573,21 +482,15 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="quotaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div class="modal-overlay" id="quotaModal" style="display:none;">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3 class="modal-title">Gestión Tarjetas</h3>
                 <button onclick="closeModal('quotaModal')" style="background:none; font-size:1.5rem;">&times;</button>
             </div>
             <div class="add-card-form">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="cardNameInput" placeholder="Ej: Visa">
-                </div>
-                <div class="form-group">
-                    <label>Cupo</label>
-                    <input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0">
-                </div>
+                <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
+                <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
                 <button class="btn-primary" onclick="saveCard()" id="btnSaveCard" style="height: 46px; width: auto; padding: 0 20px;"><i class="fas fa-plus"></i></button>
                 <input type="hidden" id="editCardId">
             </div>
@@ -597,7 +500,6 @@
 
     <div id="toastContainer"></div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -623,10 +525,11 @@
         let trendChartInstance = null;
         let tempTransactionData = null;
         let globalDeudaPorTarjeta = {};
-        let currentViewDate = new Date(); // For Dashboard (Month)
-        let currentHistoryDate = new Date(); // For History (Day) - NEW
+        let currentViewDate = new Date(); 
+        let currentHistoryDate = new Date(); 
 
-        const categories = { /* Same categories object as before */
+        // Categorias (Mantenidas)
+        const categories = {
             gasto: {
                 'vivienda': { icon: '🏠', subcategorias: ['Arriendo', 'Cuota hipoteca', 'Administración', 'Impuesto predial', 'Reparaciones', 'Muebles y electrodomésticos'] },
                 'servicios_publicos': { icon: '💡', subcategorias: ['Energía eléctrica', 'Agua y alcantarillado', 'Gas natural', 'Internet', 'Telefonía móvil', 'TV por cable/streaming'] },
@@ -648,7 +551,7 @@
                 'otros': { icon: '💰', subcategorias: ['Subsidios estatales', 'Pensión', 'Regalos/donaciones', 'Otros ingresos'] }
             }
         };
-        const categorias = categories; // Alias compatibility
+        const categorias = categories;
 
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
@@ -657,25 +560,146 @@
             document.getElementById('dashboardMonth').value = `${yyyy}-${mm}`;
             document.getElementById('fecha').valueAsDate = today;
             
-            // Set Date Picker to Today
             updateHistoryHeader();
-
+            
             document.getElementById('creditModal').style.display = 'none';
             document.getElementById('quotaModal').style.display = 'none';
 
             loadCards();
         });
 
-        // --- NAVIGATION UI ---
+        // --- AI AGENT LOGIC (NEW) ---
+        const apiKey = ""; // Environment handled
+
+        async function generateAIAnalysis() {
+            const btn = document.querySelector('.btn-ai-action');
+            const loader = document.getElementById('aiLoading');
+            const result = document.getElementById('aiResultContainer');
+            
+            btn.disabled = true;
+            loader.style.display = 'flex';
+            result.style.display = 'none';
+
+            // 1. Prepare Context
+            const financialContext = prepareFinancialContext();
+
+            // 2. Construct System Prompt
+            const prompt = `
+                Actúa como un Asesor Financiero Personal Experto. Analiza los siguientes datos de un hogar:
+                ${JSON.stringify(financialContext)}
+                
+                Genera un reporte en formato Markdown con:
+                1. 🚦 **Diagnóstico de Salud Financiera**: (Verde/Amarillo/Rojo) y por qué.
+                2. 📉 **Análisis de Deuda**: Si hay deuda en tarjetas, sugiere si usar método 'Bola de Nieve' (pagar menor saldo primero) o 'Avalancha' (mayor interés, asumiendo tasas estándar colombianas del 25% EA).
+                3. ⚠️ **Alertas**: Detecta si los gastos superan ingresos o si hay categorías con gasto excesivo.
+                4. 💡 **3 Tips de Acción Inmediata**: Basados en los datos reales.
+                
+                Usa emojis, sé directo, empático pero firme con los números. No inventes datos. Moneda: COP.
+            `;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, no pude generar el análisis en este momento.";
+
+                // Render Result
+                document.getElementById('aiContentBody').innerHTML = marked.parse(aiText);
+                document.getElementById('aiTimestamp').textContent = new Date().toLocaleString();
+                
+                loader.style.display = 'none';
+                result.style.display = 'block';
+            } catch (error) {
+                console.error(error);
+                alert('Error conectando con el Agente IA');
+                loader.style.display = 'none';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function prepareFinancialContext() {
+            // Aggregate real data for the AI
+            let totalIncome = 0;
+            let totalExpense = 0;
+            let debts = {...globalDeudaPorTarjeta};
+            let totalDebt = 0;
+            
+            // Calculate totals from last 30 days for "Current flow"
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            const recentTransactions = transactions.filter(t => new Date(t.fecha) >= thirtyDaysAgo);
+            
+            recentTransactions.forEach(t => {
+                const m = parseFloat(t.monto);
+                if (t.tipo === 'ingreso') totalIncome += m;
+                if (t.tipo === 'gasto' || t.tipo === 'credito') totalExpense += m;
+            });
+
+            // Calculate total debt
+            Object.values(debts).forEach(d => totalDebt += d);
+
+            // Top Expense Categories
+            let catMap = {};
+            recentTransactions.filter(t => t.tipo === 'gasto').forEach(t => {
+                catMap[t.categoria] = (catMap[t.categoria] || 0) + parseFloat(t.monto);
+            });
+            // Sort categories
+            const topCategories = Object.entries(catMap)
+                .sort(([,a],[,b]) => b-a)
+                .slice(0, 3)
+                .map(([k,v]) => ({ category: k, amount: v }));
+
+            return {
+                period: "Últimos 30 días",
+                income: totalIncome,
+                expenses: totalExpense,
+                cashFlow: totalIncome - totalExpense,
+                totalDebt: totalDebt,
+                debtDetails: debts,
+                topExpenses: topCategories,
+                cards: cardsList.map(c => ({ name: c.name, quota: c.quota }))
+            };
+        }
+
+        // --- NAVIGATION LOGIC ---
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
-            document.getElementById('headerDateFilter').style.display = viewId === 'dashboard' ? 'flex' : 'none';
-            document.getElementById('pageTitle').textContent = viewId === 'historial' ? 'Agenda Financiera' : document.getElementById('pageTitle').textContent;
+            
+            // Toggle Date Filter visibility
+            const filter = document.getElementById('headerDateFilter');
+            if(filter) filter.style.display = viewId === 'dashboard' ? 'flex' : 'none';
+            
+            // Update Titles
+            const titles = { 'dashboard': 'Resumen', 'transacciones': 'Registrar', 'estadisticas': 'Análisis', 'historial': 'Agenda', 'asistente': 'Asesor IA' };
+            document.getElementById('pageTitle').textContent = titles[viewId] || 'CRM';
 
-            // Nav states logic (omitted for brevity, same as before)
+            // Update Sidebar Active State
+            document.querySelectorAll('.sidebar .nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.mobile-nav .mob-link').forEach(el => el.classList.remove('active'));
+
+            // Identify links by onclick attribute content roughly
+            const sideLinks = document.querySelectorAll('.sidebar .nav-item');
+            const mobLinks = document.querySelectorAll('.mobile-nav .mob-link');
+            
+            // Manual mapping for precision
+            if(viewId==='dashboard') { sideLinks[0].classList.add('active'); mobLinks[0].classList.add('active'); }
+            if(viewId==='transacciones') { sideLinks[1].classList.add('active'); mobLinks[1].classList.add('active'); }
+            if(viewId==='estadisticas') { sideLinks[2].classList.add('active'); /* Mob index 2 is AI in V3 */ }
+            if(viewId==='historial') { sideLinks[3].classList.add('active'); mobLinks[3].classList.add('active'); }
+            if(viewId==='asistente') { sideLinks[4].classList.add('active'); mobLinks[2].classList.add('active'); }
         }
-        function goToAddTransaction() { switchView('transacciones', null); }
+
+        function goToAddTransaction() { switchView('transacciones'); }
 
         // --- DATE & CURRENCY UTILS ---
         function formatMoney(n) { return '$ ' + parseFloat(n).toLocaleString('es-CO', {maximumFractionDigits:0}); }
@@ -686,33 +710,23 @@
         }
         function parseCurrencyInput(valueString) { return valueString ? parseFloat(valueString.replace(/\D/g, '')) : 0; }
 
-        // --- HISTORY DATE LOGIC (NEW) ---
+        // --- HISTORY LOGIC ---
         function changeDay(offset) {
             currentHistoryDate.setDate(currentHistoryDate.getDate() + offset);
-            updateHistoryHeader();
-            renderHistory();
+            updateHistoryHeader(); renderHistory();
         }
-        
         function setHistoryDate(dateStr) {
-            // Input is YYYY-MM-DD, we must respect timezone
             const [y, m, d] = dateStr.split('-').map(Number);
             currentHistoryDate = new Date(y, m - 1, d);
-            updateHistoryHeader();
-            renderHistory();
+            updateHistoryHeader(); renderHistory();
         }
-
         function updateHistoryHeader() {
-            // Format date for display
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const displayStr = currentHistoryDate.toLocaleDateString('es-CO', options);
-            
-            // Check if it is today
             const today = new Date();
             const isToday = today.toDateString() === currentHistoryDate.toDateString();
-            
             document.getElementById('lblHistoryDate').textContent = isToday ? "Hoy" : displayStr;
             
-            // Update hidden picker value to keep in sync
             const yyyy = currentHistoryDate.getFullYear();
             const mm = String(currentHistoryDate.getMonth() + 1).padStart(2, '0');
             const dd = String(currentHistoryDate.getDate()).padStart(2, '0');
@@ -730,10 +744,13 @@
                 loadTransactions();
             } catch (error) { console.error(error); }
         }
-        async function seedDefaultCards() { /* Same */ }
+        async function seedDefaultCards() { /* Same logic */ 
+            const defaults = ['Exito', 'Nu', 'Falabella']; const batch = db.batch();
+            defaults.forEach(name => batch.set(db.collection('cards').doc(), { name, quota: 0 }));
+            await batch.commit(); loadCards();
+        }
         function populateCardSelects() {
-            const s1 = document.getElementById('tarjetaCredito');
-            const s2 = document.getElementById('tarjetaDestinoPago');
+            const s1 = document.getElementById('tarjetaCredito'); const s2 = document.getElementById('tarjetaDestinoPago');
             s1.innerHTML = ''; s2.innerHTML = '';
             cardsList.forEach(c => { s1.add(new Option(c.name,c.name)); s2.add(new Option(c.name,c.name)); });
         }
@@ -745,57 +762,36 @@
             updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();
         }
 
-        // --- RENDER HISTORY (UPDATED) ---
         function renderHistory() {
-            const tbody = document.getElementById('transactionList');
-            tbody.innerHTML = '';
-
-            // 1. Build Filter Key (YYYY-MM-DD)
+            const tbody = document.getElementById('transactionList'); tbody.innerHTML = '';
             const yyyy = currentHistoryDate.getFullYear();
             const mm = String(currentHistoryDate.getMonth() + 1).padStart(2, '0');
             const dd = String(currentHistoryDate.getDate()).padStart(2, '0');
             const filterDateStr = `${yyyy}-${mm}-${dd}`;
-
-            // 2. Text & Type Filter
+            
             const searchText = document.getElementById('historySearch').value.toLowerCase();
             const filterType = document.getElementById('historyType').value;
-
-            // 3. Daily Summaries
+            
             let dayInc = 0, dayExp = 0;
-
             const filtered = transactions.filter(t => {
-                // Date Check (Strict Equality)
                 const isSameDay = t.fecha === filterDateStr;
-                
-                // Other Filters
                 const textMatch = t.descripcion.toLowerCase().includes(searchText);
                 const typeMatch = filterType === 'all' || t.tipo === filterType;
-
                 if (isSameDay) {
-                    // Calculate summary even if filtered by text? No, summary reflects view.
-                    // Actually, let's calculate summary for the DAY regardless of search to show reality.
                     const m = parseFloat(t.monto);
-                    if(t.tipo === 'ingreso') dayInc += m;
-                    else if(t.tipo === 'gasto' || t.tipo === 'credito') dayExp += m;
+                    if(t.tipo === 'ingreso') dayInc += m; else if(t.tipo === 'gasto' || t.tipo === 'credito') dayExp += m;
                 }
-
                 return isSameDay && textMatch && typeMatch;
             });
 
-            // Update Summary UI
             document.getElementById('valDailyInc').textContent = formatMoney(dayInc);
             document.getElementById('valDailyExp').textContent = formatMoney(dayExp);
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Sin movimientos este día</td></tr>';
-                return;
-            }
+            if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Sin movimientos este día</td></tr>'; return; }
 
             filtered.forEach(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
-                let symbol = t.tipo==='ingreso'?'+':'-';
-                if(t.tipo==='transferencia') { color='text-main'; symbol=''; }
-                
+                let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia') { color='text-main'; symbol=''; }
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="text-transform:capitalize; font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
@@ -811,25 +807,20 @@
             });
         }
 
-        // --- UNCHANGED LOGIC (Dashboard, Forms, CRUD) ---
-        function updateDashboard() { /* Logic from v2.7.1 */ 
+        // --- DASHBOARD & CHARTS (Kept precise) ---
+        function updateDashboard() { 
             let deb=0, eff=0, neq=0; let debtMap = {}; cardsList.forEach(c => debtMap[c.name]=0);
-            let incMonth=0, expMonth=0;
-            const vm = currentViewDate.getMonth(); const vy = currentViewDate.getFullYear();
+            let incMonth=0, expMonth=0; const vm = currentViewDate.getMonth(); const vy = currentViewDate.getFullYear();
             transactions.forEach(t => {
-                const m = parseFloat(t.monto);
-                const [ty, tm] = t.fecha.split('-').map(Number);
-                const isView = (tm-1)===vm && ty===vy;
+                const m = parseFloat(t.monto); const [ty, tm] = t.fecha.split('-').map(Number); const isView = (tm-1)===vm && ty===vy;
                 if(t.tipo === 'pago_tarjeta') {
                     if(t.metodoPago==='debito') deb-=m; if(t.metodoPago==='efectivo') eff-=m; if(t.metodoPago==='nequi') neq-=m;
                     if(debtMap[t.tarjetaDestino] !== undefined) debtMap[t.tarjetaDestino] -= m;
                 } else if(!t.esCredito) {
                     if(t.tipo==='ingreso') {
-                        if(t.metodoPago==='debito') deb+=m; if(t.metodoPago==='efectivo') eff+=m; if(t.metodoPago==='nequi') neq+=m;
-                        if(isView) incMonth+=m;
+                        if(t.metodoPago==='debito') deb+=m; if(t.metodoPago==='efectivo') eff+=m; if(t.metodoPago==='nequi') neq+=m; if(isView) incMonth+=m;
                     } else if(t.tipo==='gasto') {
-                        if(t.metodoPago==='debito') deb-=m; if(t.metodoPago==='efectivo') eff-=m; if(t.metodoPago==='nequi') neq-=m;
-                        if(isView) expMonth+=m;
+                        if(t.metodoPago==='debito') deb-=m; if(t.metodoPago==='efectivo') eff-=m; if(t.metodoPago==='nequi') neq-=m; if(isView) expMonth+=m;
                     } else if(t.tipo==='transferencia') {
                         if(t.metodoPago==='debito') deb-=m; if(t.metodoPago==='efectivo') eff-=m; if(t.metodoPago==='nequi') neq-=m;
                         if(t.metodoDestino==='debito') deb+=m; if(t.metodoDestino==='efectivo') eff+=m; if(t.metodoDestino==='nequi') neq+=m;
@@ -856,10 +847,9 @@
 
         function updateDashboardView() {
             const pickerVal = document.getElementById('dashboardMonth').value;
-            if(pickerVal) { const [year, month] = pickerVal.split('-'); currentViewDate = new Date(parseInt(year), parseInt(month) - 1, 1); updateDashboard(); }
+            if(pickerVal) { const [year, month] = pickerVal.split('-'); currentViewDate = new Date(parseInt(year), parseInt(month) - 1, 1); updateDashboard(); renderCharts(); }
         }
 
-        // Charts & CRUD (same as before)
         function renderTrendChart() {
             const ctx = document.getElementById('chartTendencias'); if(trendChartInstance) trendChartInstance.destroy();
             const labels = []; const dInc = []; const dExp = []; const today = new Date(); const buckets = {};
@@ -875,8 +865,8 @@
             chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: ['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6'] }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} } });
         }
 
-        // FORM LOGIC
-        function handleTipoChange() { /* same */ 
+        // --- FORMS & CRUD ---
+        function handleTipoChange() {
             const t = document.getElementById('tipo').value;
             const cc = document.getElementById('creditConfig'); const pc = document.getElementById('divPagoTarjeta');
             const mp = document.getElementById('metodoPagoDiv'); const md = document.getElementById('metodoDestinoDiv');
@@ -886,15 +876,38 @@
             cat.innerHTML = '<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden');
             if(t === 'pago_tarjeta') cat.add(new Option('Abono Tarjeta', 'pago_tc')); else if(t === 'transferencia') cat.add(new Option('Transferencia', 'transferencia')); else { const group = t === 'credito' ? 'gasto' : t; if(categorias[group]) { Object.keys(categorias[group]).forEach(k => { cat.add(new Option(categorias[group][k].icon + ' ' + k.toUpperCase().replace(/_/g,' '), k)); }); } }
         }
-        document.getElementById('categoria').addEventListener('change', function() { /* same */ const t=document.getElementById('tipo').value; if(t==='pago_tarjeta'||t==='transferencia')return; const k=this.value; const sub=document.getElementById('subcategoria'); const div=document.getElementById('subcategoriaDiv'); const group=t==='credito'?'gasto':t; if(k&&categorias[group][k]){ div.classList.remove('hidden'); sub.innerHTML=''; categorias[group][k].subcategorias.forEach(s => sub.add(new Option(s,s))); } else div.classList.add('hidden'); });
+        
+        document.getElementById('categoria').addEventListener('change', function() {
+            const t=document.getElementById('tipo').value; if(t==='pago_tarjeta'||t==='transferencia')return;
+            const k=this.value; const sub=document.getElementById('subcategoria'); const div=document.getElementById('subcategoriaDiv'); const group=t==='credito'?'gasto':t;
+            if(k&&categorias[group][k]){ div.classList.remove('hidden'); sub.innerHTML=''; categorias[group][k].subcategorias.forEach(s => sub.add(new Option(s,s))); } else div.classList.add('hidden');
+        });
 
-        function preSubmit() { /* same */ const t = document.getElementById('tipo').value; const m = parseCurrencyInput(document.getElementById('monto').value); if(m<=0){alert('Monto inválido');return;} const data={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()}; if(t==='credito'){ const tc=document.getElementById('tarjetaCredito').value; const c=parseInt(document.getElementById('cuotas').value); data.metodoPago=tc; data.esCredito=true; data.cuotas=c; data.totalDeuda=m; tempTransactionData=data; document.getElementById('modalTarjeta').textContent=tc; document.getElementById('modalCuotas').textContent=c; document.getElementById('modalTotalDeuda').textContent=formatMoney(m); document.getElementById('creditModal').style.display='flex'; }else{ if(t==='pago_tarjeta'){ data.metodoPago=document.getElementById('metodoPago').value; data.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value; }else{ data.metodoPago=document.getElementById('metodoPago').value; if(t==='transferencia') data.metodoDestino=document.getElementById('metodoDestino').value; } saveTransaction(data); } }
+        function preSubmit() { 
+            const t = document.getElementById('tipo').value; const m = parseCurrencyInput(document.getElementById('monto').value); if(m<=0){alert('Monto inválido');return;}
+            const data={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+            if(t==='credito'){ const tc=document.getElementById('tarjetaCredito').value; const c=parseInt(document.getElementById('cuotas').value); data.metodoPago=tc; data.esCredito=true; data.cuotas=c; data.totalDeuda=m; tempTransactionData=data; document.getElementById('modalTarjeta').textContent=tc; document.getElementById('modalCuotas').textContent=c; document.getElementById('modalTotalDeuda').textContent=formatMoney(m); document.getElementById('creditModal').style.display='flex'; }
+            else{ if(t==='pago_tarjeta'){ data.metodoPago=document.getElementById('metodoPago').value; data.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value; }else{ data.metodoPago=document.getElementById('metodoPago').value; if(t==='transferencia') data.metodoDestino=document.getElementById('metodoDestino').value; } saveTransaction(data); }
+        }
+        
         function confirmSaveTransaction() { if(tempTransactionData) saveTransaction(tempTransactionData); closeModal('creditModal'); }
         async function saveTransaction(data) { try{ if(editingTransactionId) await db.collection('transactions').doc(editingTransactionId).update(data); else await db.collection('transactions').add(data); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success'); }catch(e){alert('Error: '+e.message);} }
         function showToast(msg,type) { const c=document.getElementById('toastContainer'); const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; c.appendChild(t); setTimeout(()=>t.remove(),4000); }
         function cancelEdit() { editingTransactionId = null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent = 'Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent = 'Guardar Transacción'; handleTipoChange(); }
-        window.editTransaction = function(id) { /* same */ const t = transactions.find(x => x.id === id); if (!t) return; editingTransactionId = id; switchView('transacciones', document.querySelector('.sidebar .nav-item:nth-child(2)')); document.getElementById('tipo').value = t.tipo; handleTipoChange(); const mInput = document.getElementById('monto'); mInput.value = t.monto; formatCurrencyInput(mInput); document.getElementById('descripcion').value = t.descripcion; document.getElementById('fecha').value = t.fecha; document.getElementById('miembro').value = t.miembro; if (t.tipo === 'credito') { document.getElementById('tarjetaCredito').value = t.metodoPago; document.getElementById('cuotas').value = t.cuotas; } else if (t.tipo === 'pago_tarjeta') { document.getElementById('metodoPago').value = t.metodoPago; document.getElementById('tarjetaDestinoPago').value = t.tarjetaDestino; } else { document.getElementById('metodoPago').value = t.metodoPago; if(t.tipo === 'transferencia') document.getElementById('metodoDestino').value = t.metodoDestino; } document.getElementById('formTitle').textContent = 'Editar Transacción'; document.getElementById('btnSubmitText').textContent = 'Actualizar Transacción'; document.getElementById('btnCancelar').classList.remove('hidden'); setTimeout(() => { document.getElementById('categoria').value = t.categoria; const event = new Event('change'); document.getElementById('categoria').dispatchEvent(event); setTimeout(() => { if(t.subcategoria) document.getElementById('subcategoria').value = t.subcategoria; }, 50); }, 100); }
+        window.editTransaction = function(id) { 
+            const t = transactions.find(x => x.id === id); if (!t) return; editingTransactionId = id; 
+            switchView('transacciones'); document.getElementById('tipo').value = t.tipo; handleTipoChange(); 
+            const mInput = document.getElementById('monto'); mInput.value = t.monto; formatCurrencyInput(mInput); 
+            document.getElementById('descripcion').value = t.descripcion; document.getElementById('fecha').value = t.fecha; document.getElementById('miembro').value = t.miembro; 
+            if (t.tipo === 'credito') { document.getElementById('tarjetaCredito').value = t.metodoPago; document.getElementById('cuotas').value = t.cuotas; } 
+            else if (t.tipo === 'pago_tarjeta') { document.getElementById('metodoPago').value = t.metodoPago; document.getElementById('tarjetaDestinoPago').value = t.tarjetaDestino; } 
+            else { document.getElementById('metodoPago').value = t.metodoPago; if(t.tipo === 'transferencia') document.getElementById('metodoDestino').value = t.metodoDestino; } 
+            document.getElementById('formTitle').textContent = 'Editar Transacción'; document.getElementById('btnSubmitText').textContent = 'Actualizar Transacción'; document.getElementById('btnCancelar').classList.remove('hidden'); 
+            setTimeout(() => { document.getElementById('categoria').value = t.categoria; const event = new Event('change'); document.getElementById('categoria').dispatchEvent(event); setTimeout(() => { if(t.subcategoria) document.getElementById('subcategoria').value = t.subcategoria; }, 50); }, 100); 
+        }
         window.deleteTransaction = async function(id) { if(confirm("Eliminar?")) { await db.collection('transactions').doc(id).delete(); loadTransactions(); showToast('Eliminado', 'success'); } }
+        
+        // MODAL & CARD MGMT
         function openQuotaModal() { renderQuotaCards(); resetCardForm(); document.getElementById('quotaModal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function resetCardForm() { document.getElementById('cardNameInput').value=''; document.getElementById('cardQuotaInput').value=''; document.getElementById('editCardId').value=''; document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>'; }
