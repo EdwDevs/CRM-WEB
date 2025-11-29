@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v3.4 - Expert Analyst</title>
+    <title>CRM Financiero v3.5 - Gemini AI</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -24,7 +24,7 @@
             --info: #3b82f6;
             --credit: #ec4899;
             
-            --ai-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            --ai-gradient: linear-gradient(135deg, #6366f1 0%, #d946ef 100%); /* Gemini Theme */
             
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -46,7 +46,7 @@
             display: flex;
         }
 
-        /* --- SIDEBAR (Desktop) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             width: var(--nav-width);
             background: var(--surface);
@@ -66,7 +66,9 @@
             font-size: 1.25rem; font-weight: 800; color: var(--primary);
             border-bottom: 1px solid #f3f4f6;
         }
-        .brand span { color: #0ea5e9; margin-left: 5px; }
+        .brand span { 
+            background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-left: 5px; 
+        }
 
         .nav-links { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 8px; }
         
@@ -79,9 +81,9 @@
         .nav-item:hover { background: #f9fafb; color: var(--primary); }
         .nav-item.active { background: #e0e7ff; color: var(--primary); font-weight: 600; }
         
-        .nav-item.ai-nav { color: #0284c7; }
-        .nav-item.ai-nav.active { background: #e0f2fe; color: #0369a1; }
-        .nav-item.ai-nav i { color: #0ea5e9; }
+        .nav-item.ai-nav { color: #9333ea; }
+        .nav-item.ai-nav.active { background: #f3e8ff; color: #7e22ce; }
+        .nav-item.ai-nav i { color: #d946ef; }
 
         /* --- MAIN CONTENT --- */
         .main-wrapper {
@@ -137,13 +139,13 @@
         /* --- AI AGENT VIEW --- */
         .ai-welcome-card {
             background: var(--ai-gradient); color: white; padding: 30px; border-radius: var(--radius);
-            text-align: center; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4);
+            text-align: center; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
         }
         .ai-welcome-card h2 { font-size: 2rem; margin-bottom: 10px; }
         .ai-welcome-card p { opacity: 0.95; font-size: 1.1rem; max-width: 600px; margin: 0 auto 20px auto; }
         
         .btn-ai-action {
-            background: white; color: #0369a1; padding: 15px 35px; border-radius: 30px;
+            background: white; color: #7c3aed; padding: 15px 35px; border-radius: 30px;
             font-weight: 800; border: none; cursor: pointer; font-size: 1.1rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;
             display: inline-flex; align-items: center; gap: 10px;
@@ -152,43 +154,21 @@
 
         .ai-response-container { display: none; animation: slideUp 0.5s ease-out; }
         .ai-loading { display: none; flex-direction: column; align-items: center; padding: 40px; text-align: center; }
-        .ai-spinner { width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top-color: #0ea5e9; border-radius: 50%; animation: spin 1s infinite linear; margin-bottom: 15px; }
+        .ai-spinner { width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top-color: #d946ef; border-radius: 50%; animation: spin 1s infinite linear; margin-bottom: 15px; }
         .ai-loading-text { color: var(--text-light); font-weight: 500; animation: pulse 1.5s infinite; }
 
-        /* --- DETAILED AI REPORT --- */
+        /* --- AI REPORT TYPOGRAPHY --- */
+        .ai-content { color: #374151; line-height: 1.7; }
+        .ai-content h1, .ai-content h2, .ai-content h3 { margin-top: 1.5em; margin-bottom: 0.5em; color: #111827; font-weight: 700; }
+        .ai-content h3 { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .ai-content ul { padding-left: 20px; margin-bottom: 1em; }
+        .ai-content li { margin-bottom: 0.5em; }
+        .ai-content strong { color: #4c1d95; font-weight: 700; }
+        .ai-content blockquote { border-left: 4px solid #d946ef; padding-left: 15px; background: #fdf4ff; color: #86198f; margin: 15px 0; padding: 10px; border-radius: 0 8px 8px 0; }
+        
         .ai-report-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f9ff;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;
         }
-        .score-badge {
-            background: #0f172a; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; letter-spacing: 1px;
-        }
-        
-        .report-section { 
-            margin-bottom: 30px; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;
-            background: linear-gradient(to right, #f8fafc, #fff);
-        }
-        .report-section h4 { 
-            font-size: 1.1rem; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #334155;
-        }
-        .report-section h4 i { font-size: 1.3rem; }
-        
-        .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
-        .insight-item { background: white; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
-        .insight-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
-        .insight-val { font-size: 1.1rem; font-weight: 600; color: #0f172a; }
-        
-        .ai-list { list-style: none; padding: 0; margin: 0; }
-        .ai-list li { 
-            position: relative; padding-left: 25px; margin-bottom: 10px; font-size: 0.95rem; line-height: 1.5; color: #475569;
-        }
-        .ai-list li::before {
-            content: '•'; position: absolute; left: 5px; color: var(--primary); font-weight: bold; font-size: 1.2rem; top: -2px;
-        }
-        
-        /* Color Modifiers */
-        .text-good { color: #16a34a !important; }
-        .text-warn { color: #ca8a04 !important; }
-        .text-bad { color: #dc2626 !important; }
         
         /* --- HISTORY NAVIGATOR --- */
         .date-nav-container {
@@ -201,6 +181,7 @@
             transition: all 0.2s; cursor: pointer;
         }
         .nav-btn:hover { background: var(--primary); color: white; }
+        
         .current-date-display { text-align: center; flex: 1; cursor: pointer; }
         .date-label { font-weight: 800; font-size: 1.1rem; color: var(--text-main); text-transform: capitalize; }
         .date-sublabel { font-size: 0.8rem; color: var(--text-light); text-decoration: underline; }
@@ -228,6 +209,7 @@
             font-size: 1rem; background: #f9fafb; outline: none; transition: border 0.2s;
         }
         input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
         button { border: none; font-family: inherit; cursor: pointer; }
         .btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
         .btn-cancel { background: #e5e7eb; color: var(--text-main); padding: 12px 24px; border-radius: 10px; font-weight: 600; }
@@ -290,7 +272,7 @@
         }
         .mob-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #9ca3af; font-size: 0.75rem; gap: 4px; background: none; border: none; }
         .mob-link.active { color: var(--primary); font-weight: 600; }
-        .mob-link.ai-mob { color: #0ea5e9; } .mob-link.ai-mob.active { color: #0369a1; }
+        .mob-link.ai-mob { color: #9333ea; } .mob-link.ai-mob.active { color: #7e22ce; }
 
         .fab {
             position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%;
@@ -327,13 +309,13 @@
 
     <!-- SIDEBAR -->
     <nav class="sidebar">
-        <div class="brand"><i class="fas fa-wallet"></i> CRM <span>Expert</span></div>
+        <div class="brand"><i class="fas fa-wallet"></i> CRM <span>Gemini</span></div>
         <div class="nav-links">
             <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> Dashboard</div>
             <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> Transacciones</div>
             <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> Estadísticas</div>
             <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> Historial</div>
-            <div class="nav-item ai-nav" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> Asesor Experto</div>
+            <div class="nav-item ai-nav" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> Análisis Gemini</div>
         </div>
         <div style="padding: 24px; font-size: 0.75rem; color: #9ca3af; text-align: center;">Familia & Finanzas © 2025</div>
     </nav>
@@ -342,7 +324,7 @@
     <nav class="mobile-nav">
         <button class="mob-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Inicio</span></button>
         <button class="mob-link" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Trans.</span></button>
-        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Expert</span></button>
+        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Gemini</span></button>
         <button class="mob-link" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Hist.</span></button>
     </nav>
 
@@ -386,26 +368,23 @@
                 </div>
             </div>
 
-            <!-- ASISTENTE EXPERTO (NEW DETAILED VIEW) -->
+            <!-- ASISTENTE IA (GEMINI API) -->
             <div id="view-asistente" class="tab-content">
                 <div class="ai-welcome-card">
-                    <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
-                    <p>Análisis detallado de solvencia, liquidez y patrones de consumo. Ejecución 100% local y privada.</p>
-                    <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Ejecutar Auditoría</button>
+                    <h2><i class="fas fa-brain"></i> Inteligencia Gemini</h2>
+                    <p>Análisis financiero profundo potenciado por Google AI. Estrategias de deuda, auditoría de gastos y proyecciones.</p>
+                    <button class="btn-ai-action" onclick="generateAIAnalysis()"><i class="fas fa-magic"></i> Consultar a Gemini</button>
                 </div>
                 <div id="aiLoading" class="ai-loading">
-                    <div class="ai-spinner"></div><div class="ai-loading-text">Calculando ratios financieros...</div>
+                    <div class="ai-spinner"></div><div class="ai-loading-text">Gemini está analizando tus finanzas...</div>
                 </div>
                 <div id="aiResultContainer" class="ai-response-container">
                     <div class="card">
                         <div class="ai-report-header">
-                            <div>
-                                <h3 style="margin:0; color:#0f172a;">Diagnóstico Integral</h3>
-                                <span style="font-size:0.8rem; color:#64748b;">Basado en historial de 30 días</span>
-                            </div>
-                            <div id="aiScoreBadge" class="score-badge">SCORE: --</div>
+                            <h3 style="margin:0; color:#4c1d95;">Reporte Estratégico</h3>
+                            <span style="font-size:0.8rem; color:#6b7280;" id="aiTimestamp"></span>
                         </div>
-                        <div id="aiContentBody"></div>
+                        <div id="aiContentBody" class="ai-content"></div>
                     </div>
                 </div>
             </div>
@@ -509,141 +488,127 @@
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
+        // VARIABLES GLOBALES
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), currentHistoryDate=new Date();
         const categories={ gasto: { 'vivienda':{icon:'🏠',subcategorias:['Arriendo','Cuota hipoteca','Administración','Impuesto','Reparaciones']}, 'servicios_publicos':{icon:'💡',subcategorias:['Energía','Agua','Gas','Internet','Celular','Streaming']}, 'alimentacion':{icon:'🍔',subcategorias:['Mercado','Carnes','Frutas','Tienda','Domicilios']}, 'transporte':{icon:'🚗',subcategorias:['Transporte público','Gasolina','SOAT','Mantenimiento','Parqueadero','Peajes','Uber']}, 'educacion':{icon:'📚',subcategorias:['Pensión','Universidad','Útiles','Uniformes','Transporte']}, 'salud':{icon:'⚕️',subcategorias:['Prepagada','Consultas','Medicamentos','Odontología']}, 'vestuario':{icon:'👕',subcategorias:['Ropa','Calzado']}, 'cuidado_personal':{icon:'💄',subcategorias:['Peluquería','Aseo','Cosméticos','Gym']}, 'entretenimiento':{icon:'🎬',subcategorias:['Restaurantes','Cine','Paseos','Eventos']}, 'deudas':{icon:'💳',subcategorias:['Préstamos','Gota a gota']}, 'seguros':{icon:'🛡️',subcategorias:['Vida','Hogar','Vehículo']}, 'otros':{icon:'📦',subcategorias:['Mascotas','Regalos','Imprevistos']} }, ingreso: { 'salario':{icon:'💼',subcategorias:['Principal','Extras','Prima']}, 'negocio':{icon:'🏪',subcategorias:['Ventas','Servicios']}, 'inversiones':{icon:'📈',subcategorias:['Dividendos','Intereses']}, 'otros':{icon:'💰',subcategorias:['Subsidios','Pensión','Regalos']} } }; const categorias=categories;
 
         document.addEventListener('DOMContentLoaded', () => { const t=new Date(); document.getElementById('dashboardMonth').value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; document.getElementById('fecha').valueAsDate=t; updateHistoryHeader(); loadCards(); });
 
+        // --- GEMINI AI INTEGRATION ---
+        // ⚠️ IMPORTANTE: COLOCA TU API KEY AQUÍ PARA QUE EL AGENTE FUNCIONE
+        const apiKey = ""; // <--- PEGA TU API KEY DENTRO DE LAS COMILLAS
+
+        async function generateAIAnalysis() {
+            const btn = document.querySelector('.btn-ai-action');
+            const loader = document.getElementById('aiLoading');
+            const result = document.getElementById('aiResultContainer');
+            
+            // Validation
+            if (!apiKey || apiKey === "") {
+                alert("⚠️ Falta Configuración.\n\nPara usar la IA de Google, debes editar el código y pegar tu API KEY en la variable 'apiKey' (Línea ~552).");
+                return;
+            }
+
+            btn.disabled = true; loader.style.display = 'flex'; result.style.display = 'none';
+
+            const context = prepareFinancialContext();
+            
+            const prompt = `
+                Actúa como un Analista Financiero Senior experto en economía familiar.
+                Analiza los siguientes datos financieros reales de un hogar:
+                ${JSON.stringify(context)}
+
+                Tu misión es generar una auditoría financiera detallada en formato Markdown.
+                Estructura tu respuesta así:
+
+                ### 📊 Resumen Ejecutivo
+                * **Score Financiero (0-100):** Calcula una calificación basada en liquidez y deuda.
+                * **Estado Actual:** (Breve frase de impacto).
+
+                ### 🚦 Diagnóstico de Riesgo
+                * Analiza el Ratio de Endeudamiento (Deuda/Ingresos).
+                * Analiza el Flujo de Caja (Superávit/Déficit).
+                * Detecta fugas de capital en categorías específicas.
+
+                ### 📉 Estrategia de Deuda
+                * Si hay deuda: Recomienda matemáticamente 'Bola de Nieve' o 'Avalancha' con los datos provistos.
+                * Si no hay deuda: Sugiere cómo optimizar el uso de tarjetas.
+
+                ### 💡 Plan de Acción Inmediato
+                1.  (Acción concreta 1)
+                2.  (Acción concreta 2)
+                3.  (Acción concreta 3)
+
+                Sé directo, profesional pero empático. Usa emojis para facilitar la lectura. Moneda: COP.
+            `;
+
+            try {
+                // Call Gemini 1.5 Flash (Public Model)
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                if (!response.ok) throw new Error('Error en la respuesta de Google API');
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo generar el análisis.";
+
+                document.getElementById('aiContentBody').innerHTML = marked.parse(aiText);
+                document.getElementById('aiTimestamp').textContent = new Date().toLocaleString();
+                
+                loader.style.display = 'none';
+                result.style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión con la IA. Verifica tu API Key.");
+                loader.style.display = 'none';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function prepareFinancialContext() {
+            let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0; const t=new Date(); const p=new Date(); p.setDate(t.getDate()-30);
+            const rt=transactions.filter(x=>new Date(x.fecha)>=p);
+            rt.forEach(x=>{const m=parseFloat(x.monto); if(x.tipo==='ingreso')i+=m; if(x.tipo==='gasto'||x.tipo==='credito')e+=m;});
+            Object.values(dt).forEach(x=>td+=x);
+            let cm={}; rt.filter(x=>x.tipo==='gasto').forEach(x=>{cm[x.categoria]=(cm[x.categoria]||0)+parseFloat(x.monto);});
+            const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>({category:k,amount:v}));
+            return {periodo: "Últimos 30 días", ingresos:i, gastos:e, flujo_caja:i-e, deuda_total:td, detalle_deuda:dt, top_gastos:tc};
+        }
+
+        // --- UTILS & CORE ---
         function formatMoney(n){return '$ '+parseFloat(n).toLocaleString('es-CO',{maximumFractionDigits:0});}
         function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
         function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
         function showToast(m,t){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),4000);}
 
-        // --- DETAILED LOCAL AI BRAIN ---
-        function generateLocalAnalysis() {
-            const btn = document.querySelector('.btn-ai-action'); const loader = document.getElementById('aiLoading'); const result = document.getElementById('aiResultContainer');
-            btn.disabled = true; loader.style.display = 'flex'; result.style.display = 'none';
-
-            setTimeout(() => {
-                const d = prepareFinancialContext();
-                
-                // 1. Logic: Scoring
-                let score = 100;
-                if(d.cashFlow < 0) score -= 30;
-                const savingsRate = (d.cashFlow / d.income) * 100;
-                if(savingsRate < 10) score -= 10;
-                if(d.totalDebt > (d.income * 3)) score -= 20; // Heavy debt
-                if(d.totalDebt > d.income) score -= 10;
-                if(score < 0) score = 0;
-
-                // 2. HTML Construction
-                let healthColor = score > 80 ? 'good' : (score > 50 ? 'warn' : 'bad');
-                let healthMsg = score > 80 ? "Finanzas robustas." : (score > 50 ? "Atención requerida." : "Estado crítico.");
-                
-                // Debt Strategy
-                let debtHTML = "";
-                if (d.totalDebt === 0) debtHTML = `<div class="insight-item"><div class="insight-label">Estado Deuda</div><div class="insight-val text-success">Libre de Deuda 🎉</div></div>`;
-                else {
-                    let ratio = (d.totalDebt / d.income * 100).toFixed(1);
-                    debtHTML = `
-                        <div class="insight-grid">
-                            <div class="insight-item"><div class="insight-label">Deuda Total</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div>
-                            <div class="insight-item"><div class="insight-label">Ratio Endeudamiento</div><div class="insight-val">${ratio}%</div></div>
-                        </div>
-                        <p class="report-text">Recomendación: <strong>${d.debtCards > 1 ? 'Método Bola de Nieve (Paga la menor primero)' : 'Abonos a Capital (Reduce interés)'}</strong>.</p>
-                    `;
-                }
-
-                const html = `
-                    <div class="report-section">
-                        <h4><i class="fas fa-heartbeat" style="color:#ef4444"></i> Radiografía Financiera</h4>
-                        <div class="insight-grid">
-                            <div class="insight-item"><div class="insight-label">Ingresos (30d)</div><div class="insight-val text-success">${formatMoney(d.income)}</div></div>
-                            <div class="insight-item"><div class="insight-label">Gastos (30d)</div><div class="insight-val text-danger">${formatMoney(d.expenses)}</div></div>
-                            <div class="insight-item"><div class="insight-label">Flujo Caja</div><div class="insight-val ${d.cashFlow>=0?'text-success':'text-danger'}">${formatMoney(d.cashFlow)}</div></div>
-                        </div>
-                    </div>
-
-                    <div class="report-section">
-                        <h4><i class="fas fa-shield-alt" style="color:#eab308"></i> Estrategia de Pasivos</h4>
-                        ${debtHTML}
-                    </div>
-
-                    <div class="report-section">
-                        <h4><i class="fas fa-search-dollar" style="color:#3b82f6"></i> Fugas de Capital</h4>
-                        <ul class="ai-list">
-                            ${d.topExpenses.map(c => `<li>Gasto alto en <strong>${c.category}</strong>: ${formatMoney(c.amount)}</li>`).join('')}
-                            ${d.cashFlow < 0 ? '<li>⚠️ <strong>ALERTA ROJA:</strong> Estás gastando más de lo que ganas. Revisa gastos hormiga hoy mismo.</li>' : '<li>✅ Tu flujo de caja es positivo. Mantén el hábito.</li>'}
-                        </ul>
-                    </div>
-                `;
-
-                document.getElementById('aiContentBody').innerHTML = html;
-                document.getElementById('aiScoreBadge').textContent = `SCORE: ${score}/100`;
-                document.getElementById('aiScoreBadge').style.background = score > 80 ? '#166534' : (score > 50 ? '#854d0e' : '#991b1b');
-                
-                loader.style.display = 'none'; result.style.display = 'block'; btn.disabled = false;
-            }, 1500);
-        }
-
-        function prepareFinancialContext(){
-            let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0; const t=new Date(); const p=new Date(); p.setDate(t.getDate()-30);
-            const rt=transactions.filter(x=>new Date(x.fecha)>=p);
-            rt.forEach(x=>{const m=parseFloat(x.monto); if(x.tipo==='ingreso')i+=m; if(x.tipo==='gasto'||x.tipo==='credito')e+=m;});
-            let cardCount = 0;
-            Object.values(dt).forEach(x=>{td+=x; if(x>0) cardCount++;});
-            let cm={}; rt.filter(x=>x.tipo==='gasto').forEach(x=>{cm[x.categoria]=(cm[x.categoria]||0)+parseFloat(x.monto);});
-            const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>({category:k,amount:v}));
-            return {income:i, expenses:e, cashFlow:i-e, totalDebt:td, debtCards:cardCount, topExpenses:tc};
-        }
-
-        // --- HISTORY (FIXED DISPLAY) ---
         function renderHistory() {
-            const b = document.getElementById('transactionList'); b.innerHTML = '';
-            const fDate = `${currentHistoryDate.getFullYear()}-${String(currentHistoryDate.getMonth()+1).padStart(2,'0')}-${String(currentHistoryDate.getDate()).padStart(2,'0')}`;
-            const txt = document.getElementById('historySearch').value.toLowerCase();
-            const type = document.getElementById('historyType').value;
+            const b=document.getElementById('transactionList'); b.innerHTML='';
+            const fDate=`${currentHistoryDate.getFullYear()}-${String(currentHistoryDate.getMonth()+1).padStart(2,'0')}-${String(currentHistoryDate.getDate()).padStart(2,'0')}`;
+            const txt=document.getElementById('historySearch').value.toLowerCase(); const type=document.getElementById('historyType').value;
             let dInc=0, dExp=0;
-
-            const res = transactions.filter(t => {
-                const same = t.fecha === fDate; const txtM = t.descripcion.toLowerCase().includes(txt); const typM = type==='all'||t.tipo===type;
-                if(same){ const m=parseFloat(t.monto); if(t.tipo==='ingreso') dInc+=m; else if(t.tipo==='gasto'||t.tipo==='credito') dExp+=m; }
-                return same && txtM && typM;
+            const res=transactions.filter(t=>{
+                const sameDay=t.fecha===fDate; const txtM=t.descripcion.toLowerCase().includes(txt); const typM=type==='all'||t.tipo===type;
+                if(sameDay){const m=parseFloat(t.monto); if(t.tipo==='ingreso')dInc+=m; else if(t.tipo==='gasto'||t.tipo==='credito')dExp+=m;}
+                return sameDay&&txtM&&typM;
             });
-
-            document.getElementById('valDailyInc').textContent = formatMoney(dInc);
-            document.getElementById('valDailyExp').textContent = formatMoney(dExp);
-
-            if(res.length===0){ b.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">Sin movimientos</td></tr>'; return; }
-
-            res.forEach(t => {
-                let c = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
-                let s = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){c='text-main';s='';}
-                
-                let method = t.metodoPago;
-                if(t.tipo==='credito') method = `${t.metodoPago} (${t.cuotas}x)`;
-                else if(t.tipo==='pago_tarjeta') method = `${t.metodoPago} ➔ ${t.tarjetaDestino}`;
-                else if(t.tipo==='transferencia') method = `${t.metodoPago} ➔ ${t.metodoDestino}`;
-
-                b.innerHTML += `<tr>
-                    <td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
-                    <td style="font-size:0.85rem;color:#4b5563;">${method}</td>
-                    <td>${t.categoria||'-'}</td>
-                    <td>${t.descripcion}</td>
-                    <td class="${c}" style="font-weight:bold;">${s} ${formatMoney(t.monto)}</td>
-                    <td style="text-align:right;">
-                        <button onclick="editTransaction('${t.id}')" class="btn-icon-action" style="color:var(--info);"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`;
+            document.getElementById('valDailyInc').textContent=formatMoney(dInc); document.getElementById('valDailyExp').textContent=formatMoney(dExp);
+            if(res.length===0){b.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">Sin movimientos</td></tr>';return;}
+            res.forEach(t=>{
+                let c=t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger'); let s=t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){c='text-main';s='';}
+                let met=t.metodoPago; if(t.tipo==='credito')met=`${t.metodoPago} (${t.cuotas}x)`; else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${t.metodoPago} ➔ ${t.tarjetaDestino||t.metodoDestino}`;
+                b.innerHTML+=`<tr><td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td><td style="font-size:0.85rem;color:#4b5563;">${met}</td><td>${t.categoria||'-'}</td><td>${t.descripcion}</td><td class="${c}" style="font-weight:bold;">${s} ${formatMoney(t.monto)}</td><td style="text-align:right;"><button onclick="editTransaction('${t.id}')" class="btn-icon-action" style="color:var(--info);"><i class="fas fa-edit"></i></button><button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button></td></tr>`;
             });
         }
 
-        // --- REST OF LOGIC (UNCHANGED) ---
+        // --- DASHBOARD, CHART, LOAD ---
         function changeDay(o){currentHistoryDate.setDate(currentHistoryDate.getDate()+o); updateHistoryHeader(); renderHistory();}
         function setHistoryDate(d){const[y,m,dd]=d.split('-').map(Number); currentHistoryDate=new Date(y,m-1,dd); updateHistoryHeader(); renderHistory();}
         function updateHistoryHeader(){const s=currentHistoryDate.toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); document.getElementById('lblHistoryDate').textContent=(new Date().toDateString()===currentHistoryDate.toDateString())?"Hoy":s; document.getElementById('historyDatePicker').value=`${currentHistoryDate.getFullYear()}-${String(currentHistoryDate.getMonth()+1).padStart(2,'0')}-${String(currentHistoryDate.getDate()).padStart(2,'0')}`; }
-        
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; let dm={}; cardsList.forEach(c=>dm[c.name]=0); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;}
@@ -659,6 +624,7 @@
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.name));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){const s=await db.collection('transactions').orderBy('fecha','desc').get(); transactions=[]; s.forEach(d=>transactions.push({id:d.id,...d.data()})); updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();}
         
+        // --- FORM & CRUD ---
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
         function preSubmit(){const t=document.getElementById('tipo').value; const m=parseCurrencyInput(document.getElementById('monto').value); if(m<=0){alert('Monto inválido');return;} const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()}; if(t==='credito'){const tc=document.getElementById('tarjetaCredito').value;const c=parseInt(document.getElementById('cuotas').value);d.metodoPago=tc;d.esCredito=true;d.cuotas=c;d.totalDeuda=m;tempTransactionData=d;document.getElementById('modalTarjeta').textContent=tc;document.getElementById('modalCuotas').textContent=c;document.getElementById('modalTotalDeuda').textContent=formatMoney(m);document.getElementById('creditModal').style.display='flex';}else{if(t==='pago_tarjeta'){d.metodoPago=document.getElementById('metodoPago').value;d.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value;}else{d.metodoPago=document.getElementById('metodoPago').value;if(t==='transferencia')d.metodoDestino=document.getElementById('metodoDestino').value;}saveTransaction(d);}}
