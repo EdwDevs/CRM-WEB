@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v3.4 - Expert Analyst</title>
+    <title>CRM Financiero v3.7 - Categorías Full</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -510,7 +510,87 @@
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), currentHistoryDate=new Date();
-        const categories={ gasto: { 'vivienda':{icon:'🏠',subcategorias:['Arriendo','Cuota hipoteca','Administración','Impuesto','Reparaciones']}, 'servicios_publicos':{icon:'💡',subcategorias:['Energía','Agua','Gas','Internet','Celular','Streaming']}, 'alimentacion':{icon:'🍔',subcategorias:['Mercado','Carnes','Frutas','Tienda','Domicilios']}, 'transporte':{icon:'🚗',subcategorias:['Transporte público','Gasolina','SOAT','Mantenimiento','Parqueadero','Peajes','Uber']}, 'educacion':{icon:'📚',subcategorias:['Pensión','Universidad','Útiles','Uniformes','Transporte']}, 'salud':{icon:'⚕️',subcategorias:['Prepagada','Consultas','Medicamentos','Odontología']}, 'vestuario':{icon:'👕',subcategorias:['Ropa','Calzado']}, 'cuidado_personal':{icon:'💄',subcategorias:['Peluquería','Aseo','Cosméticos','Gym']}, 'entretenimiento':{icon:'🎬',subcategorias:['Restaurantes','Cine','Paseos','Eventos']}, 'deudas':{icon:'💳',subcategorias:['Préstamos','Gota a gota']}, 'seguros':{icon:'🛡️',subcategorias:['Vida','Hogar','Vehículo']}, 'otros':{icon:'📦',subcategorias:['Mascotas','Regalos','Imprevistos']} }, ingreso: { 'salario':{icon:'💼',subcategorias:['Principal','Extras','Prima']}, 'negocio':{icon:'🏪',subcategorias:['Ventas','Servicios']}, 'inversiones':{icon:'📈',subcategorias:['Dividendos','Intereses']}, 'otros':{icon:'💰',subcategorias:['Subsidios','Pensión','Regalos']} } }; const categorias=categories;
+        
+        // --- CATEGORÍAS AMPLIADAS Y MEJORADAS (V3.7) ---
+        const categories = {
+            gasto: {
+                'vivienda': {
+                    icon: '🏠',
+                    subcategorias: ['Arriendo/Hipoteca', 'Administración', 'Reparaciones 🛠️', 'Muebles 🛋️', 'Electrodomésticos 📺', 'Artículos Aseo 🧹', 'Decoración 🖼️', 'Impuesto Predial 📄']
+                },
+                'servicios_publicos': {
+                    icon: '💡',
+                    subcategorias: ['Energía ⚡', 'Agua 💧', 'Gas 🔥', 'Internet 🌐', 'Plan Celular 📱', 'Streaming (Netflix/Disney) 🎬', 'Spotify/Music 🎵', 'Nube (Google/iCloud) ☁️', 'Servicio Doméstico 🧹']
+                },
+                'alimentacion': {
+                    icon: '🍔',
+                    subcategorias: ['Mercado General 🛒', 'Carnes y Pescados 🥩', 'Frutas y Verduras 🥦', 'Panadería 🥖', 'Restaurantes 🍽️', 'Domicilios (Rappi/Uber) 🛵', 'Café/Snacks ☕', 'Licores 🍺']
+                },
+                'transporte': {
+                    icon: '🚗',
+                    subcategorias: ['Gasolina ⛽', 'Transporte Público 🚌', 'Taxi/Uber/DiDi 🚖', 'Parqueadero 🅿️', 'Peajes 🚧', 'Mantenimiento/Taller 🔧', 'Lavado Auto 🚿', 'SOAT/Seguro 🛡️', 'Licencia/Trámites 📝']
+                },
+                'educacion': {
+                    icon: '📚',
+                    subcategorias: ['Pensión Escolar/U 🎓', 'Cursos Online 💻', 'Libros/Ebooks 📖', 'Útiles/Papelería ✏️', 'Uniformes 👕', 'Transporte Escolar 🚌', 'Idiomas 🗣️']
+                },
+                'salud': {
+                    icon: '⚕️',
+                    subcategorias: ['Medicina Prepagada 🏥', 'Citas Médicas 🩺', 'Medicamentos 💊', 'Odontología 🦷', 'Optometría 👓', 'Laboratorio/Exámenes 💉', 'Terapia/Psicología 🧠']
+                },
+                'vestuario': {
+                    icon: '👕',
+                    subcategorias: ['Ropa Casual 👚', 'Ropa Formal 👔', 'Ropa Deportiva 🏃', 'Calzado 👟', 'Accesorios (Bolsos/Joyas) 👜', 'Lavandería/Sastrería 🧵']
+                },
+                'cuidado_personal': {
+                    icon: '💄',
+                    subcategorias: ['Peluquería/Barbería 💇', 'Manicure/Pedicure 💅', 'Cosméticos/Maquillaje 💄', 'Cuidado Piel (Skincare) 🧴', 'Aseo Personal 🧼', 'Masajes/Spa 💆']
+                },
+                'entretenimiento': {
+                    icon: '🎬',
+                    subcategorias: ['Cine 🍿', 'Salidas/Bares 🍻', 'Conciertos/Eventos 🎟️', 'Videojuegos 🎮', 'Libros/Hobbies 🎨', 'Paseos/Turismo ✈️', 'Suscripciones (Música/Juegos) 🎧']
+                },
+                'mascotas': {
+                    icon: '🐶',
+                    subcategorias: ['Comida Mascota 🦴', 'Veterinaria 🩺', 'Juguetes/Accesorios 🎾', 'Guardería/Paseador 🐕', 'Medicamentos 💊']
+                },
+                'tecnologia': {
+                     icon: '💻',
+                     subcategorias: ['Celulares/Tablets 📱', 'Computadores 💻', 'Accesorios (Cables/Audífonos) 🎧', 'Software/Apps 💾', 'Reparaciones 🔧']
+                },
+                'deudas': {
+                    icon: '💳',
+                    subcategorias: ['Pago Tarjeta Crédito 💳', 'Préstamo Banco 🏦', 'Préstamo Familiar 🤝', 'Crédito Vehículo 🚗', 'Crédito Hipotecario 🏠', 'Gota a Gota 💧']
+                },
+                'seguros': {
+                    icon: '🛡️',
+                    subcategorias: ['Seguro Vida 👤', 'Seguro Vehículo 🚗', 'Seguro Hogar 🏠', 'Seguro Desempleo 💼']
+                },
+                'otros': {
+                    icon: '📦',
+                    subcategorias: ['Regalos/Detalles 🎁', 'Donaciones 🤲', 'Imprevistos ⚠️', 'Trámites Notariales 🖋️', 'Multas 👮']
+                }
+            },
+            ingreso: {
+                'salario': {
+                    icon: '💼',
+                    subcategorias: ['Nómina Principal 💰', 'Horas Extras ⏱️', 'Bonificaciones 🎁', 'Prima Servicios ⭐', 'Cesantías 🏦']
+                },
+                'negocio': {
+                    icon: '🏪',
+                    subcategorias: ['Ventas Productos 📦', 'Servicios Freelance 💻', 'Consultorías 🤝', 'Propinas 💵']
+                },
+                'inversiones': {
+                    icon: '📈',
+                    subcategorias: ['Rendimientos CDT 📉', 'Dividendos Acciones 📊', 'Ganancia Crypto ₿', 'Arriendos Recibidos 🏠']
+                },
+                'otros': {
+                    icon: '💰',
+                    subcategorias: ['Préstamo Recibido 🤝', 'Regalos/Dinero 🎁', 'Venta Garaje 🏷️', 'Devolución Impuestos 📄', 'Subsidios 🏛️']
+                }
+            }
+        };
+        const categorias = categories;
 
         document.addEventListener('DOMContentLoaded', () => { const t=new Date(); document.getElementById('dashboardMonth').value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; document.getElementById('fecha').valueAsDate=t; updateHistoryHeader(); loadCards(); });
 
@@ -590,11 +670,10 @@
             let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0; const t=new Date(); const p=new Date(); p.setDate(t.getDate()-30);
             const rt=transactions.filter(x=>new Date(x.fecha)>=p);
             rt.forEach(x=>{const m=parseFloat(x.monto); if(x.tipo==='ingreso')i+=m; if(x.tipo==='gasto'||x.tipo==='credito')e+=m;});
-            let cardCount = 0;
-            Object.values(dt).forEach(x=>{td+=x; if(x>0) cardCount++;});
+            Object.values(dt).forEach(x=>td+=x);
             let cm={}; rt.filter(x=>x.tipo==='gasto').forEach(x=>{cm[x.categoria]=(cm[x.categoria]||0)+parseFloat(x.monto);});
             const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>({category:k,amount:v}));
-            return {income:i, expenses:e, cashFlow:i-e, totalDebt:td, debtCards:cardCount, topExpenses:tc};
+            return {income:i, expenses:e, cashFlow:i-e, totalDebt:td, debtCards:Object.values(dt).filter(x=>x>0).length, topExpenses:tc};
         }
 
         // --- HISTORY (FIXED DISPLAY) ---
