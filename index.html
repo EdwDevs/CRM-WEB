@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v3.7 - Categorías Full</title>
+    <title>CRM Financiero v3.8 - Historial Avanzado</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -190,33 +190,34 @@
         .text-warn { color: #ca8a04 !important; }
         .text-bad { color: #dc2626 !important; }
         
-        /* --- HISTORY NAVIGATOR --- */
-        .date-nav-container {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;
+        /* --- HISTORY FILTERS (UPDATED) --- */
+        .advanced-filters-container {
+            background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0;
         }
-        .nav-btn {
-            width: 40px; height: 40px; border-radius: 50%; background: white; border: 1px solid #d1d5db;
-            display: flex; align-items: center; justify-content: center; color: var(--primary);
-            transition: all 0.2s; cursor: pointer;
+        
+        .filters-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 15px;
         }
-        .nav-btn:hover { background: var(--primary); color: white; }
-        .current-date-display { text-align: center; flex: 1; cursor: pointer; }
-        .date-label { font-weight: 800; font-size: 1.1rem; color: var(--text-main); text-transform: capitalize; }
-        .date-sublabel { font-size: 0.8rem; color: var(--text-light); text-decoration: underline; }
-        #historyDatePicker { position: absolute; opacity: 0; width: 1px; height: 1px; }
+        
+        .filter-control {
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .filter-control label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .filter-control select, .filter-control input {
+            padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white;
+            width: 100%;
+        }
 
-        .day-summary { display: flex; gap: 15px; margin-bottom: 20px; justify-content: center; }
-        .summary-pill {
-            background: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #eee;
-            display: flex; align-items: center; gap: 8px;
+        .summary-banner {
+            display: flex; gap: 15px; margin-bottom: 20px; justify-content: space-between; align-items: center;
+            background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: var(--shadow-sm);
         }
-        .summary-pill.inc { color: var(--success); background: #f0fdf4; border-color: #bbf7d0; }
-        .summary-pill.exp { color: var(--danger); background: #fef2f2; border-color: #fecaca; }
-
-        .history-filters { display: flex; gap: 10px; margin-bottom: 15px; }
-        .filter-input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
-        .search-box { flex: 1; }
+        .sum-item { display: flex; flex-direction: column; }
+        .sum-lbl { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+        .sum-val { font-weight: 700; font-size: 1.1rem; }
+        .sum-val.inc { color: var(--success); }
+        .sum-val.exp { color: var(--danger); }
+        .sum-val.bal { color: var(--text-main); }
 
         /* --- FORMS & INPUTS --- */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
@@ -231,11 +232,12 @@
         button { border: none; font-family: inherit; cursor: pointer; }
         .btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
         .btn-cancel { background: #e5e7eb; color: var(--text-main); padding: 12px 24px; border-radius: 10px; font-weight: 600; }
+        .btn-reset { background: #f1f5f9; color: #64748b; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; align-self: flex-end; }
 
         /* --- TABLES & LISTS --- */
-        .table-container { overflow-x: auto; }
+        .table-container { overflow-x: auto; max-height: 600px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th { text-align: left; padding: 16px; color: var(--text-light); font-weight: 600; border-bottom: 1px solid #eee; }
+        th { text-align: left; padding: 16px; color: var(--text-light); font-weight: 600; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #f8fafc; z-index: 10; }
         td { padding: 16px; border-bottom: 1px solid #f3f4f6; }
         
         .btn-icon-action { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; margin-right: 5px; transition: transform 0.2s; }
@@ -312,6 +314,8 @@
             .content-container { padding: 16px; }
             .history-filters { flex-direction: column; }
             .add-card-form { grid-template-columns: 1fr; }
+            .summary-banner { flex-wrap: wrap; }
+            .filters-grid { grid-template-columns: 1fr 1fr; }
         }
         
         .hidden { display: none !important; }
@@ -443,31 +447,70 @@
                 <div class="card"><h3>Distribución de Gastos</h3><div style="height:350px;"><canvas id="chartCategorias"></canvas></div></div>
             </div>
 
-            <!-- HISTORIAL -->
+            <!-- HISTORIAL (ACTUALIZADO CON FILTROS AVANZADOS) -->
             <div id="view-historial" class="tab-content">
                 <div class="card">
-                    <h3 style="margin-bottom:15px; text-align:center;">Agenda Financiera</h3>
-                    <div class="date-nav-container">
-                        <button class="nav-btn" onclick="changeDay(-1)"><i class="fas fa-chevron-left"></i></button>
-                        <div class="current-date-display" onclick="document.getElementById('historyDatePicker').showPicker()">
-                            <div class="date-label" id="lblHistoryDate">Hoy</div>
-                            <div class="date-sublabel">Cambiar fecha</div>
-                            <input type="date" id="historyDatePicker" onchange="setHistoryDate(this.value)">
+                    <h3 style="margin-bottom:15px; text-align:center;">Historial Avanzado</h3>
+                    
+                    <div class="advanced-filters-container">
+                        <div class="filters-grid">
+                            <div class="filter-control">
+                                <label>Desde</label>
+                                <input type="date" id="filterDateStart" onchange="renderHistory()">
+                            </div>
+                            <div class="filter-control">
+                                <label>Hasta</label>
+                                <input type="date" id="filterDateEnd" onchange="renderHistory()">
+                            </div>
+                            <div class="filter-control">
+                                <label>Tipo</label>
+                                <select id="filterType" onchange="renderHistory()">
+                                    <option value="all">Todo</option>
+                                    <option value="gasto">Gasto</option>
+                                    <option value="ingreso">Ingreso</option>
+                                    <option value="credito">Crédito</option>
+                                    <option value="pago_tarjeta">Abono TC</option>
+                                    <option value="transferencia">Transferencia</option>
+                                </select>
+                            </div>
+                            <div class="filter-control">
+                                <label>Categoría</label>
+                                <select id="filterCategory" onchange="renderHistory()">
+                                    <option value="all">Todas</option>
+                                    <!-- Populated JS -->
+                                </select>
+                            </div>
+                            <div class="filter-control">
+                                <label>Método</label>
+                                <select id="filterMethod" onchange="renderHistory()">
+                                    <option value="all">Todos</option>
+                                    <option value="debito">Débito</option>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="nequi">Nequi</option>
+                                    <option value="tarjeta">Tarjeta Crédito</option>
+                                </select>
+                            </div>
+                            <div class="filter-control full-width" style="grid-column: 1 / -1;">
+                                <label>Buscar (Descripción)</label>
+                                <input type="text" id="filterSearch" placeholder="Ej: Mercado, Netflix..." oninput="renderHistory()">
+                            </div>
                         </div>
-                        <button class="nav-btn" onclick="changeDay(1)"><i class="fas fa-chevron-right"></i></button>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button class="btn-reset" onclick="resetFilters()"><i class="fas fa-undo"></i> Limpiar Filtros</button>
+                        </div>
                     </div>
-                    <div class="day-summary">
-                        <div class="summary-pill inc"><i class="fas fa-arrow-down"></i><span id="valDailyInc">$0</span></div>
-                        <div class="summary-pill exp"><i class="fas fa-arrow-up"></i><span id="valDailyExp">$0</span></div>
+
+                    <div class="summary-banner">
+                        <div class="sum-item"><span class="sum-lbl">Ingresos Visibles</span><span class="sum-val inc" id="sumVisibleInc">$0</span></div>
+                        <div class="sum-item"><span class="sum-lbl">Gastos Visibles</span><span class="sum-val exp" id="sumVisibleExp">$0</span></div>
+                        <div class="sum-item"><span class="sum-lbl">Flujo Neto</span><span class="sum-val bal" id="sumVisibleBal">$0</span></div>
                     </div>
-                    <div class="history-filters">
-                        <input type="text" id="historySearch" class="filter-input search-box" placeholder="Buscar..." oninput="renderHistory()">
-                        <select id="historyType" class="filter-input" style="flex:1;" onchange="renderHistory()"><option value="all">Todo</option><option value="gasto">Gastos</option><option value="ingreso">Ingresos</option><option value="credito">Crédito</option></select>
-                    </div>
+
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Fecha</th>
                                     <th>Tipo</th>
                                     <th>Método</th>
                                     <th>Cat.</th>
@@ -509,7 +552,7 @@
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), currentHistoryDate=new Date();
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date();
         
         // --- CATEGORÍAS AMPLIADAS Y MEJORADAS (V3.7) ---
         const categories = {
@@ -592,12 +635,52 @@
         };
         const categorias = categories;
 
-        document.addEventListener('DOMContentLoaded', () => { const t=new Date(); document.getElementById('dashboardMonth').value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; document.getElementById('fecha').valueAsDate=t; updateHistoryHeader(); loadCards(); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            const t=new Date(); 
+            document.getElementById('dashboardMonth').value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; 
+            document.getElementById('fecha').valueAsDate=t; 
+            
+            // Set Default History Filters (Current Month)
+            const firstDay = new Date(t.getFullYear(), t.getMonth(), 1);
+            const lastDay = new Date(t.getFullYear(), t.getMonth() + 1, 0);
+            document.getElementById('filterDateStart').valueAsDate = firstDay;
+            document.getElementById('filterDateEnd').valueAsDate = lastDay;
+
+            populateFilterCategories();
+            loadCards(); 
+        });
 
         function formatMoney(n){return '$ '+parseFloat(n).toLocaleString('es-CO',{maximumFractionDigits:0});}
         function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
         function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
         function showToast(m,t){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),4000);}
+
+        // --- FILTER HELPERS ---
+        function populateFilterCategories() {
+            const sel = document.getElementById('filterCategory');
+            // Add expenses
+            Object.keys(categories.gasto).forEach(k => {
+                sel.add(new Option(categories.gasto[k].icon + ' ' + k.charAt(0).toUpperCase() + k.slice(1), k));
+            });
+            // Add incomes
+            Object.keys(categories.ingreso).forEach(k => {
+                sel.add(new Option(categories.ingreso[k].icon + ' ' + k.charAt(0).toUpperCase() + k.slice(1), k));
+            });
+        }
+
+        function resetFilters() {
+            const t = new Date();
+            const firstDay = new Date(t.getFullYear(), t.getMonth(), 1);
+            const lastDay = new Date(t.getFullYear(), t.getMonth() + 1, 0);
+            
+            document.getElementById('filterDateStart').valueAsDate = firstDay;
+            document.getElementById('filterDateEnd').valueAsDate = lastDay;
+            document.getElementById('filterType').value = 'all';
+            document.getElementById('filterCategory').value = 'all';
+            document.getElementById('filterMethod').value = 'all';
+            document.getElementById('filterSearch').value = '';
+            renderHistory();
+        }
 
         // --- DETAILED LOCAL AI BRAIN ---
         function generateLocalAnalysis() {
@@ -617,14 +700,12 @@
                 if(score < 0) score = 0;
 
                 // 2. HTML Construction
-                let healthColor = score > 80 ? 'good' : (score > 50 ? 'warn' : 'bad');
-                let healthMsg = score > 80 ? "Finanzas robustas." : (score > 50 ? "Atención requerida." : "Estado crítico.");
                 
                 // Debt Strategy
                 let debtHTML = "";
                 if (d.totalDebt === 0) debtHTML = `<div class="insight-item"><div class="insight-label">Estado Deuda</div><div class="insight-val text-success">Libre de Deuda 🎉</div></div>`;
                 else {
-                    let ratio = (d.totalDebt / d.income * 100).toFixed(1);
+                    let ratio = d.income > 0 ? (d.totalDebt / d.income * 100).toFixed(1) : 0;
                     debtHTML = `
                         <div class="insight-grid">
                             <div class="insight-item"><div class="insight-label">Deuda Total</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div>
@@ -676,24 +757,60 @@
             return {income:i, expenses:e, cashFlow:i-e, totalDebt:td, debtCards:Object.values(dt).filter(x=>x>0).length, topExpenses:tc};
         }
 
-        // --- HISTORY (FIXED DISPLAY) ---
+        // --- HISTORY (NEW FILTERED LOGIC) ---
         function renderHistory() {
             const b = document.getElementById('transactionList'); b.innerHTML = '';
-            const fDate = `${currentHistoryDate.getFullYear()}-${String(currentHistoryDate.getMonth()+1).padStart(2,'0')}-${String(currentHistoryDate.getDate()).padStart(2,'0')}`;
-            const txt = document.getElementById('historySearch').value.toLowerCase();
-            const type = document.getElementById('historyType').value;
-            let dInc=0, dExp=0;
+            
+            // Get Filter Values
+            const fStart = document.getElementById('filterDateStart').value;
+            const fEnd = document.getElementById('filterDateEnd').value;
+            const fType = document.getElementById('filterType').value;
+            const fCat = document.getElementById('filterCategory').value;
+            const fMethod = document.getElementById('filterMethod').value;
+            const fSearch = document.getElementById('filterSearch').value.toLowerCase();
+
+            let totalVisibleInc = 0;
+            let totalVisibleExp = 0;
 
             const res = transactions.filter(t => {
-                const same = t.fecha === fDate; const txtM = t.descripcion.toLowerCase().includes(txt); const typM = type==='all'||t.tipo===type;
-                if(same){ const m=parseFloat(t.monto); if(t.tipo==='ingreso') dInc+=m; else if(t.tipo==='gasto'||t.tipo==='credito') dExp+=m; }
-                return same && txtM && typM;
+                // 1. Date Check (String comparison works for ISO dates YYYY-MM-DD)
+                const dateOk = (!fStart || t.fecha >= fStart) && (!fEnd || t.fecha <= fEnd);
+                
+                // 2. Type Check
+                const typeOk = fType === 'all' || t.tipo === fType;
+                
+                // 3. Category Check
+                const catOk = fCat === 'all' || t.categoria === fCat;
+                
+                // 4. Method Check
+                let methodOk = true;
+                if (fMethod !== 'all') {
+                    if (fMethod === 'tarjeta') {
+                        // Include both credit spend and card payments
+                        methodOk = t.esCredito || t.tipo === 'pago_tarjeta' || (t.metodoPago && cardsList.some(c => c.name === t.metodoPago));
+                    } else {
+                        methodOk = t.metodoPago === fMethod || t.metodoDestino === fMethod;
+                    }
+                }
+
+                // 5. Search Check
+                const searchOk = !fSearch || t.descripcion.toLowerCase().includes(fSearch) || (t.categoria && t.categoria.toLowerCase().includes(fSearch));
+
+                return dateOk && typeOk && catOk && methodOk && searchOk;
             });
 
-            document.getElementById('valDailyInc').textContent = formatMoney(dInc);
-            document.getElementById('valDailyExp').textContent = formatMoney(dExp);
+            // Calculate Totals for VISIBLE items
+            res.forEach(t => {
+                const m = parseFloat(t.monto);
+                if (t.tipo === 'ingreso') totalVisibleInc += m;
+                else if (t.tipo === 'gasto' || t.tipo === 'credito') totalVisibleExp += m;
+            });
 
-            if(res.length===0){ b.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">Sin movimientos</td></tr>'; return; }
+            document.getElementById('sumVisibleInc').textContent = formatMoney(totalVisibleInc);
+            document.getElementById('sumVisibleExp').textContent = formatMoney(totalVisibleExp);
+            document.getElementById('sumVisibleBal').textContent = formatMoney(totalVisibleInc - totalVisibleExp);
+
+            if(res.length===0){ b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:#999;">No hay coincidencias</td></tr>'; return; }
 
             res.forEach(t => {
                 let c = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
@@ -705,6 +822,7 @@
                 else if(t.tipo==='transferencia') method = `${t.metodoPago} ➔ ${t.metodoDestino}`;
 
                 b.innerHTML += `<tr>
+                    <td style="font-size:0.85rem; color:#6b7280;">${t.fecha}</td>
                     <td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
                     <td style="font-size:0.85rem;color:#4b5563;">${method}</td>
                     <td>${t.categoria||'-'}</td>
@@ -719,10 +837,6 @@
         }
 
         // --- REST OF LOGIC (UNCHANGED) ---
-        function changeDay(o){currentHistoryDate.setDate(currentHistoryDate.getDate()+o); updateHistoryHeader(); renderHistory();}
-        function setHistoryDate(d){const[y,m,dd]=d.split('-').map(Number); currentHistoryDate=new Date(y,m-1,dd); updateHistoryHeader(); renderHistory();}
-        function updateHistoryHeader(){const s=currentHistoryDate.toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); document.getElementById('lblHistoryDate').textContent=(new Date().toDateString()===currentHistoryDate.toDateString())?"Hoy":s; document.getElementById('historyDatePicker').value=`${currentHistoryDate.getFullYear()}-${String(currentHistoryDate.getMonth()+1).padStart(2,'0')}-${String(currentHistoryDate.getDate()).padStart(2,'0')}`; }
-        
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; let dm={}; cardsList.forEach(c=>dm[c.name]=0); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;}
