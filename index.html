@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v3.8 - Historial Avanzado</title>
+    <title>CRM Financiero v3.9 - Estadísticas Pro</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -134,6 +134,35 @@
         .mini-stat.debt .mini-value { color: var(--danger); }
         .mini-stat.income .mini-value { color: var(--success); }
 
+        /* --- STATS PRO STYLES --- */
+        .stats-control-bar {
+            background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px;
+            display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; border: 1px solid #e2e8f0;
+        }
+        .stats-kpi-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;
+        }
+        .stat-kpi {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; position: relative; overflow: hidden;
+        }
+        .stat-kpi-label { font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        .stat-kpi-val { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
+        .stat-kpi-sub { font-size: 0.8rem; margin-top: 5px; font-weight: 500; }
+        
+        .charts-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 20px;
+        }
+        .chart-container {
+            background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; min-height: 350px;
+        }
+        .chart-header { font-weight: 700; color: #334155; margin-bottom: 15px; font-size: 1rem; display: flex; justify-content: space-between; }
+        
+        .top-expenses-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .top-expenses-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .top-expenses-table tr:last-child td { border-bottom: none; }
+        .bar-container { width: 100%; background: #f1f5f9; height: 6px; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 3px; }
+
         /* --- AI AGENT VIEW --- */
         .ai-welcome-card {
             background: var(--ai-gradient); color: white; padding: 30px; border-radius: var(--radius);
@@ -184,6 +213,18 @@
         .ai-list li::before {
             content: '•'; position: absolute; left: 5px; color: var(--primary); font-weight: bold; font-size: 1.2rem; top: -2px;
         }
+
+        /* --- NEW AI STYLES --- */
+        .metric-card { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
+        .metric-val { font-size: 1.5rem; font-weight: 800; color: var(--secondary); margin: 5px 0; }
+        .metric-lbl { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .progress-container { margin-bottom: 15px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
+        .progress-bar-bg { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s ease; }
+        .bg-ess { background: #3b82f6; } 
+        .bg-lif { background: #a855f7; } 
+        .bg-fin { background: #f59e0b; }
         
         /* Color Modifiers */
         .text-good { color: #16a34a !important; }
@@ -316,6 +357,7 @@
             .add-card-form { grid-template-columns: 1fr; }
             .summary-banner { flex-wrap: wrap; }
             .filters-grid { grid-template-columns: 1fr 1fr; }
+            .stats-control-bar { flex-direction: column; align-items: stretch; }
         }
         
         .hidden { display: none !important; }
@@ -390,7 +432,7 @@
                 </div>
             </div>
 
-            <!-- ASISTENTE EXPERTO (NEW DETAILED VIEW) -->
+            <!-- ASISTENTE EXPERTO (UPDATED DETAILED VIEW) -->
             <div id="view-asistente" class="tab-content">
                 <div class="ai-welcome-card">
                     <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
@@ -441,10 +483,64 @@
                 </div>
             </div>
 
-            <!-- ESTADISTICAS -->
+            <!-- ESTADISTICAS PRO (REDISEÑADO) -->
             <div id="view-estadisticas" class="tab-content">
-                <div class="card"><h3>Tendencia (6 Meses)</h3><div style="height:300px;"><canvas id="chartTendencias"></canvas></div></div>
-                <div class="card"><h3>Distribución de Gastos</h3><div style="height:350px;"><canvas id="chartCategorias"></canvas></div></div>
+                <div class="stats-control-bar">
+                    <div class="filter-control" style="flex:1;">
+                        <label>Desde</label>
+                        <input type="date" id="statsDateStart" onchange="renderStatistics()">
+                    </div>
+                    <div class="filter-control" style="flex:1;">
+                        <label>Hasta</label>
+                        <input type="date" id="statsDateEnd" onchange="renderStatistics()">
+                    </div>
+                    <button class="btn-primary" style="width:auto; padding: 10px 20px;" onclick="initStatsDates()"><i class="fas fa-sync"></i> Reset Mes</button>
+                </div>
+
+                <!-- KPI CARDS -->
+                <div class="stats-kpi-grid">
+                    <div class="stat-kpi">
+                        <div class="stat-kpi-label">Ingresos Totales</div>
+                        <div class="stat-kpi-val text-success" id="kpiIngresos">$0</div>
+                    </div>
+                    <div class="stat-kpi">
+                        <div class="stat-kpi-label">Gastos Totales</div>
+                        <div class="stat-kpi-val text-danger" id="kpiGastos">$0</div>
+                        <div class="stat-kpi-sub" id="kpiGastosSub">0 transacciones</div>
+                    </div>
+                    <div class="stat-kpi">
+                        <div class="stat-kpi-label">Ahorro Neto</div>
+                        <div class="stat-kpi-val" id="kpiAhorro">$0</div>
+                    </div>
+                    <div class="stat-kpi">
+                        <div class="stat-kpi-label">Tasa de Ahorro</div>
+                        <div class="stat-kpi-val" style="color:#3b82f6;" id="kpiTasa">0%</div>
+                    </div>
+                </div>
+
+                <!-- CHARTS ROW 1 -->
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <div class="chart-header"><span>Flujo de Caja (Evolución)</span></div>
+                        <div style="height:300px; position:relative;"><canvas id="chartTrendStats"></canvas></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-header"><span>Distribución de Gastos</span></div>
+                        <div style="height:300px; position:relative;"><canvas id="chartCatStats"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- CHARTS ROW 2 -->
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <div class="chart-header"><span>Uso de Métodos de Pago</span></div>
+                        <div style="height:300px; position:relative;"><canvas id="chartMethodsStats"></canvas></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-header"><span>Top 5 Gastos Mayores</span></div>
+                        <div id="topExpensesList" style="overflow-y:auto; max-height:300px;"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- HISTORIAL (ACTUALIZADO CON FILTROS AVANZADOS) -->
@@ -554,6 +650,9 @@
 
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date();
         
+        // Stats Charts Instances
+        let stChartTrend=null, stChartCat=null, stChartMethod=null;
+
         // --- CATEGORÍAS AMPLIADAS Y MEJORADAS (V3.7) ---
         const categories = {
             gasto: {
@@ -646,9 +745,21 @@
             document.getElementById('filterDateStart').valueAsDate = firstDay;
             document.getElementById('filterDateEnd').valueAsDate = lastDay;
 
+            // Init Stats Dates
+            initStatsDates();
+
             populateFilterCategories();
             loadCards(); 
         });
+
+        function initStatsDates(){
+            const t=new Date();
+            const fd=new Date(t.getFullYear(), t.getMonth(), 1);
+            const ld=new Date(t.getFullYear(), t.getMonth()+1, 0);
+            document.getElementById('statsDateStart').valueAsDate = fd;
+            document.getElementById('statsDateEnd').valueAsDate = ld;
+            if(transactions.length>0) renderStatistics();
+        }
 
         function formatMoney(n){return '$ '+parseFloat(n).toLocaleString('es-CO',{maximumFractionDigits:0});}
         function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
@@ -658,11 +769,9 @@
         // --- FILTER HELPERS ---
         function populateFilterCategories() {
             const sel = document.getElementById('filterCategory');
-            // Add expenses
             Object.keys(categories.gasto).forEach(k => {
                 sel.add(new Option(categories.gasto[k].icon + ' ' + k.charAt(0).toUpperCase() + k.slice(1), k));
             });
-            // Add incomes
             Object.keys(categories.ingreso).forEach(k => {
                 sel.add(new Option(categories.ingreso[k].icon + ' ' + k.charAt(0).toUpperCase() + k.slice(1), k));
             });
@@ -682,7 +791,138 @@
             renderHistory();
         }
 
-        // --- DETAILED LOCAL AI BRAIN ---
+        // --- NEW STATISTICS PRO LOGIC ---
+        function renderStatistics() {
+            const startStr = document.getElementById('statsDateStart').value;
+            const endStr = document.getElementById('statsDateEnd').value;
+            
+            if(!startStr || !endStr) return;
+
+            // Filter transactions
+            const filtered = transactions.filter(t => t.fecha >= startStr && t.fecha <= endStr);
+            
+            // 1. KPIs
+            let totalInc=0, totalExp=0, expCount=0;
+            filtered.forEach(t => {
+                const m = parseFloat(t.monto);
+                if(t.tipo === 'ingreso') totalInc += m;
+                else if(t.tipo === 'gasto' || t.tipo === 'credito') { totalExp += m; expCount++; }
+            });
+            
+            const savings = totalInc - totalExp;
+            const rate = totalInc > 0 ? ((savings/totalInc)*100).toFixed(1) : 0;
+            
+            document.getElementById('kpiIngresos').textContent = formatMoney(totalInc);
+            document.getElementById('kpiGastos').textContent = formatMoney(totalExp);
+            document.getElementById('kpiGastosSub').textContent = `${expCount} transacciones`;
+            document.getElementById('kpiAhorro').textContent = formatMoney(savings);
+            document.getElementById('kpiAhorro').className = `stat-kpi-val ${savings>=0?'text-success':'text-danger'}`;
+            document.getElementById('kpiTasa').textContent = `${rate}%`;
+
+            // 2. Trend Chart (Line)
+            const daily = {};
+            filtered.forEach(t => {
+                if(!daily[t.fecha]) daily[t.fecha] = {inc:0, exp:0};
+                const m = parseFloat(t.monto);
+                if(t.tipo === 'ingreso') daily[t.fecha].inc += m;
+                else if(t.tipo === 'gasto' || t.tipo === 'credito') daily[t.fecha].exp += m;
+            });
+            const sortedDates = Object.keys(daily).sort();
+            
+            if(stChartTrend) stChartTrend.destroy();
+            stChartTrend = new Chart(document.getElementById('chartTrendStats'), {
+                type: 'bar',
+                data: {
+                    labels: sortedDates.map(d => d.substring(5)), // MM-DD
+                    datasets: [
+                        { label: 'Ingresos', data: sortedDates.map(d=>daily[d].inc), backgroundColor: '#10b981', borderRadius:4 },
+                        { label: 'Gastos', data: sortedDates.map(d=>daily[d].exp), backgroundColor: '#ef4444', borderRadius:4 }
+                    ]
+                },
+                options: { responsive:true, maintainAspectRatio:false, scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:'#f1f5f9'}}} }
+            });
+
+            // 3. Category Doughnut
+            const cats = {};
+            filtered.filter(t=>t.tipo==='gasto'||t.tipo==='credito').forEach(t => {
+                cats[t.categoria] = (cats[t.categoria]||0) + parseFloat(t.monto);
+            });
+            
+            if(stChartCat) stChartCat.destroy();
+            stChartCat = new Chart(document.getElementById('chartCatStats'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(cats),
+                    datasets: [{
+                        data: Object.values(cats),
+                        backgroundColor: ['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6','#ef4444','#14b8a6']
+                    }]
+                },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
+            });
+
+            // 4. Payment Methods (Horizontal Bar)
+            const methods = {};
+            filtered.filter(t=>t.tipo==='gasto'||t.tipo==='credito').forEach(t => {
+                let m = t.metodoPago || 'Otros';
+                if(t.esCredito) m = 'Crédito';
+                methods[m] = (methods[m]||0) + parseFloat(t.monto);
+            });
+
+            if(stChartMethod) stChartMethod.destroy();
+            stChartMethod = new Chart(document.getElementById('chartMethodsStats'), {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: Object.keys(methods),
+                    datasets: [{
+                        label: 'Gasto por Método',
+                        data: Object.values(methods),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive:true, maintainAspectRatio:false }
+            });
+
+            // 5. Top Expenses List
+            const top = filtered.filter(t=>t.tipo==='gasto'||t.tipo==='credito')
+                .sort((a,b) => parseFloat(b.monto) - parseFloat(a.monto))
+                .slice(0, 5);
+                
+            let html = '<table class="top-expenses-table">';
+            if(top.length===0) html += '<tr><td style="text-align:center; color:#94a3b8;">Sin datos</td></tr>';
+            else {
+                const maxVal = parseFloat(top[0].monto);
+                top.forEach(t => {
+                    const pct = (parseFloat(t.monto) / maxVal) * 100;
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; color:#334155;">
+                                    <span>${t.descripcion}</span>
+                                    <span>${formatMoney(t.monto)}</span>
+                                </div>
+                                <div style="font-size:0.75rem; color:#64748b;">${t.fecha} • ${t.categoria}</div>
+                                <div class="bar-container"><div class="bar-fill" style="width:${pct}%; background:var(--danger);"></div></div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            html += '</table>';
+            document.getElementById('topExpensesList').innerHTML = html;
+        }
+
+        // --- DETAILED LOCAL AI BRAIN (ADVANCED) ---
+        const CAT_TYPE = {
+            'vivienda': 'essential', 'servicios_publicos': 'essential', 'alimentacion': 'essential', 
+            'salud': 'essential', 'educacion': 'essential', 'transporte': 'essential', 'seguros': 'essential',
+            'vestuario': 'lifestyle', 'cuidado_personal': 'lifestyle', 'entretenimiento': 'lifestyle', 
+            'mascotas': 'lifestyle', 'tecnologia': 'lifestyle', 'otros': 'lifestyle',
+            'deudas': 'financial', 'pago_tc': 'financial'
+        };
+
         function generateLocalAnalysis() {
             const btn = document.querySelector('.btn-ai-action'); const loader = document.getElementById('aiLoading'); const result = document.getElementById('aiResultContainer');
             btn.disabled = true; loader.style.display = 'flex'; result.style.display = 'none';
@@ -695,11 +935,17 @@
                 if(d.cashFlow < 0) score -= 30;
                 const savingsRate = (d.cashFlow / d.income) * 100;
                 if(savingsRate < 10) score -= 10;
-                if(d.totalDebt > (d.income * 3)) score -= 20; // Heavy debt
+                if(d.totalDebt > (d.income * 3)) score -= 20; 
                 if(d.totalDebt > d.income) score -= 10;
                 if(score < 0) score = 0;
 
-                // 2. HTML Construction
+                // 2. Metric Calculations
+                const daysRunway = d.avgDailyExp > 0 ? (d.liquidAssets / d.avgDailyExp).toFixed(0) : 999;
+                
+                // 50/30/20 Percentages
+                const pEss = d.income > 0 ? (d.breakdown.essential / d.income * 100) : 0;
+                const pLife = d.income > 0 ? (d.breakdown.lifestyle / d.income * 100) : 0;
+                const pFin = d.income > 0 ? (d.breakdown.financial / d.income * 100) : 0;
                 
                 // Debt Strategy
                 let debtHTML = "";
@@ -709,33 +955,68 @@
                     debtHTML = `
                         <div class="insight-grid">
                             <div class="insight-item"><div class="insight-label">Deuda Total</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div>
-                            <div class="insight-item"><div class="insight-label">Ratio Endeudamiento</div><div class="insight-val">${ratio}%</div></div>
+                            <div class="insight-item"><div class="insight-label">Deuda/Ingreso</div><div class="insight-val">${ratio}%</div></div>
                         </div>
-                        <p class="report-text">Recomendación: <strong>${d.debtCards > 1 ? 'Método Bola de Nieve (Paga la menor primero)' : 'Abonos a Capital (Reduce interés)'}</strong>.</p>
                     `;
                 }
 
+                // 3. Construct HTML
                 const html = `
                     <div class="report-section">
-                        <h4><i class="fas fa-heartbeat" style="color:#ef4444"></i> Radiografía Financiera</h4>
-                        <div class="insight-grid">
-                            <div class="insight-item"><div class="insight-label">Ingresos (30d)</div><div class="insight-val text-success">${formatMoney(d.income)}</div></div>
-                            <div class="insight-item"><div class="insight-label">Gastos (30d)</div><div class="insight-val text-danger">${formatMoney(d.expenses)}</div></div>
-                            <div class="insight-item"><div class="insight-label">Flujo Caja</div><div class="insight-val ${d.cashFlow>=0?'text-success':'text-danger'}">${formatMoney(d.cashFlow)}</div></div>
+                        <h4><i class="fas fa-chart-line" style="color:#3b82f6"></i> Indicadores Clave</h4>
+                        <div class="insight-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="metric-card">
+                                <div class="metric-lbl">Días de Vida (Runway)</div>
+                                <div class="metric-val ${daysRunway<30?'text-bad':(daysRunway>90?'text-good':'text-warn')}">${daysRunway}</div>
+                                <div style="font-size:0.7rem; color:#94a3b8;">Días sin ingresos</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-lbl">Tasa Ahorro Real</div>
+                                <div class="metric-val ${savingsRate<10?'text-bad':'text-good'}">${savingsRate.toFixed(1)}%</div>
+                                <div style="font-size:0.7rem; color:#94a3b8;">Meta: >20%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-lbl">Gasto Diario Prom.</div>
+                                <div class="metric-val">${formatMoney(d.avgDailyExp)}</div>
+                                <div style="font-size:0.7rem; color:#94a3b8;">Últimos 30 días</div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="report-section">
-                        <h4><i class="fas fa-shield-alt" style="color:#eab308"></i> Estrategia de Pasivos</h4>
+                        <h4><i class="fas fa-balance-scale" style="color:#8b5cf6"></i> Regla 50/30/20</h4>
+                        
+                        <div class="progress-container">
+                            <div class="progress-label"><span>Necesidades (Meta 50%)</span> <strong>${pEss.toFixed(1)}%</strong></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill bg-ess" style="width: ${Math.min(pEss, 100)}%"></div></div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-label"><span>Estilo de Vida (Meta 30%)</span> <strong>${pLife.toFixed(1)}%</strong></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill bg-lif" style="width: ${Math.min(pLife, 100)}%"></div></div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-label"><span>Deudas/Ahorro (Meta 20%)</span> <strong>${pFin.toFixed(1)}%</strong></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill bg-fin" style="width: ${Math.min(pFin, 100)}%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="report-section">
+                        <h4><i class="fas fa-shield-alt" style="color:#eab308"></i> Análisis de Deuda</h4>
                         ${debtHTML}
                     </div>
 
                     <div class="report-section">
-                        <h4><i class="fas fa-search-dollar" style="color:#3b82f6"></i> Fugas de Capital</h4>
-                        <ul class="ai-list">
-                            ${d.topExpenses.map(c => `<li>Gasto alto en <strong>${c.category}</strong>: ${formatMoney(c.amount)}</li>`).join('')}
-                            ${d.cashFlow < 0 ? '<li>⚠️ <strong>ALERTA ROJA:</strong> Estás gastando más de lo que ganas. Revisa gastos hormiga hoy mismo.</li>' : '<li>✅ Tu flujo de caja es positivo. Mantén el hábito.</li>'}
-                        </ul>
+                        <h4><i class="fas fa-search-dollar" style="color:#ef4444"></i> Vampiros Financieros (Top 5)</h4>
+                        <table style="width:100%; font-size:0.9rem;">
+                            ${d.topExpenses.map((c, i) => `
+                                <tr>
+                                    <td style="padding:8px 0; border-bottom:1px solid #f1f5f9;"><strong>#${i+1}</strong> ${c.category}</td>
+                                    <td style="padding:8px 0; border-bottom:1px solid #f1f5f9; text-align:right;">${formatMoney(c.amount)}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
                     </div>
                 `;
 
@@ -744,17 +1025,64 @@
                 document.getElementById('aiScoreBadge').style.background = score > 80 ? '#166534' : (score > 50 ? '#854d0e' : '#991b1b');
                 
                 loader.style.display = 'none'; result.style.display = 'block'; btn.disabled = false;
-            }, 1500);
+            }, 1000);
         }
 
         function prepareFinancialContext(){
-            let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0; const t=new Date(); const p=new Date(); p.setDate(t.getDate()-30);
-            const rt=transactions.filter(x=>new Date(x.fecha)>=p);
-            rt.forEach(x=>{const m=parseFloat(x.monto); if(x.tipo==='ingreso')i+=m; if(x.tipo==='gasto'||x.tipo==='credito')e+=m;});
-            Object.values(dt).forEach(x=>td+=x);
-            let cm={}; rt.filter(x=>x.tipo==='gasto').forEach(x=>{cm[x.categoria]=(cm[x.categoria]||0)+parseFloat(x.monto);});
-            const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>({category:k,amount:v}));
-            return {income:i, expenses:e, cashFlow:i-e, totalDebt:td, debtCards:Object.values(dt).filter(x=>x>0).length, topExpenses:tc};
+            let i=0, e=0;
+            let essential=0, lifestyle=0, financial=0;
+            let dt={...globalDeudaPorTarjeta}, td=0; 
+            
+            // 1. Calculate Liquid Assets (Current Snapshot)
+            // Recalculate strictly from transactions to avoid UI dependency
+            let liquidAssets = 0; 
+            transactions.forEach(t => {
+                const m = parseFloat(t.monto);
+                if(t.tipo === 'pago_tarjeta') {
+                     if(t.metodoPago !== 'tarjeta') liquidAssets -= m; 
+                } else if(!t.esCredito) {
+                    if(t.tipo === 'ingreso') liquidAssets += m;
+                    else if(t.tipo === 'gasto' || t.tipo === 'transferencia') liquidAssets -= m; 
+                }
+            });
+
+            // 2. Last 30 Days Analysis
+            const t=new Date(); const p=new Date(); p.setDate(t.getDate()-30);
+            const rt=transactions.filter(x=>new Date(x.fecha)>=p); 
+            
+            let cm={}; // Category map
+
+            rt.forEach(x=>{
+                const m=parseFloat(x.monto); 
+                if(x.tipo==='ingreso') i+=m; 
+                
+                if(x.tipo==='gasto' || x.tipo==='credito') {
+                    e+=m;
+                    // Categorize 50/30/20
+                    const type = CAT_TYPE[x.categoria] || 'lifestyle';
+                    if(type === 'essential') essential += m;
+                    else if(type === 'lifestyle') lifestyle += m;
+                    else if(type === 'financial') financial += m;
+                    
+                    cm[x.categoria]=(cm[x.categoria]||0)+m;
+                }
+            });
+            
+            Object.values(dt).forEach(x=>td+=x); // Total Debt
+            
+            const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,5).map(([k,v])=>({category:k,amount:v})); // Top 5
+            
+            return {
+                income: i, 
+                expenses: e, 
+                cashFlow: i-e, 
+                totalDebt: td, 
+                debtCards: Object.values(dt).filter(x=>x>0).length, 
+                topExpenses: tc,
+                breakdown: { essential, lifestyle, financial },
+                liquidAssets: liquidAssets,
+                avgDailyExp: e / 30
+            };
         }
 
         // --- HISTORY (NEW FILTERED LOGIC) ---
@@ -850,7 +1178,7 @@
         async function loadCards(){try{const s=await db.collection('cards').orderBy('name').get(); cardsList=[]; s.forEach(d=>cardsList.push({id:d.id,...d.data()})); if(cardsList.length===0){await seedDefaultCards();return;} populateCardSelects(); loadTransactions();}catch(e){console.error(e);}}
         async function seedDefaultCards(){const d=['Exito','Nu','Falabella']; const b=db.batch(); d.forEach(n=>b.set(db.collection('cards').doc(),{name:n,quota:0})); await b.commit(); loadCards();}
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.name));s2.add(new Option(c.name,c.name));});}
-        async function loadTransactions(){const s=await db.collection('transactions').orderBy('fecha','desc').get(); transactions=[]; s.forEach(d=>transactions.push({id:d.id,...d.data()})); updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();}
+        async function loadTransactions(){const s=await db.collection('transactions').orderBy('fecha','desc').get(); transactions=[]; s.forEach(d=>transactions.push({id:d.id,...d.data()})); updateDashboard(); renderHistory(); renderCharts(); renderTrendChart(); if(document.getElementById('view-estadisticas').classList.contains('active')) renderStatistics();}
         
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
@@ -865,7 +1193,7 @@
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const i=document.getElementById('editCardId').value;if(!n)return;try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q});else await db.collection('cards').add({name:n,quota:q});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);}}
         async function deleteCard(id){if(!confirm("Borrar?"))return;await db.collection('cards').doc(id).delete();loadCards();setTimeout(openQuotaModal,500);}
         function editCard(id,n,q){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
-        function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='asistente'){s[4].classList.add('active');m[2].classList.add('active');}}
+        function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');if(transactions.length>0)renderStatistics();}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='asistente'){s[4].classList.add('active');m[2].classList.add('active');}}
         function goToAddTransaction(){switchView('transacciones');}
 
         handleTipoChange();
