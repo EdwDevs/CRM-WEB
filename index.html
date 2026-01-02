@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Financiero v4.0 - Advanced Features</title>
+    <title>CRM Financiero v4.1 - Fixed</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
@@ -2470,14 +2470,24 @@
                 if(siguienteCuota>cuotaTotal)return; // Skip if all paid
                 const montoPorCuota=(cred.totalDeuda||cred.monto)/cuotaTotal;
                 
-                // Calculate next payment date
-                let nextPaymentDate;if(cred.proximaFechaPago){nextPaymentDate=new Date(cred.proximaFechaPago);
-                    nextPaymentDate=new Date(nextPaymentDate.getFullYear(),nextPaymentDate.getMonth(),paymentDay);
-                }else{nextPaymentDate=new Date(cred.fechaPrimerPago);
-                    if(!nextPaymentDate.getTime())nextPaymentDate=new Date();
-                    nextPaymentDate=new Date(nextPaymentDate.getFullYear(),nextPaymentDate.getMonth(),paymentDay);
+                // --- CORRECCIÓN DE FECHA ---
+                let nextPaymentDate;
+                if (cred.proximaFechaPago) {
+                    // Si existe una fecha guardada explícitamente, la usamos directamente
+                    // Usamos split y constructor manual para evitar problemas de zona horaria
+                    const parts = cred.proximaFechaPago.split('-');
+                    nextPaymentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                } else {
+                    // Lógica de fallback original
+                    nextPaymentDate = new Date(cred.fechaPrimerPago);
+                    if(!nextPaymentDate.getTime()) nextPaymentDate = new Date();
+                    nextPaymentDate = new Date(nextPaymentDate.getFullYear(), nextPaymentDate.getMonth(), paymentDay);
+                    
+                    if(today.getDate() > paymentDay){
+                         nextPaymentDate = new Date(today.getFullYear(), today.getMonth() + 1, paymentDay);
+                    }
                 }
-                if(today.getDate()>paymentDay){nextPaymentDate=new Date(today.getFullYear(),today.getMonth()+1,paymentDay);}
+                // ---------------------------
                 
                 const isVencida=today>nextPaymentDate;
                 const diasRestantes=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));
@@ -2503,18 +2513,130 @@
         function checkBudgetAlerts(){const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const budgets={};transactions.filter(t=>{const[ty,tm]=t.fecha.split('-').map(Number);return(t.tipo==='gasto'||t.tipo==='credito')&&(tm-1)===vm&&ty===vy;}).forEach(t=>{budgets[t.categoria]=(budgets[t.categoria]||0)+parseFloat(t.monto);});
         let exceeded=null;Object.keys(budgets).forEach(cat=>{if(budgets[cat]>1000000&&!exceeded){exceeded=cat;}});const alertDiv=document.getElementById('budgetAlert');if(exceeded){alertDiv.classList.remove('hidden');document.getElementById('budgetAlertDesc').textContent=`Has excedido $1,000,000 en ${exceeded.toUpperCase().replace(/_/g,' ')}`;}else{alertDiv.classList.add('hidden');}}
         
-        function renderReminders(){const cont=document.getElementById('remindersContainer');const today=new Date();const currentDay=today.getDate();const reminders=[];Object.keys(globalDeudaPorTarjeta).forEach(card=>{if(globalDeudaPorTarjeta[card]>0){const cardData=cardsList.find(c=>c.name===card);const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;let nextPaymentDate=new Date(today.getFullYear(),today.getMonth(),paymentDay);if(nextPaymentDate<today){nextPaymentDate=new Date(today.getFullYear(),today.getMonth()+1,paymentDay);}const daysUntilPayment=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));reminders.push({title:`Pago ${card}`,desc:`Deuda actual: ${formatMoney(globalDeudaPorTarjeta[card])}`,date:nextPaymentDate,daysUntil:daysUntilPayment});}});
-        if(reminders.length===0){cont.innerHTML='';return;}
-        let html='';reminders.forEach(r=>{const urgencyClass=r.daysUntil<=3?'var(--danger)':r.daysUntil<=7?'var(--warning)':'var(--text-muted)';const urgencyBg=r.daysUntil<=3?'var(--danger-light)':r.daysUntil<=7?'var(--warning-light)':'transparent';html+=`<div class="reminder-card" style="background:${urgencyBg};"><div class="reminder-icon"><i class="fas fa-calendar-check"></i></div><div class="reminder-text"><div class="reminder-title">${r.title}</div><div class="reminder-date" style="font-size:0.75rem;color:var(--text-muted);">Próximo pago: ${r.date.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})}</div></div><div style="text-align:right;"><div style="font-weight:600;color:${urgencyClass};font-size:0.9rem;">${r.daysUntil<=0?'Vencido':r.daysUntil===1?'1 día':`${r.daysUntil} días`}</div><div style="font-size:0.85rem;color:var(--text-muted);">${r.desc}</div></div></div>`;});cont.innerHTML=html;}
+        function renderReminders(){
+            const cont=document.getElementById('remindersContainer');
+            const today=new Date();
+            today.setHours(0,0,0,0);
+            
+            const reminders=[];
+            
+            Object.keys(globalDeudaPorTarjeta).forEach(card=>{
+                if(globalDeudaPorTarjeta[card]>0){
+                    const cardData=cardsList.find(c=>c.name===card);
+                    const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
+                    
+                    // Lógica corregida: Buscar fecha real basada en los créditos
+                    const cardCredits = transactions.filter(t => 
+                        t.tipo === 'credito' && 
+                        t.esCredito && 
+                        t.metodoPago === card && 
+                        (t.cuotasPagadas || 0) < (t.cuotas || 1)
+                    );
+
+                    let nextPaymentDate = null;
+
+                    if (cardCredits.length > 0) {
+                        // Obtener todas las próximas fechas de pago
+                        const dates = cardCredits.map(cred => {
+                            if (cred.proximaFechaPago) {
+                                const parts = cred.proximaFechaPago.split('-');
+                                return new Date(parts[0], parts[1] - 1, parts[2]);
+                            } else {
+                                // Si no hay fecha guardada, usar el default de este mes
+                                let d = new Date(today.getFullYear(), today.getMonth(), paymentDay);
+                                // Si hoy ya pasó el día de pago y no se ha pagado (no tiene proximaFechaPago), 
+                                // técnicamente está vencido o es hoy, así que dejamos esa fecha para que salga alerta.
+                                return d;
+                            }
+                        });
+                        // Ordenar y tomar la más antigua (la deuda más próxima)
+                        dates.sort((a,b) => a - b);
+                        nextPaymentDate = dates[0];
+                    }
+
+                    // Fallback si algo falla
+                    if (!nextPaymentDate) {
+                        nextPaymentDate = new Date(today.getFullYear(), today.getMonth(), paymentDay);
+                        if(nextPaymentDate < today){
+                            nextPaymentDate = new Date(today.getFullYear(), today.getMonth()+1, paymentDay);
+                        }
+                    }
+
+                    const daysUntilPayment=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));
+                    
+                    reminders.push({
+                        title:`Pago ${card}`,
+                        desc:`Deuda actual: ${formatMoney(globalDeudaPorTarjeta[card])}`,
+                        date:nextPaymentDate,
+                        daysUntil:daysUntilPayment
+                    });
+                }
+            });
+
+            if(reminders.length===0){cont.innerHTML='';return;}
+            
+            let html='';
+            reminders.forEach(r=>{
+                // Ajustar colores según urgencia
+                const isOverdue = r.daysUntil <= 0;
+                const isUrgent = r.daysUntil <= 3;
+                const isWarning = r.daysUntil <= 7;
+                
+                let urgencyClass = 'var(--text-muted)';
+                let urgencyBg = 'transparent';
+                let iconClass = 'fas fa-calendar-alt'; // Icono normal
+
+                if(isOverdue) {
+                    urgencyClass = 'var(--danger)';
+                    urgencyBg = 'var(--danger-light)';
+                    iconClass = 'fas fa-exclamation-circle';
+                } else if(isUrgent) {
+                    urgencyClass = '#c2410c'; // Naranja oscuro
+                    urgencyBg = '#ffedd5'; // Naranja claro
+                    iconClass = 'fas fa-clock';
+                } else if(isWarning) {
+                    urgencyClass = 'var(--warning)';
+                    urgencyBg = 'var(--warning-light)';
+                }
+
+                html+=`<div class="reminder-card" style="background:${urgencyBg}; border-left: 4px solid ${isOverdue ? 'var(--danger)' : (isUrgent ? '#f97316' : (isWarning ? 'var(--warning)' : 'transparent'))};">
+                    <div class="reminder-icon"><i class="${iconClass}" style="color:${isOverdue ? 'var(--danger)' : (isUrgent ? '#f97316' : 'var(--warning)')}"></i></div>
+                    <div class="reminder-text">
+                        <div class="reminder-title">${r.title}</div>
+                        <div class="reminder-date" style="font-size:0.75rem;color:var(--text-muted);">Próximo pago: ${r.date.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:600;color:${urgencyClass};font-size:0.9rem;">${r.daysUntil < 0 ? 'Vencido (' + Math.abs(r.daysUntil) + 'd)' : (r.daysUntil===0 ? '¡Hoy!' : (r.daysUntil===1 ? 'Mañana' : `${r.daysUntil} días`))}</div>
+                        <div style="font-size:0.85rem;color:var(--text-muted);">${r.desc}</div>
+                    </div>
+                </div>`;
+            });
+            cont.innerHTML=html;
+        }
         
         let tempPagoCuotaData=null;
         
-        window.pagarCuota=function(creditId,cuotaNum,monto,cardName,paymentDay){const credito=transactions.find(t=>t.id===creditId);if(!credito){showToast('Crédito no encontrado','error');return;}
-            tempPagoCuotaData={creditId,cuotaNum,monto,cardName};
-            const infoDiv=document.getElementById('pagoCuotaInfo');infoDiv.innerHTML=`Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}`;
-            const today=new Date();
-            let suggestedDate=new Date(today.getFullYear(),today.getMonth(),paymentDay||15);
-            if(credito.proximaFechaPago){suggestedDate=new Date(credito.proximaFechaPago);}
+        // Función unificada para pagar cuota
+        window.pagarCuota = function(creditId, cuotaNum, monto, cardName, paymentDay) {
+            const credito = transactions.find(t => t.id === creditId);
+            if (!credito) {
+                showToast('Crédito no encontrado', 'error');
+                return;
+            }
+            // Importante: Guardar el ID correctamente
+            tempPagoCuotaData = { creditId, cuotaNum, monto, cardName };
+            
+            const infoDiv = document.getElementById('pagoCuotaInfo');
+            infoDiv.innerHTML = `Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}`;
+            
+            const today = new Date();
+            let suggestedDate = new Date(today.getFullYear(), today.getMonth(), paymentDay || 15);
+            
+            // Si ya hay una fecha, usar esa
+            if (credito.proximaFechaPago) {
+                const parts = credito.proximaFechaPago.split('-');
+                suggestedDate = new Date(parts[0], parts[1]-1, parts[2]);
+            }
             
             // Configurar calendario con fecha sugerida
             calendarioMesActual = suggestedDate.getMonth();
@@ -2524,17 +2646,38 @@
             // Inicializar calendario
             initCalendarioPagoCuota();
             
-            document.getElementById('pagoCuotaModal').style.display='flex';}
+            document.getElementById('pagoCuotaModal').style.display = 'flex';
+        }
         
-        window.confirmarPagoCuota=async function(){if(!tempPagoCuotaData)return;if(!fechaSeleccionadaCalendario){showToast('Por favor selecciona una fecha','warning');return;}
-            const año=fechaSeleccionadaCalendario.getFullYear();
-            const mes=String(fechaSeleccionadaCalendario.getMonth()+1).padStart(2,'0');
-            const dia=String(fechaSeleccionadaCalendario.getDate()).padStart(2,'0');
-            const nuevaFecha=`${año}-${mes}-${dia}`;
-            try{const credito=transactions.find(t=>t.id===tempPagoCuotaData.creditId);const nuevasPagadas=Math.max(credito.cuotasPagadas||0,tempPagoCuotaData.cuotaNum);
-            await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({cuotasPagadas:nuevasPagadas,proximaFechaPago:nuevaFecha});
-            closeModal('pagoCuotaModal');showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} programada para ${formatDate(nuevaFecha)}`,'success');loadTransactions();}
-            catch(e){console.error(e);showToast('Error al actualizar','error');}}
+        window.confirmarPagoCuota = async function() {
+            if (!tempPagoCuotaData) return;
+            if (!fechaSeleccionadaCalendario) {
+                showToast('Por favor selecciona una fecha', 'warning');
+                return;
+            }
+            
+            const año = fechaSeleccionadaCalendario.getFullYear();
+            const mes = String(fechaSeleccionadaCalendario.getMonth() + 1).padStart(2, '0');
+            const dia = String(fechaSeleccionadaCalendario.getDate()).padStart(2, '0');
+            const nuevaFecha = `${año}-${mes}-${dia}`;
+            
+            try {
+                const credito = transactions.find(t => t.id === tempPagoCuotaData.creditId);
+                const nuevasPagadas = Math.max(credito.cuotasPagadas || 0, tempPagoCuotaData.cuotaNum);
+                
+                await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({
+                    cuotasPagadas: nuevasPagadas,
+                    proximaFechaPago: nuevaFecha // Guardamos la fecha seleccionada en DB
+                });
+                
+                closeModal('pagoCuotaModal');
+                showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} programada para ${formatDate(nuevaFecha)}`, 'success');
+                loadTransactions();
+            } catch (e) {
+                console.error(e);
+                showToast('Error al actualizar', 'error');
+            }
+        }
         
         function renderGoals(){const cont=document.getElementById('goalsContainer');if(goals.length===0){cont.innerHTML='<p style="text-align:center;color:var(--text-light);">No tienes objetivos definidos</p>';return;}
         let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div style="font-weight:700;color:var(--primary);">${pct}%</div></div><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats" style="margin-top:5px;"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn-primary" style="width:auto;padding:8px 16px;" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn-cancel" style="width:auto;padding:8px 16px;" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
@@ -2654,47 +2797,6 @@
         function seleccionarDiaCalendario(dia) {
             fechaSeleccionadaCalendario = new Date(calendarioAnoActual, calendarioMesActual, dia);
             renderizarCalendario();
-        }
-
-        // Abrir modal de pago de cuota con inicialización del calendario
-        window.abrirModalPagoCuota = function(id, cuotaNum, monto) {
-            tempPagoCuotaData = { id, cuotaNum, monto };
-            document.getElementById('pagoCuotaInfo').innerHTML = `<strong>Cuota #${cuotaNum}</strong> - ${formatMoney(monto)}`;
-            
-            // Resetear calendario
-            calendarioMesActual = new Date().getMonth();
-            calendarioAnoActual = new Date().getFullYear();
-            fechaSeleccionadaCalendario = null;
-            
-            // Inicializar calendario
-            initCalendarioPagoCuota();
-            
-            document.getElementById('pagoCuotaModal').style.display = 'flex';
-        }
-
-        // Confirmar pago con fecha seleccionada del calendario
-        window.confirmarPagoCuota = async function() {
-            if (!fechaSeleccionadaCalendario) {
-                showToast('Por favor selecciona una fecha', 'warning');
-                return;
-            }
-            
-            const año = fechaSeleccionadaCalendario.getFullYear();
-            const mes = String(fechaSeleccionadaCalendario.getMonth() + 1).padStart(2, '0');
-            const dia = String(fechaSeleccionadaCalendario.getDate()).padStart(2, '0');
-            const fechaStr = `${año}-${mes}-${dia}`;
-            
-            try {
-                await db.collection('transactions').doc(tempPagoCuotaData.id).update({
-                    proximaFechaPago: fechaStr
-                });
-                closeModal('pagoCuotaModal');
-                showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} programada para ${formatDate(fechaStr)}`, 'success');
-                loadTransactions();
-            } catch (e) {
-                console.error(e);
-                showToast('Error al guardar', 'error');
-            }
         }
 
         // Formatear fecha
