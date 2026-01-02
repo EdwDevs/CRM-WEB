@@ -1671,6 +1671,173 @@
             margin-top: 4px;
         }
 
+        .cuota-item {
+            background: var(--bg-body);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all var(--transition-fast);
+        }
+
+        .cuota-item:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cuota-item.pagada {
+            background: var(--success-light);
+            border-color: rgba(16, 185, 129, 0.2);
+            opacity: 0.7;
+        }
+
+        .cuota-item.pendiente {
+            background: var(--warning-light);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .cuota-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .cuota-numero {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .cuota-fecha {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .cuota-monto {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .btn-cuota-pagar {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-cuota-pagar:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .cuota-pagada-badge {
+            background: var(--success);
+            color: white;
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .credit-summary-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        [data-theme="dark"] .credit-summary-card {
+            background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+        }
+
+        .credit-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .credit-card-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .credit-card-name {
+            color: #fbbf24;
+        }
+
+        .credit-progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .credit-progress-label {
+            font-size: 0.85rem;
+            color: #a16207;
+        }
+
+        [data-theme="dark"] .credit-progress-label {
+            color: #fcd34d;
+        }
+
+        .credit-progress-value {
+            font-weight: 700;
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .credit-progress-value {
+            color: #fbbf24;
+        }
+
+        .credit-progress-bar {
+            height: 8px;
+            background: rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .credit-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        .cuotas-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .cuotas-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .modal-details {
             background: var(--bg-body);
             padding: 20px;
@@ -2010,6 +2177,26 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="pagoCuotaModal">
+        <div class="modal-content" style="max-width:400px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 class="modal-title">💳 Programar Próxima Cuota</h3>
+                <button onclick="closeModal('pagoCuotaModal')" style="background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="text-align:center; margin-bottom:20px;">
+                <div id="pagoCuotaInfo" style="font-size:0.9rem; color:var(--text-muted);"></div>
+            </div>
+            <div class="form-group">
+                <label>📅 Seleccionar fecha del próximo pago</label>
+                <input type="date" id="proximaFechaPagoInput" style="font-size:1.2rem; padding:16px;">
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button class="btn-cancel" onclick="closeModal('pagoCuotaModal')" style="flex:1;">Cancelar</button>
+                <button class="btn-primary" onclick="confirmarPagoCuota()" style="flex:1;">💰 Confirmar Pago</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toastContainer"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -2029,7 +2216,7 @@
         
         function initTheme(){const t=localStorage.getItem('theme')||'light';document.body.setAttribute('data-theme',t);updateThemeIcon();}
         
-        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeModal('goalModal');}});}
+        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeModal('goalModal');closeModal('pagoCuotaModal');}});}
         
         document.addEventListener('DOMContentLoaded', () => { 
             initTheme();initKeyboardShortcuts();initOfflineSupport();
@@ -2147,9 +2334,55 @@
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; let dm={}; cardsList.forEach(c=>dm[c.name]=0); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;}
-        else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{const c=t.metodoPago;if(dm[c]!==undefined)dm[c]+=(t.totalDeuda||m);if(iv)g+=m;}});
+        else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{const c=t.metodoPago;if(dm[c]!==undefined){const totalDeuda=t.totalDeuda||m;const cuotas=t.cuotas||1;const pagadas=t.cuotasPagadas||0;const porPagar=Math.max(0,cuotas-pagadas);dm[c]+=(totalDeuda/cuotas)*porPagar;}if(iv)g+=m;}});
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
-        const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; Object.keys(dm).forEach(k=>{if(dm[k]!==0){td+=dm[k];dv.innerHTML+=`<div class="card-status-item"><span class="card-name">${k}</span><span class="card-debt">${formatMoney(dm[k])}</span></div>`;}}); document.getElementById('deudaTotalTC').textContent=formatMoney(td);
+        const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
+        
+        // Get all credit transactions grouped by card
+        const creditosPorTarjeta={}; 
+        transactions.filter(t=>t.tipo==='credito'&&t.esCredito).forEach(t=>{if(!creditosPorTarjeta[t.metodoPago])creditosPorTarjeta[t.metodoPago]=[]; creditosPorTarjeta[t.metodoPago].push(t);});
+        
+        Object.keys(dm).forEach(k=>{if(dm[k]!==0){td+=dm[k];const creditos=creditosPorTarjeta[k]||[];dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
+            <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><span style="font-size:1.25rem;font-weight:700;color:var(--danger);">${formatMoney(dm[k])}</span></div>
+            ${creditos.length>0?`<div class="cuotas-section"><div class="cuotas-title"><i class="fas fa-credit-card"></i> Gestión de Cuotas</div>
+            <div id="cuotas-list-${k.replace(/\s/g,'_')}"></div></div>`:''}
+        </div>`;}}); 
+        document.getElementById('deudaTotalTC').textContent=formatMoney(td);
+        
+        // Simple payment option - one per credit
+        Object.keys(creditosPorTarjeta).forEach(cardName=>{
+            const creditos=creditosPorTarjeta[cardName];const container=document.getElementById(`cuotas-list-${cardName.replace(/\s/g,'_')}`);
+            if(!container)return;container.innerHTML='';const today=new Date();const cardData=cardsList.find(c=>c.name===cardName);
+            const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
+            
+            creditos.forEach((cred,idx)=>{const cuotaTotal=cred.cuotas||1;const pagadas=cred.cuotasPagadas||0;const siguienteCuota=pagadas+1;
+                if(siguienteCuota>cuotaTotal)return; // Skip if all paid
+                const montoPorCuota=(cred.totalDeuda||cred.monto)/cuotaTotal;
+                
+                // Calculate next payment date
+                let nextPaymentDate;if(cred.proximaFechaPago){nextPaymentDate=new Date(cred.proximaFechaPago);
+                    nextPaymentDate=new Date(nextPaymentDate.getFullYear(),nextPaymentDate.getMonth(),paymentDay);
+                }else{nextPaymentDate=new Date(cred.fechaPrimerPago);
+                    if(!nextPaymentDate.getTime())nextPaymentDate=new Date();
+                    nextPaymentDate=new Date(nextPaymentDate.getFullYear(),nextPaymentDate.getMonth(),paymentDay);
+                }
+                if(today.getDate()>paymentDay){nextPaymentDate=new Date(today.getFullYear(),today.getMonth()+1,paymentDay);}
+                
+                const isVencida=today>nextPaymentDate;
+                const diasRestantes=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));
+                
+                container.innerHTML+=`<div style="background:var(--bg-body);border-radius:var(--radius-md);padding:16px;margin-bottom:12px;border:1px solid rgba(148,163,184,0.1);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <div><span style="font-weight:600;font-size:1rem;color:var(--text-primary);">${cred.descripcion||'Crédito'}</span>
+                        <div style="font-size:0.8rem;color:var(--text-muted);">Cuota ${siguienteCuota} de ${cuotaTotal}</div></div>
+                        <div style="text-align:right;"><span style="font-weight:700;font-size:1.2rem;color:var(--primary);">${formatMoney(montoPorCuota)}</span>
+                        <div style="font-size:0.8rem;color:${isVencida?'var(--danger)':'var(--success)'};">${isVencida?'Vencida':'Pago: '+nextPaymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</div></div>
+                    </div>
+                    <button class="btn-cuota-pagar" style="width:100%;justify-content:center;" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${cardName}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Gestionar Pago</button>
+                </div>`;
+            });
+        });
+        
         updateFamilySummary();checkBudgetAlerts();renderReminders();}
         
         function updateFamilySummary(){const cont=document.getElementById('familySummary');const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const miembros={papa:{name:'Papá',icon:'👨'},mama:{name:'Mamá',icon:'👩'},hijo1:{name:'Hijo/a',icon:'👶'},compartido:{name:'Compartido',icon:'👨‍👩‍👧‍👦'}};const stats={};Object.keys(miembros).forEach(m=>stats[m]={gastos:0,ingresos:0});
@@ -2162,6 +2395,22 @@
         function renderReminders(){const cont=document.getElementById('remindersContainer');const today=new Date();const currentDay=today.getDate();const reminders=[];Object.keys(globalDeudaPorTarjeta).forEach(card=>{if(globalDeudaPorTarjeta[card]>0){const cardData=cardsList.find(c=>c.name===card);const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;let nextPaymentDate=new Date(today.getFullYear(),today.getMonth(),paymentDay);if(nextPaymentDate<today){nextPaymentDate=new Date(today.getFullYear(),today.getMonth()+1,paymentDay);}const daysUntilPayment=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));reminders.push({title:`Pago ${card}`,desc:`Deuda actual: ${formatMoney(globalDeudaPorTarjeta[card])}`,date:nextPaymentDate,daysUntil:daysUntilPayment});}});
         if(reminders.length===0){cont.innerHTML='';return;}
         let html='';reminders.forEach(r=>{const urgencyClass=r.daysUntil<=3?'var(--danger)':r.daysUntil<=7?'var(--warning)':'var(--text-muted)';const urgencyBg=r.daysUntil<=3?'var(--danger-light)':r.daysUntil<=7?'var(--warning-light)':'transparent';html+=`<div class="reminder-card" style="background:${urgencyBg};"><div class="reminder-icon"><i class="fas fa-calendar-check"></i></div><div class="reminder-text"><div class="reminder-title">${r.title}</div><div class="reminder-date" style="font-size:0.75rem;color:var(--text-muted);">Próximo pago: ${r.date.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})}</div></div><div style="text-align:right;"><div style="font-weight:600;color:${urgencyClass};font-size:0.9rem;">${r.daysUntil<=0?'Vencido':r.daysUntil===1?'1 día':`${r.daysUntil} días`}</div><div style="font-size:0.85rem;color:var(--text-muted);">${r.desc}</div></div></div>`;});cont.innerHTML=html;}
+        
+        let tempPagoCuotaData=null;
+        
+        window.pagarCuota=function(creditId,cuotaNum,monto,cardName,paymentDay){const credito=transactions.find(t=>t.id===creditId);if(!credito){showToast('Crédito no encontrado','error');return;}
+            tempPagoCuotaData={creditId,cuotaNum,monto,cardName};
+            const infoDiv=document.getElementById('pagoCuotaInfo');infoDiv.innerHTML=`Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}`;
+            const today=new Date();let suggestedDate=new Date(today.getFullYear(),today.getMonth()+1,paymentDay||15);
+            if(credito.proximaFechaPago){suggestedDate=new Date(credito.proximaFechaPago);}
+            document.getElementById('proximaFechaPagoInput').value=suggestedDate.toISOString().split('T')[0];
+            document.getElementById('pagoCuotaModal').style.display='flex';}
+        
+        window.confirmarPagoCuota=async function(){if(!tempPagoCuotaData)return;const nuevaFecha=document.getElementById('proximaFechaPagoInput').value;if(!nuevaFecha){showToast('Selecciona una fecha','error');return;}
+            try{const credito=transactions.find(t=>t.id===tempPagoCuotaData.creditId);const nuevasPagadas=Math.max(credito.cuotasPagadas||0,tempPagoCuotaData.cuotaNum);
+            await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({cuotasPagadas:nuevasPagadas,proximaFechaPago:nuevaFecha});
+            closeModal('pagoCuotaModal');showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} pagada`,'success');loadTransactions();}
+            catch(e){console.error(e);showToast('Error al actualizar','error');}}
         
         function renderGoals(){const cont=document.getElementById('goalsContainer');if(goals.length===0){cont.innerHTML='<p style="text-align:center;color:var(--text-light);">No tienes objetivos definidos</p>';return;}
         let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div style="font-weight:700;color:var(--primary);">${pct}%</div></div><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats" style="margin-top:5px;"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn-primary" style="width:auto;padding:8px 16px;" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn-cancel" style="width:auto;padding:8px 16px;" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
@@ -2192,7 +2441,7 @@
         
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
-        function preSubmit(){const t=document.getElementById('tipo').value; const m=parseCurrencyInput(document.getElementById('monto').value); if(m<=0){alert('Monto inválido');return;} const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()}; if(t==='credito'){const tc=document.getElementById('tarjetaCredito').value;const c=parseInt(document.getElementById('cuotas').value);const fp=document.getElementById('fechaPrimerPago').value;d.metodoPago=tc;d.esCredito=true;d.cuotas=c;d.totalDeuda=m;d.fechaPrimerPago=fp;tempTransactionData=d;document.getElementById('modalTarjeta').textContent=tc;document.getElementById('modalCuotas').textContent=c;document.getElementById('modalTotalDeuda').textContent=formatMoney(m);document.getElementById('creditModal').style.display='flex';}else{if(t==='pago_tarjeta'){d.metodoPago=document.getElementById('metodoPago').value;d.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value;}else{d.metodoPago=document.getElementById('metodoPago').value;if(t==='transferencia')d.metodoDestino=document.getElementById('metodoDestino').value;}saveTransaction(d);}}
+        function preSubmit(){const t=document.getElementById('tipo').value; const m=parseCurrencyInput(document.getElementById('monto').value); if(m<=0){alert('Monto inválido');return;} const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()}; if(t==='credito'){const tc=document.getElementById('tarjetaCredito').value;const c=parseInt(document.getElementById('cuotas').value);const fp=document.getElementById('fechaPrimerPago').value;const cardData=cardsList.find(card=>card.name===tc);const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;let proximaPago=new Date(fp);proximaPago=new Date(proximaPago.getFullYear(),proximaPago.getMonth(),paymentDay);d.metodoPago=tc;d.esCredito=true;d.cuotas=c;d.totalDeuda=m;d.fechaPrimerPago=fp;d.proximaFechaPago=proximaPago.toISOString().split('T')[0];d.cuotasPagadas=0;tempTransactionData=d;document.getElementById('modalTarjeta').textContent=tc;document.getElementById('modalCuotas').textContent=c;document.getElementById('modalTotalDeuda').textContent=formatMoney(m);document.getElementById('creditModal').style.display='flex';}else{if(t==='pago_tarjeta'){d.metodoPago=document.getElementById('metodoPago').value;d.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value;}else{d.metodoPago=document.getElementById('metodoPago').value;if(t==='transferencia')d.metodoDestino=document.getElementById('metodoDestino').value;}saveTransaction(d);}}
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){try{if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);else await db.collection('transactions').add(d); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success');}catch(e){saveToLocal(d);loadTransactions();showToast('Guardado localmente (offline)','warning');}}
         function cancelEdit(){editingTransactionId=null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
