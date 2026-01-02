@@ -1181,6 +1181,110 @@
             border: 1px solid rgba(148, 163, 184, 0.1);
         }
 
+        .calendar-container {
+            background: var(--bg-body);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        [data-theme="dark"] .calendar-container {
+            background: var(--bg-elevated);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-nav-btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        .calendar-month-year {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .calendar-weekdays span {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+        }
+
+        .calendar-day:hover:not(.calendar-day-empty):not(.calendar-day-disabled) {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+
+        .calendar-day-empty {
+            cursor: default;
+        }
+
+        .calendar-day-disabled {
+            color: var(--text-muted);
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .calendar-day-selected {
+            background: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        .calendar-day-today {
+            border: 2px solid var(--primary-color);
+        }
+
         .add-card-form {
             background: var(--bg-body);
             padding: 20px;
@@ -2178,17 +2282,24 @@
     </div>
 
     <div class="modal-overlay" id="pagoCuotaModal">
-        <div class="modal-content" style="max-width:400px;">
+        <div class="modal-content" style="max-width:420px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 class="modal-title">💳 Programar Próxima Cuota</h3>
+                <h3 class="modal-title">📅 Programar Próxima Cuota</h3>
                 <button onclick="closeModal('pagoCuotaModal')" style="background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
-            <div style="text-align:center; margin-bottom:20px;">
+            <div style="text-align:center; margin-bottom:15px;">
                 <div id="pagoCuotaInfo" style="font-size:0.9rem; color:var(--text-muted);"></div>
             </div>
-            <div class="form-group">
-                <label>📅 Seleccionar fecha del próximo pago</label>
-                <input type="date" id="proximaFechaPagoInput" style="font-size:1.2rem; padding:16px;">
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" onclick="cambiarMesCalendario(-1)">&#8249;</button>
+                    <span id="calendarMonthYear" class="calendar-month-year"></span>
+                    <button class="calendar-nav-btn" onclick="cambiarMesCalendario(1)">&#8250;</button>
+                </div>
+                <div class="calendar-weekdays">
+                    <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+                </div>
+                <div id="calendarDays" class="calendar-days"></div>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
                 <button class="btn-cancel" onclick="closeModal('pagoCuotaModal')" style="flex:1;">Cancelar</button>
@@ -2401,15 +2512,28 @@
         window.pagarCuota=function(creditId,cuotaNum,monto,cardName,paymentDay){const credito=transactions.find(t=>t.id===creditId);if(!credito){showToast('Crédito no encontrado','error');return;}
             tempPagoCuotaData={creditId,cuotaNum,monto,cardName};
             const infoDiv=document.getElementById('pagoCuotaInfo');infoDiv.innerHTML=`Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}`;
-            const today=new Date();let suggestedDate=new Date(today.getFullYear(),today.getMonth()+1,paymentDay||15);
+            const today=new Date();
+            let suggestedDate=new Date(today.getFullYear(),today.getMonth(),paymentDay||15);
             if(credito.proximaFechaPago){suggestedDate=new Date(credito.proximaFechaPago);}
-            document.getElementById('proximaFechaPagoInput').value=suggestedDate.toISOString().split('T')[0];
+            
+            // Configurar calendario con fecha sugerida
+            calendarioMesActual = suggestedDate.getMonth();
+            calendarioAnoActual = suggestedDate.getFullYear();
+            fechaSeleccionadaCalendario = suggestedDate;
+            
+            // Inicializar calendario
+            initCalendarioPagoCuota();
+            
             document.getElementById('pagoCuotaModal').style.display='flex';}
         
-        window.confirmarPagoCuota=async function(){if(!tempPagoCuotaData)return;const nuevaFecha=document.getElementById('proximaFechaPagoInput').value;if(!nuevaFecha){showToast('Selecciona una fecha','error');return;}
+        window.confirmarPagoCuota=async function(){if(!tempPagoCuotaData)return;if(!fechaSeleccionadaCalendario){showToast('Por favor selecciona una fecha','warning');return;}
+            const año=fechaSeleccionadaCalendario.getFullYear();
+            const mes=String(fechaSeleccionadaCalendario.getMonth()+1).padStart(2,'0');
+            const dia=String(fechaSeleccionadaCalendario.getDate()).padStart(2,'0');
+            const nuevaFecha=`${año}-${mes}-${dia}`;
             try{const credito=transactions.find(t=>t.id===tempPagoCuotaData.creditId);const nuevasPagadas=Math.max(credito.cuotasPagadas||0,tempPagoCuotaData.cuotaNum);
             await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({cuotasPagadas:nuevasPagadas,proximaFechaPago:nuevaFecha});
-            closeModal('pagoCuotaModal');showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} pagada`,'success');loadTransactions();}
+            closeModal('pagoCuotaModal');showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} programada para ${formatDate(nuevaFecha)}`,'success');loadTransactions();}
             catch(e){console.error(e);showToast('Error al actualizar','error');}}
         
         function renderGoals(){const cont=document.getElementById('goalsContainer');if(goals.length===0){cont.innerHTML='<p style="text-align:center;color:var(--text-light);">No tienes objetivos definidos</p>';return;}
@@ -2456,6 +2580,129 @@
         function goToAddTransaction(){switchView('transacciones');}
 
         handleTipoChange();
+
+        // Variables del calendario
+        let calendarioMesActual = new Date().getMonth();
+        let calendarioAnoActual = new Date().getFullYear();
+        let fechaSeleccionadaCalendario = null;
+
+        // Inicializar calendario
+        function initCalendarioPagoCuota() {
+            renderizarCalendario();
+        }
+
+        // Renderizar el calendario
+        function renderizarCalendario() {
+            const container = document.getElementById('calendarDays');
+            const monthYearDisplay = document.getElementById('calendarMonthYear');
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            
+            monthYearDisplay.textContent = `${meses[calendarioMesActual]} ${calendarioAnoActual}`;
+            
+            const primerDia = new Date(calendarioAnoActual, calendarioMesActual, 1).getDay();
+            const diasEnMes = new Date(calendarioAnoActual, calendarioMesActual + 1, 0).getDate();
+            const hoy = new Date();
+            
+            let html = '';
+            
+            // Días vacíos antes del primer día del mes
+            for (let i = 0; i < primerDia; i++) {
+                html += '<button class="calendar-day calendar-day-empty"></button>';
+            }
+            
+            // Días del mes
+            for (let dia = 1; dia <= diasEnMes; dia++) {
+                const fechaDia = new Date(calendarioAnoActual, calendarioMesActual, dia);
+                const esHoy = fechaDia.getDate() === hoy.getDate() && 
+                              fechaDia.getMonth() === hoy.getMonth() && 
+                              fechaDia.getFullYear() === hoy.getFullYear();
+                const esPasado = fechaDia < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+                
+                let clases = 'calendar-day';
+                if (esHoy) clases += ' calendar-day-today';
+                if (esPasado) clases += ' calendar-day-disabled';
+                if (fechaSeleccionadaCalendario && 
+                    fechaSeleccionadaCalendario.getDate() === dia &&
+                    fechaSeleccionadaCalendario.getMonth() === calendarioMesActual &&
+                    fechaSeleccionadaCalendario.getFullYear() === calendarioAnoActual) {
+                    clases += ' calendar-day-selected';
+                }
+                
+                const disabledAttr = esPasado ? 'disabled' : '';
+                const onclickAttr = esPasado ? '' : `onclick="seleccionarDiaCalendario(${dia})"`;
+                
+                html += `<button class="${clases}" ${disabledAttr} ${onclickAttr}>${dia}</button>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Cambiar mes
+        function cambiarMesCalendario(direccion) {
+            calendarioMesActual += direccion;
+            if (calendarioMesActual < 0) {
+                calendarioMesActual = 11;
+                calendarioAnoActual--;
+            } else if (calendarioMesActual > 11) {
+                calendarioMesActual = 0;
+                calendarioAnoActual++;
+            }
+            renderizarCalendario();
+        }
+
+        // Seleccionar día
+        function seleccionarDiaCalendario(dia) {
+            fechaSeleccionadaCalendario = new Date(calendarioAnoActual, calendarioMesActual, dia);
+            renderizarCalendario();
+        }
+
+        // Abrir modal de pago de cuota con inicialización del calendario
+        window.abrirModalPagoCuota = function(id, cuotaNum, monto) {
+            tempPagoCuotaData = { id, cuotaNum, monto };
+            document.getElementById('pagoCuotaInfo').innerHTML = `<strong>Cuota #${cuotaNum}</strong> - ${formatMoney(monto)}`;
+            
+            // Resetear calendario
+            calendarioMesActual = new Date().getMonth();
+            calendarioAnoActual = new Date().getFullYear();
+            fechaSeleccionadaCalendario = null;
+            
+            // Inicializar calendario
+            initCalendarioPagoCuota();
+            
+            document.getElementById('pagoCuotaModal').style.display = 'flex';
+        }
+
+        // Confirmar pago con fecha seleccionada del calendario
+        window.confirmarPagoCuota = async function() {
+            if (!fechaSeleccionadaCalendario) {
+                showToast('Por favor selecciona una fecha', 'warning');
+                return;
+            }
+            
+            const año = fechaSeleccionadaCalendario.getFullYear();
+            const mes = String(fechaSeleccionadaCalendario.getMonth() + 1).padStart(2, '0');
+            const dia = String(fechaSeleccionadaCalendario.getDate()).padStart(2, '0');
+            const fechaStr = `${año}-${mes}-${dia}`;
+            
+            try {
+                await db.collection('transactions').doc(tempPagoCuotaData.id).update({
+                    proximaFechaPago: fechaStr
+                });
+                closeModal('pagoCuotaModal');
+                showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} programada para ${formatDate(fechaStr)}`, 'success');
+                loadTransactions();
+            } catch (e) {
+                console.error(e);
+                showToast('Error al guardar', 'error');
+            }
+        }
+
+        // Formatear fecha
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const partes = dateStr.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
     </script>
 </body>
 </html>
