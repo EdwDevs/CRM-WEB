@@ -1454,7 +1454,7 @@
 
         @media (max-width: 1024px) {
             :root {
-                --nav-width: 96px;
+                --nav-width: 80px;
             }
 
             .sidebar {
@@ -1484,6 +1484,10 @@
                 width: 100%;
             }
 
+            .nav-item span {
+                display: none;
+            }
+
             .nav-item i {
                 font-size: 1.2rem;
             }
@@ -1505,11 +1509,18 @@
 
             .mobile-nav {
                 display: flex;
+                z-index: 100;
             }
 
             .main-wrapper {
                 margin-left: 0;
                 padding-bottom: 100px;
+            }
+
+            .top-header {
+                position: sticky;
+                top: 0;
+                z-index: 95;
             }
 
             .fab {
@@ -2270,12 +2281,12 @@
             <span id="themeText">Modo Oscuro</span>
         </button>
         <div class="nav-links">
-            <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> Dashboard</div>
-            <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> Transacciones</div>
-            <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> Estadísticas</div>
-            <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> Historial</div>
-            <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> Objetivos</div>
-            <div class="nav-item" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> Asesor Experto</div>
+            <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Dashboard</span></div>
+            <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Transacciones</span></div>
+            <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Estadísticas</span></div>
+            <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Historial</span></div>
+            <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Objetivos</span></div>
+            <div class="nav-item" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor Experto</span></div>
         </div>
         <div style="padding: 24px; font-size: 0.75rem; color: #9ca3af; text-align: center;">Familia & Finanzas © 2025</div>
     </nav>
