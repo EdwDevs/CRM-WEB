@@ -1535,6 +1535,18 @@
             .date-filter-pill {
                 font-size: 0.8rem;
             }
+
+            .filter-row {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
         }
 
         .hidden {
