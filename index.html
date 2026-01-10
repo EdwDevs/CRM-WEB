@@ -320,6 +320,11 @@
             transition: all var(--transition-fast);
         }
 
+        [data-theme="dark"] .date-filter-pill {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
         .date-filter-pill:hover {
             border-color: rgba(80, 70, 229, 0.3);
             box-shadow: var(--shadow-md);
@@ -589,6 +594,16 @@
 
         [data-theme="dark"] .summary-pill {
             border-color: rgba(148, 163, 184, 0.15);
+        }
+
+        [data-theme="dark"] .summary-pill.inc {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: rgba(16, 185, 129, 0.35);
+        }
+
+        [data-theme="dark"] .summary-pill.exp {
+            background: rgba(239, 68, 68, 0.18);
+            border-color: rgba(239, 68, 68, 0.35);
         }
 
         .summary-pill.inc {
