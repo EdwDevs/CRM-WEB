@@ -440,7 +440,7 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 32px;
             margin-bottom: 32px;
         }
 
@@ -1542,8 +1542,12 @@
 
             .content-container {
                 --section-gap: 24px;
-                padding: 20px;
+                padding: 24px;
                 margin-bottom: 24px;
+            }
+
+            .stats-grid {
+                gap: 24px;
             }
 
             .add-card-form {
@@ -1599,6 +1603,15 @@
         }
 
         @media (max-width: 480px) {
+            .content-container {
+                --section-gap: 16px;
+                padding: 16px;
+            }
+
+            .stats-grid {
+                gap: 16px;
+            }
+
             .filter-row {
                 grid-template-columns: 1fr;
                 gap: 10px;
