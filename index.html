@@ -3354,7 +3354,25 @@
         function openQuotaModal(){const d=document.getElementById('quotaListContainer');d.innerHTML='';cardsList.forEach(c=>{const db=globalDeudaPorTarjeta[c.name]||0;const av=(c.quota||0)-db;const el=document.createElement('div');el.className='quota-card';el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp: ${formatMoney(av)}</span></div>`;d.appendChild(el);});document.getElementById('cardNameInput').value='';document.getElementById('cardQuotaInput').value='';document.getElementById('cardPaymentDayInput').value='';document.getElementById('editCardId').value='';document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';document.getElementById('quotaModal').style.display='flex';}
         function closeModal(id){document.getElementById(id).style.display='none';}
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const p=document.getElementById('cardPaymentDayInput').value;const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago:p});else await db.collection('cards').add({name:n,quota:q,diaPago:p});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);}finally{if(btn)btn.classList.remove('is-loading');}}
-        async function deleteCard(id){if(!confirm("¿Borrar esta tarjeta?"))return;await db.collection('cards').doc(id).delete();loadCards();setTimeout(openQuotaModal,500);}
+        async function deleteCard(id){
+            const card=findCardById(id);
+            const cardName=card?.name||'';
+            const relatedTransactions=transactions.filter(t=>t.cardId===id||t.metodoPago===cardName);
+            if(relatedTransactions.length){
+                const msg=`Esta tarjeta tiene ${relatedTransactions.length} transacción(es) asociada(s).\n`+
+                `Si la borras, podrías perder la referencia histórica.\n`+
+                `¿Deseas continuar con la eliminación?`;
+                if(!confirm(msg)){
+                    showToast('Eliminación cancelada: hay transacciones asociadas.','warning');
+                    return;
+                }
+            }else if(!confirm("¿Borrar esta tarjeta?")){
+                return;
+            }
+            await db.collection('cards').doc(id).delete();
+            loadCards();
+            setTimeout(openQuotaModal,500);
+        }
         function editCard(id,n,q,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
         function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='objetivos'){s[4].classList.add('active');renderGoals();}if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}closeSidebar();}
         function goToAddTransaction(){switchView('transacciones');}
