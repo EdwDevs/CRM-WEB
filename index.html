@@ -2015,6 +2015,19 @@
             animation: spin 1s infinite linear;
         }
 
+        .pending-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: var(--warning-light);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
         .budget-alert {
             background: var(--danger-light);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -2612,11 +2625,46 @@
             loadCards();loadGoals();
         });
 
-        function initOfflineSupport(){window.addEventListener('online',()=>{syncPendingTransactions();});window.addEventListener('offline',()=>{showSyncStatus('offline');});if(navigator.onLine){showSyncStatus('online');}else{showSyncStatus('offline');}}
+        function getStoredOfflineTransactions(){try{return JSON.parse(localStorage.getItem('offlineTransactions')||'[]');}catch(e){return [];}}
+        function setStoredOfflineTransactions(data){localStorage.setItem('offlineTransactions',JSON.stringify(data));}
+        function normalizeOfflineDataForSync(item){const {id,pendingSync,...data}=item;return data;}
+        function initOfflineSupport(){
+            const offlineData=getStoredOfflineTransactions();
+            if(offlineData.length>0){pendingSync=offlineData.map(item=>({type:'add',data:normalizeOfflineDataForSync(item)}));}
+            window.addEventListener('online',()=>{syncPendingTransactions();});
+            window.addEventListener('offline',()=>{showSyncStatus('offline');});
+            if(navigator.onLine){showSyncStatus('online');if(pendingSync.length>0)syncPendingTransactions();}else{showSyncStatus('offline');}
+        }
         function showSyncStatus(status){const ind=document.getElementById('syncIndicator');const txt=document.getElementById('syncText');ind.className='sync-indicator '+status;txt.textContent=status==='online'?'Conectado':status==='syncing'?'Sincronizando...':'Sin conexión';}
-        function syncPendingTransactions(){if(pendingSync.length===0)return;showSyncStatus('syncing');let processed=0;pendingSync.forEach(async(item)=>{try{if(item.type==='add'){await db.collection('transactions').add(item.data);}else if(item.type==='delete'){await db.collection('transactions').doc(item.id).delete();}processed++;if(processed===pendingSync.length){pendingSync=[];showSyncStatus('online');showToast('Datos sincronizados','success');loadTransactions();}}catch(e){console.error('Sync error:',e);}});}
-        function saveToLocal(data,isDelete=false,id=null){if(isDelete){pendingSync.push({type:'delete',id});}else{pendingSync.push({type:'add',data});}
-        const offlineData=JSON.parse(localStorage.getItem('offlineTransactions')||'[]');if(isDelete){const idx=offlineData.findIndex(t=>t.id===id);if(idx>-1)offlineData.splice(idx,1);}else{offlineData.push({...data,id:Date.now().toString()});}localStorage.setItem('offlineTransactions',JSON.stringify(offlineData));}
+        async function syncPendingTransactions(){
+            if(pendingSync.length===0)return;
+            showSyncStatus('syncing');
+            const items=[...pendingSync];
+            try{
+                for(const item of items){
+                    if(item.type==='add'){await db.collection('transactions').add(item.data);}
+                    else if(item.type==='delete'){await db.collection('transactions').doc(item.id).delete();}
+                }
+                pendingSync=[];
+                setStoredOfflineTransactions([]);
+                showSyncStatus('online');
+                showToast('Datos sincronizados','success');
+                loadTransactions();
+            }catch(e){
+                console.error('Sync error:',e);
+            }
+        }
+        function saveToLocal(data,isDelete=false,id=null){
+            if(isDelete){pendingSync.push({type:'delete',id});}else{pendingSync.push({type:'add',data});}
+            const offlineData=getStoredOfflineTransactions();
+            if(isDelete){
+                const idx=offlineData.findIndex(t=>t.id===id);
+                if(idx>-1)offlineData.splice(idx,1);
+            }else{
+                offlineData.push({...data,id:Date.now().toString()});
+            }
+            setStoredOfflineTransactions(offlineData);
+        }
 
         function clearFilters() {
             document.getElementById('filterText').value = '';
@@ -2669,16 +2717,20 @@
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
                 let met=t.metodoPago; if(t.tipo==='credito')met=`${t.metodoPago} (${t.cuotas}x)`; else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${t.metodoPago} ➔ ${t.tarjetaDestino||t.metodoDestino}`;
+                const pendingLabel=t.pendingSync?'<span class="pending-label">Pendiente</span>':'';
+                const actionButtons=t.pendingSync
+                    ? '<span style="color:var(--warning);font-size:0.75rem;font-weight:600;">Pendiente</span>'
+                    : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action" style="color:var(--info);"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button>`;
                 tbody.innerHTML += `<tr>
                     <td>${t.fecha}</td>
                     <td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
                     <td style="font-size:0.85rem;color:#4b5563;">${met}</td>
                     <td>${t.categoria||'-'}</td>
-                    <td>${t.descripcion}</td>
+                    <td>${t.descripcion} ${pendingLabel}</td>
                     <td class="${color}" style="font-weight:bold;">${symbol} ${formatMoney(t.monto)}</td>
                     <td style="text-align:right;">
-                        <button onclick="editTransaction('${t.id}')" class="btn-icon-action" style="color:var(--info);"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+                        ${actionButtons}
                     </td>
                 </tr>`;
             });
@@ -2977,7 +3029,15 @@
         async function loadCards(){try{const s=await db.collection('cards').orderBy('name').get(); cardsList=[]; s.forEach(d=>cardsList.push({id:d.id,...d.data()})); if(cardsList.length===0){await seedDefaultCards();return;} populateCardSelects(); populateMethodFilter(); loadTransactions();}catch(e){console.error(e);}}
         async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago})); await b.commit(); loadCards();}
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.name));s2.add(new Option(c.name,c.name));});}
-        async function loadTransactions(){const s=await db.collection('transactions').orderBy('fecha','desc').get(); transactions=[]; s.forEach(d=>transactions.push({id:d.id,...d.data()})); updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();}
+        async function loadTransactions(){
+            const s=await db.collection('transactions').orderBy('fecha','desc').get();
+            const offlineData=getStoredOfflineTransactions();
+            const offlineTransactions=offlineData.map(item=>({...item,id:`offline-${item.id}`,pendingSync:true}));
+            transactions=[];
+            s.forEach(d=>transactions.push({id:d.id,...d.data()}));
+            transactions=[...offlineTransactions,...transactions].sort((a,b)=>a.fecha<b.fecha?1:-1);
+            updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();
+        }
         
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
