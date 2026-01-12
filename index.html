@@ -887,79 +887,129 @@
             cursor: pointer;
         }
 
-        .btn-primary {
-            background: var(--hero-gradient);
-            color: white;
-            padding: 14px 28px;
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 22px;
             border-radius: var(--radius-md);
             font-weight: 600;
-            width: 100%;
-            font-size: 1rem;
+            border: 1px solid transparent;
             box-shadow: var(--shadow-sm);
-            transition: all var(--transition-fast);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), filter var(--transition-fast);
             text-shadow: 0 1px 1px rgba(15, 23, 42, 0.25);
         }
 
-        .btn-primary:hover {
+        .btn--block {
+            width: 100%;
+        }
+
+        .btn--sm {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+        }
+
+        .btn--md {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
+        .btn--lg {
+            padding: 14px 28px;
+            font-size: 1rem;
+        }
+
+        .btn--primary {
+            background: var(--hero-gradient);
+            color: var(--text-inverse);
+        }
+
+        .btn--primary:hover {
             box-shadow: 0 10px 20px rgba(30, 64, 175, 0.25), 0 0 0 3px rgba(30, 64, 175, 0.3);
             transform: translateY(-2px);
             filter: brightness(1.07) saturate(1.05);
         }
 
-        .btn-primary:focus-visible {
+        .btn--primary:focus-visible {
             outline: 3px solid rgba(30, 64, 175, 0.85);
             outline-offset: 2px;
             box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.45), 0 8px 18px rgba(30, 64, 175, 0.25);
         }
 
-        .btn-primary:active {
+        .btn--primary:active {
             transform: translateY(0);
         }
 
-        .btn-secondary {
+        .btn--secondary {
             background: var(--bg-surface);
             color: var(--text-secondary);
-            padding: 14px 28px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            border: 1px solid rgba(71, 85, 105, 0.4);
-            transition: all var(--transition-fast);
+            border-color: rgba(71, 85, 105, 0.4);
+            text-shadow: none;
         }
 
-        .btn-secondary:hover {
+        .btn--secondary:hover {
             background: rgba(148, 163, 184, 0.14);
             border-color: rgba(51, 65, 85, 0.7);
             box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
             transform: translateY(-1px);
         }
 
-        .btn-secondary:focus-visible {
+        .btn--secondary:focus-visible {
             outline: 3px solid rgba(51, 65, 85, 0.85);
             outline-offset: 2px;
             box-shadow: 0 0 0 4px rgba(51, 65, 85, 0.35), 0 8px 18px rgba(15, 23, 42, 0.12);
         }
 
-        .btn-cancel {
-            background: var(--bg-body);
-            color: var(--text-secondary);
-            padding: 14px 28px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            transition: all var(--transition-fast);
+        .btn--secondary:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
         }
 
-        .btn-cancel:hover {
-            background: rgba(148, 163, 184, 0.1);
+        .btn--ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: rgba(148, 163, 184, 0.3);
+            text-shadow: none;
+        }
+
+        .btn--ghost:hover {
+            background: rgba(148, 163, 184, 0.12);
             color: var(--text-primary);
             box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
             transform: translateY(-1px);
         }
 
-        .btn-cancel:focus-visible {
+        .btn--ghost:focus-visible {
             outline: 2px solid rgba(100, 116, 139, 0.85);
             outline-offset: 2px;
             box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.3);
+        }
+
+        .btn--ghost:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .btn--danger {
+            background: var(--danger-gradient);
+            color: var(--text-inverse);
+        }
+
+        .btn--danger:hover {
+            box-shadow: 0 10px 20px rgba(185, 28, 28, 0.3), 0 0 0 3px rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            filter: brightness(1.05) saturate(1.05);
+        }
+
+        .btn--danger:focus-visible {
+            outline: 3px solid rgba(220, 38, 38, 0.85);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.35), 0 8px 18px rgba(185, 28, 28, 0.25);
+        }
+
+        .btn--danger:active {
+            transform: translateY(0);
         }
         
         .table-container {
@@ -1583,16 +1633,14 @@
                 gap: 12px;
             }
 
-            .btn-primary,
-            .btn-secondary,
+            .btn--lg,
             .btn-ai-action,
             .btn-icon-action {
                 font-size: 1.05rem;
                 min-height: 44px;
             }
 
-            .btn-primary,
-            .btn-secondary,
+            .btn--lg,
             .btn-ai-action {
                 padding: 16px 32px;
             }
@@ -2446,8 +2494,8 @@
                             <div class="form-group"><label>Fecha</label><input type="date" id="fecha" required></div>
                         </div>
                         <div style="margin-top:25px; display:flex; gap:10px;">
-                            <button type="button" onclick="preSubmit()" class="btn-primary" id="btnSubmitText">Guardar</button>
-                            <button type="button" id="btnCancelar" class="btn-cancel hidden" onclick="cancelEdit()">Cancelar</button>
+                            <button type="button" onclick="preSubmit()" class="btn btn--primary btn--lg" id="btnSubmitText">Guardar</button>
+                            <button type="button" id="btnCancelar" class="btn btn--ghost btn--lg hidden" onclick="cancelEdit()">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -2462,7 +2510,7 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h3 style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos de Ahorro</h3>
-                        <button onclick="openGoalModal()" class="btn-primary" style="width:auto; padding: 8px 16px;"><i class="fas fa-plus"></i> Nuevo</button>
+                        <button onclick="openGoalModal()" class="btn btn--primary btn--sm"><i class="fas fa-plus"></i> Nuevo</button>
                     </div>
                     <div id="goalsContainer">
                         <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
@@ -2518,7 +2566,7 @@
                         </div>
                         <div class="filter-actions">
                             <button class="btn-clear" onclick="clearFilters()">Limpiar Filtros</button>
-                            <button class="btn-primary" style="width:auto; padding: 10px 25px;" onclick="renderHistory()">
+                            <button class="btn btn--primary btn--md" onclick="renderHistory()">
                                 <i class="fas fa-search"></i> Aplicar
                             </button>
                         </div>
@@ -2550,7 +2598,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal('creditModal')">Volver</button><button class="btn-confirm" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
+    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn-confirm" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
     
     <div class="modal-overlay" id="quotaModal">
         <div class="modal-content">
@@ -2559,7 +2607,7 @@
                 <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
                 <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
                 <div class="form-group"><label>Día Pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" placeholder="Ej: 15"></div>
-                <button class="btn-primary" onclick="saveCard()" id="btnSaveCard" style="height:46px; width:auto; padding:0 20px;"><i class="fas fa-plus"></i></button>
+                <button class="btn btn--primary btn--md" onclick="saveCard()" id="btnSaveCard"><i class="fas fa-plus"></i></button>
                 <input type="hidden" id="editCardId">
             </div>
             <div id="quotaListContainer" style="max-height:300px; overflow-y:auto;"></div>
@@ -2573,7 +2621,7 @@
             <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Fecha Límite</label><input type="date" id="goalDeadline"></div>
-            <button class="btn-primary" onclick="saveGoal()">Guardar Objetivo</button>
+            <button class="btn btn--primary btn--lg btn--block" onclick="saveGoal()">Guardar Objetivo</button>
         </div>
     </div>
 
@@ -2598,8 +2646,8 @@
                 <div id="calendarDays" class="calendar-days"></div>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button class="btn-cancel" onclick="closeModal('pagoCuotaModal')" style="flex:1;">Cancelar</button>
-                <button class="btn-primary" onclick="confirmarPagoCuota()" style="flex:1;">💰 Confirmar Pago</button>
+                <button class="btn btn--ghost btn--lg" onclick="closeModal('pagoCuotaModal')" style="flex:1;">Cancelar</button>
+                <button class="btn btn--primary btn--lg" onclick="confirmarPagoCuota()" style="flex:1;">💰 Confirmar Pago</button>
             </div>
         </div>
     </div>
@@ -3038,7 +3086,7 @@
         }
         
         function renderGoals(){const cont=document.getElementById('goalsContainer');if(goals.length===0){cont.innerHTML='<p style="text-align:center;color:var(--text-light);">No tienes objetivos definidos</p>';return;}
-        let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div style="font-weight:700;color:var(--primary);">${pct}%</div></div><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats" style="margin-top:5px;"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn-primary" style="width:auto;padding:8px 16px;" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn-cancel" style="width:auto;padding:8px 16px;" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
+        let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div style="font-weight:700;color:var(--primary);">${pct}%</div></div><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats" style="margin-top:5px;"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn btn--primary btn--sm" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn btn--danger btn--sm" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
         
         function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);renderGoals();}}
         async function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseCurrencyInput(document.getElementById('goalTarget').value);const saved=parseCurrencyInput(document.getElementById('goalSaved').value);const deadline=document.getElementById('goalDeadline').value;if(!name||target<=0){showToast('Completa los campos correctamente','error');return;}
