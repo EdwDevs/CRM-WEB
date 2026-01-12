@@ -2909,8 +2909,9 @@
                 const textMatch = t.descripcion.toLowerCase().includes(txt) || (t.categoria && t.categoria.toLowerCase().includes(txt)) || (t.subcategoria && t.subcategoria.toLowerCase().includes(txt));
                 if (!textMatch) return false;
                 if (method !== 'all') {
-                    const m1 = t.metodoPago === method;
-                    const m2 = t.tipo === 'credito' && t.metodoPago === method;
+                    const creditName = t.tipo === 'credito' ? resolveCreditCardName(t) : null;
+                    const m1 = t.tipo !== 'credito' && t.metodoPago === method;
+                    const m2 = t.tipo === 'credito' && creditName === method;
                     const m3 = (t.tipo === 'pago_tarjeta' || t.tipo === 'transferencia') && (t.metodoPago === method || t.tarjetaDestino === method || t.metodoDestino === method);
                     if (!(m1 || m2 || m3)) return false;
                 }
@@ -2925,7 +2926,11 @@
             filtered.forEach(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
-                let met=t.metodoPago; if(t.tipo==='credito')met=`${t.metodoPago} (${t.cuotas}x)`; else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${t.metodoPago} ➔ ${t.tarjetaDestino||t.metodoDestino}`;
+                let met=t.metodoPago;
+                if(t.tipo==='credito'){
+                    const creditName=resolveCreditCardName(t);
+                    met=`${creditName} (${t.cuotas}x)`;
+                } else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${t.metodoPago} ➔ ${t.tarjetaDestino||t.metodoDestino}`;
                 const pendingLabel=t.pendingSync
                     ? '<span class="pending-label">Pendiente</span>'
                     : t.pendingDelete
@@ -2981,16 +2986,32 @@
         function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
         function showToast(m,t){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),4000);}
 
+        function findCardById(cardId){return cardsList.find(c=>c.id===cardId);}
+        function resolveCreditCardId(credit){
+            if(credit.cardId)return credit.cardId;
+            const legacyName=credit.cardName||credit.metodoPago;
+            if(!legacyName)return '';
+            const card=cardsList.find(c=>c.name===legacyName);
+            return card?card.id:'';
+        }
+        function resolveCreditCardName(credit){
+            if(credit.cardId){
+                const card=findCardById(credit.cardId);
+                if(card)return card.name;
+            }
+            return credit.cardName||credit.metodoPago||'';
+        }
+
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; let dm={}; cardsList.forEach(c=>dm[c.name]=0); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;}
-        else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{const c=t.metodoPago;if(dm[c]!==undefined){const totalDeuda=t.totalDeuda||m;const cuotas=t.cuotas||1;const pagadas=t.cuotasPagadas||0;const porPagar=Math.max(0,cuotas-pagadas);dm[c]+=(totalDeuda/cuotas)*porPagar;}if(iv)g+=m;}});
+        else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{const c=resolveCreditCardName(t);if(dm[c]!==undefined){const totalDeuda=t.totalDeuda||m;const cuotas=t.cuotas||1;const pagadas=t.cuotasPagadas||0;const porPagar=Math.max(0,cuotas-pagadas);dm[c]+=(totalDeuda/cuotas)*porPagar;}if(iv)g+=m;}});
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
         const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
         
         // Get all credit transactions grouped by card
         const creditosPorTarjeta={}; 
-        transactions.filter(t=>t.tipo==='credito'&&t.esCredito).forEach(t=>{if(!creditosPorTarjeta[t.metodoPago])creditosPorTarjeta[t.metodoPago]=[]; creditosPorTarjeta[t.metodoPago].push(t);});
+        transactions.filter(t=>t.tipo==='credito'&&t.esCredito).forEach(t=>{const creditName=resolveCreditCardName(t);if(!creditosPorTarjeta[creditName])creditosPorTarjeta[creditName]=[]; creditosPorTarjeta[creditName].push(t);});
         
         Object.keys(dm).forEach(k=>{if(dm[k]!==0){td+=dm[k];const creditos=creditosPorTarjeta[k]||[];dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
             <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><span style="font-size:1.25rem;font-weight:700;color:var(--danger);">${formatMoney(dm[k])}</span></div>
@@ -3068,7 +3089,7 @@
                     const cardCredits = transactions.filter(t => 
                         t.tipo === 'credito' && 
                         t.esCredito && 
-                        t.metodoPago === card && 
+                        resolveCreditCardName(t) === card && 
                         (t.cuotasPagadas || 0) < (t.cuotas || 1)
                     );
 
@@ -3232,7 +3253,7 @@
         async function deleteGoal(id){if(!confirm('¿Eliminar este objetivo?'))return;goals=goals.filter(g=>g.id!==id);localStorage.setItem('goals',JSON.stringify(goals));renderGoals();showToast('Objetivo eliminado','success');}
         function openGoalModal(){document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalSaved').value='';document.getElementById('goalModal').style.display='flex';}
 
-        function exportToCSV(){let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';transactions.forEach(t=>{const m=t.monto;csv+=`${t.fecha},${t.tipo},${t.metodoPago},${t.categoria||''},${t.subcategoria||''},${t.miembro||''},"${t.descripcion.replace(/"/g,'""')}",${m}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero.csv';a.click();showToast('CSV exportado','success');}
+        function exportToCSV(){let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';transactions.forEach(t=>{const m=t.monto;const metodo=t.tipo==='credito'?resolveCreditCardName(t):t.metodoPago;csv+=`${t.fecha},${t.tipo},${metodo},${t.categoria||''},${t.subcategoria||''},${t.miembro||''},"${t.descripcion.replace(/"/g,'""')}",${m}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero.csv';a.click();showToast('CSV exportado','success');}
         function exportToPDF(){window.print();showToast('Usa Ctrl+P para guardar como PDF','info');}
 
         function toggleVoiceSearch(){const btn=document.getElementById('voiceSearchBtn');if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Búsqueda por voz no soportada','error');return;}
@@ -3246,7 +3267,7 @@
         
         async function loadCards(){try{const s=await db.collection('cards').orderBy('name').get(); cardsList=[]; s.forEach(d=>cardsList.push({id:d.id,...d.data()})); if(cardsList.length===0){await seedDefaultCards();return;} populateCardSelects(); populateMethodFilter(); loadTransactions();}catch(e){console.error(e);}}
         async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago})); await b.commit(); loadCards();}
-        function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.name));s2.add(new Option(c.name,c.name));});}
+        function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){
             const s=await db.collection('transactions').orderBy('fecha','desc').get();
             const offlineData=getStoredOfflineTransactions();
@@ -3254,7 +3275,15 @@
             const offlineTransactions=offlineData.map(item=>({...item,id:`offline-${item.id}`,pendingSync:true}));
             transactions=[];
             s.forEach(d=>transactions.push({id:d.id,...d.data(),pendingDelete:pendingDeletes.includes(d.id)}));
-            transactions=[...offlineTransactions,...transactions].sort((a,b)=>a.fecha<b.fecha?1:-1);
+            transactions=[...offlineTransactions,...transactions].map(t=>{
+                if(t.tipo==='credito'){
+                    const legacyName=t.cardName||t.metodoPago;
+                    const cardId=t.cardId||cardsList.find(c=>c.name===legacyName)?.id||'';
+                    const cardName=cardId?(findCardById(cardId)?.name||legacyName):legacyName||'';
+                    return {...t,cardId,cardName};
+                }
+                return t;
+            }).sort((a,b)=>a.fecha<b.fecha?1:-1);
             updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();
         }
         
@@ -3270,12 +3299,14 @@
                 const c=parseInt(document.getElementById('cuotas').value);
                 const fp=document.getElementById('fechaPrimerPago').value;
                 if(!fp||!c||c<=0){showToast('Completa fecha y cuotas válidas','error');alert('Completa fecha y cuotas válidas');return;}
-                const cardData=cardsList.find(card=>card.name===tc);
+                const cardData=findCardById(tc);
+                const cardName=cardData?.name||'';
                 const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
                 let proximaPago=new Date(fp);
                 proximaPago=new Date(proximaPago.getFullYear(),proximaPago.getMonth(),paymentDay);
                 if(Number.isNaN(proximaPago.getTime())){showToast('Fecha de primer pago inválida','error');alert('Fecha de primer pago inválida');return;}
-                d.metodoPago=tc;
+                d.cardId=tc;
+                d.cardName=cardName;
                 d.esCredito=true;
                 d.cuotas=c;
                 d.totalDeuda=m;
@@ -3283,7 +3314,7 @@
                 d.proximaFechaPago=proximaPago.toISOString().split('T')[0];
                 d.cuotasPagadas=0;
                 tempTransactionData=d;
-                document.getElementById('modalTarjeta').textContent=tc;
+                document.getElementById('modalTarjeta').textContent=cardName;
                 document.getElementById('modalCuotas').textContent=c;
                 document.getElementById('modalTotalDeuda').textContent=formatMoney(m);
                 document.getElementById('creditModal').style.display='flex';
@@ -3301,7 +3332,7 @@
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){const btn=document.getElementById('btnSubmitText');if(btn)btn.classList.add('is-loading');try{if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);else await db.collection('transactions').add(d); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success');}catch(e){saveToLocal(d);loadTransactions();showToast('Guardado localmente (offline)','warning');}finally{if(btn)btn.classList.remove('is-loading');}}
         function cancelEdit(){editingTransactionId=null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
-        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=t.metodoPago;document.getElementById('cuotas').value=t.cuotas;document.getElementById('fechaPrimerPago').value=t.fechaPrimerPago||'';}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
+        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('fechaPrimerPago').value=t.fechaPrimerPago||'';}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         window.deleteTransaction=async function(id){
             if(!confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
             try{
