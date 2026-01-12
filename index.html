@@ -2028,6 +2028,16 @@
             border: 1px solid rgba(245, 158, 11, 0.2);
         }
 
+        .pending-delete-label {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        tr.pending-delete-row td {
+            opacity: 0.6;
+        }
+
         .budget-alert {
             background: var(--danger-light);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -2627,10 +2637,15 @@
 
         function getStoredOfflineTransactions(){try{return JSON.parse(localStorage.getItem('offlineTransactions')||'[]');}catch(e){return [];}}
         function setStoredOfflineTransactions(data){localStorage.setItem('offlineTransactions',JSON.stringify(data));}
+        function getStoredPendingDeletes(){try{return JSON.parse(localStorage.getItem('pendingDeletes')||'[]');}catch(e){return [];}}
+        function setStoredPendingDeletes(data){localStorage.setItem('pendingDeletes',JSON.stringify(data));}
         function normalizeOfflineDataForSync(item){const {id,pendingSync,...data}=item;return data;}
         function initOfflineSupport(){
             const offlineData=getStoredOfflineTransactions();
+            const pendingDeletes=getStoredPendingDeletes();
+            pendingSync=[];
             if(offlineData.length>0){pendingSync=offlineData.map(item=>({type:'add',data:normalizeOfflineDataForSync(item)}));}
+            if(pendingDeletes.length>0){pendingSync.push(...pendingDeletes.map(id=>({type:'delete',id})));}
             window.addEventListener('online',()=>{syncPendingTransactions();});
             window.addEventListener('offline',()=>{showSyncStatus('offline');});
             if(navigator.onLine){showSyncStatus('online');if(pendingSync.length>0)syncPendingTransactions();}else{showSyncStatus('offline');}
@@ -2647,6 +2662,7 @@
                 }
                 pendingSync=[];
                 setStoredOfflineTransactions([]);
+                setStoredPendingDeletes([]);
                 showSyncStatus('online');
                 showToast('Datos sincronizados','success');
                 loadTransactions();
@@ -2655,10 +2671,22 @@
             }
         }
         function saveToLocal(data,isDelete=false,id=null){
-            if(isDelete){pendingSync.push({type:'delete',id});}else{pendingSync.push({type:'add',data});}
+            const normalizedId=id?String(id).replace(/^offline-/,''):null;
+            if(isDelete){
+                if(id && !String(id).startsWith('offline-')){
+                    pendingSync.push({type:'delete',id});
+                    const pendingDeletes=getStoredPendingDeletes();
+                    if(!pendingDeletes.includes(id)){
+                        pendingDeletes.push(id);
+                        setStoredPendingDeletes(pendingDeletes);
+                    }
+                }
+            }else{
+                pendingSync.push({type:'add',data});
+            }
             const offlineData=getStoredOfflineTransactions();
             if(isDelete){
-                const idx=offlineData.findIndex(t=>t.id===id);
+                const idx=offlineData.findIndex(t=>t.id===normalizedId);
                 if(idx>-1)offlineData.splice(idx,1);
             }else{
                 offlineData.push({...data,id:Date.now().toString()});
@@ -2717,12 +2745,17 @@
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
                 let met=t.metodoPago; if(t.tipo==='credito')met=`${t.metodoPago} (${t.cuotas}x)`; else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${t.metodoPago} ➔ ${t.tarjetaDestino||t.metodoDestino}`;
-                const pendingLabel=t.pendingSync?'<span class="pending-label">Pendiente</span>':'';
-                const actionButtons=t.pendingSync
-                    ? '<span style="color:var(--warning);font-size:0.75rem;font-weight:600;">Pendiente</span>'
+                const pendingLabel=t.pendingSync
+                    ? '<span class="pending-label">Pendiente</span>'
+                    : t.pendingDelete
+                        ? '<span class="pending-label pending-delete-label">Pendiente de eliminación</span>'
+                        : '';
+                const actionButtons=t.pendingSync || t.pendingDelete
+                    ? `<span style="color:${t.pendingDelete?'var(--danger)':'var(--warning)'};font-size:0.75rem;font-weight:600;">Pendiente</span>`
                     : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action" style="color:var(--info);"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button>`;
-                tbody.innerHTML += `<tr>
+                const rowClass=t.pendingDelete?'pending-delete-row':'';
+                tbody.innerHTML += `<tr class="${rowClass}">
                     <td>${t.fecha}</td>
                     <td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
                     <td style="font-size:0.85rem;color:#4b5563;">${met}</td>
@@ -3032,9 +3065,10 @@
         async function loadTransactions(){
             const s=await db.collection('transactions').orderBy('fecha','desc').get();
             const offlineData=getStoredOfflineTransactions();
+            const pendingDeletes=getStoredPendingDeletes();
             const offlineTransactions=offlineData.map(item=>({...item,id:`offline-${item.id}`,pendingSync:true}));
             transactions=[];
-            s.forEach(d=>transactions.push({id:d.id,...d.data()}));
+            s.forEach(d=>transactions.push({id:d.id,...d.data(),pendingDelete:pendingDeletes.includes(d.id)}));
             transactions=[...offlineTransactions,...transactions].sort((a,b)=>a.fecha<b.fecha?1:-1);
             updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();
         }
@@ -3046,7 +3080,24 @@
         async function saveTransaction(d){try{if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);else await db.collection('transactions').add(d); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success');}catch(e){saveToLocal(d);loadTransactions();showToast('Guardado localmente (offline)','warning');}}
         function cancelEdit(){editingTransactionId=null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
         window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=t.metodoPago;document.getElementById('cuotas').value=t.cuotas;document.getElementById('fechaPrimerPago').value=t.fechaPrimerPago||'';}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
-        window.deleteTransaction=async function(id){if(confirm("¿Estás seguro?\nEsta acción no se puede deshacer.")){await db.collection('transactions').doc(id).delete();loadTransactions();showToast('Borrado','success');}}
+        window.deleteTransaction=async function(id){
+            if(!confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
+            try{
+                if(String(id).startsWith('offline-')){
+                    saveToLocal(null,true,id);
+                    loadTransactions();
+                    showToast('Eliminación local completada','success');
+                    return;
+                }
+                await db.collection('transactions').doc(id).delete();
+                loadTransactions();
+                showToast('Borrado','success');
+            }catch(e){
+                saveToLocal(null,true,id);
+                loadTransactions();
+                showToast('Eliminación pendiente','warning');
+            }
+        }
         function openQuotaModal(){const d=document.getElementById('quotaListContainer');d.innerHTML='';cardsList.forEach(c=>{const db=globalDeudaPorTarjeta[c.name]||0;const av=(c.quota||0)-db;const el=document.createElement('div');el.className='quota-card';el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.diaPago||''}')" class="btn-icon-action" style="color:var(--info)"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action" style="color:var(--danger)"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp: ${formatMoney(av)}</span></div>`;d.appendChild(el);});document.getElementById('cardNameInput').value='';document.getElementById('cardQuotaInput').value='';document.getElementById('cardPaymentDayInput').value='';document.getElementById('editCardId').value='';document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';document.getElementById('quotaModal').style.display='flex';}
         function closeModal(id){document.getElementById(id).style.display='none';}
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const p=document.getElementById('cardPaymentDayInput').value;const i=document.getElementById('editCardId').value;if(!n)return;try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago:p});else await db.collection('cards').add({name:n,quota:q,diaPago:p});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);}}
