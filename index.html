@@ -3075,7 +3075,44 @@
         
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
-        function preSubmit(){const t=document.getElementById('tipo').value; const m=parseCurrencyInput(document.getElementById('monto').value); if(m<=0){alert('Monto inválido');return;} const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()}; if(t==='credito'){const tc=document.getElementById('tarjetaCredito').value;const c=parseInt(document.getElementById('cuotas').value);const fp=document.getElementById('fechaPrimerPago').value;const cardData=cardsList.find(card=>card.name===tc);const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;let proximaPago=new Date(fp);proximaPago=new Date(proximaPago.getFullYear(),proximaPago.getMonth(),paymentDay);d.metodoPago=tc;d.esCredito=true;d.cuotas=c;d.totalDeuda=m;d.fechaPrimerPago=fp;d.proximaFechaPago=proximaPago.toISOString().split('T')[0];d.cuotasPagadas=0;tempTransactionData=d;document.getElementById('modalTarjeta').textContent=tc;document.getElementById('modalCuotas').textContent=c;document.getElementById('modalTotalDeuda').textContent=formatMoney(m);document.getElementById('creditModal').style.display='flex';}else{if(t==='pago_tarjeta'){d.metodoPago=document.getElementById('metodoPago').value;d.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value;}else{d.metodoPago=document.getElementById('metodoPago').value;if(t==='transferencia')d.metodoDestino=document.getElementById('metodoDestino').value;}saveTransaction(d);}}
+        function preSubmit(){
+            const t=document.getElementById('tipo').value;
+            const m=parseCurrencyInput(document.getElementById('monto').value);
+            if(m<=0){alert('Monto inválido');return;}
+            const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+            if(t==='credito'){
+                const tc=document.getElementById('tarjetaCredito').value;
+                const c=parseInt(document.getElementById('cuotas').value);
+                const fp=document.getElementById('fechaPrimerPago').value;
+                if(!fp||!c||c<=0){showToast('Completa fecha y cuotas válidas','error');alert('Completa fecha y cuotas válidas');return;}
+                const cardData=cardsList.find(card=>card.name===tc);
+                const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
+                let proximaPago=new Date(fp);
+                proximaPago=new Date(proximaPago.getFullYear(),proximaPago.getMonth(),paymentDay);
+                if(Number.isNaN(proximaPago.getTime())){showToast('Fecha de primer pago inválida','error');alert('Fecha de primer pago inválida');return;}
+                d.metodoPago=tc;
+                d.esCredito=true;
+                d.cuotas=c;
+                d.totalDeuda=m;
+                d.fechaPrimerPago=fp;
+                d.proximaFechaPago=proximaPago.toISOString().split('T')[0];
+                d.cuotasPagadas=0;
+                tempTransactionData=d;
+                document.getElementById('modalTarjeta').textContent=tc;
+                document.getElementById('modalCuotas').textContent=c;
+                document.getElementById('modalTotalDeuda').textContent=formatMoney(m);
+                document.getElementById('creditModal').style.display='flex';
+            }else{
+                if(t==='pago_tarjeta'){
+                    d.metodoPago=document.getElementById('metodoPago').value;
+                    d.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value;
+                }else{
+                    d.metodoPago=document.getElementById('metodoPago').value;
+                    if(t==='transferencia')d.metodoDestino=document.getElementById('metodoDestino').value;
+                }
+                saveTransaction(d);
+            }
+        }
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){try{if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);else await db.collection('transactions').add(d); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success');}catch(e){saveToLocal(d);loadTransactions();showToast('Guardado localmente (offline)','warning');}}
         function cancelEdit(){editingTransactionId=null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
