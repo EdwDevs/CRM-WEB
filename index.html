@@ -955,6 +955,28 @@
             font-size: 1rem;
         }
 
+        .btn--icon {
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: transparent;
+            box-shadow: none;
+            text-shadow: none;
+            font-size: 1.35rem;
+        }
+
+        .btn--icon:hover {
+            background: rgba(148, 163, 184, 0.12);
+            color: var(--primary);
+        }
+
+        .btn--full {
+            width: 100%;
+            flex: 1;
+            justify-content: center;
+        }
+
         .btn--primary {
             background: var(--hero-gradient);
             color: var(--text-inverse);
@@ -1045,6 +1067,14 @@
 
         .btn--danger:active {
             transform: translateY(1px) scale(0.98);
+        }
+
+        .btn-icon-action--info {
+            color: var(--info);
+        }
+
+        .btn-icon-action--danger {
+            color: var(--danger);
         }
         
         .table-container {
@@ -2433,22 +2463,6 @@
             margin-top: 24px;
         }
 
-        .btn-confirm {
-            background: var(--hero-gradient);
-            color: white;
-            padding: 14px 28px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-
-        .btn-confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
         .modal-title {
             font-size: 1.25rem;
             font-weight: 700;
@@ -2542,7 +2556,7 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
-                        <button onclick="openQuotaModal()" style="background: var(--bg-body); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; width: auto; cursor:pointer;"><i class="fas fa-cog"></i> Gestionar</button>
+                        <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
                     </div>
                     <div class="hero-amount" id="deudaTotalTC" style="color:var(--danger); font-size:1.8rem; margin-bottom:15px;">$0</div>
                     <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
@@ -2695,16 +2709,16 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn-confirm" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
+    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
     
     <div class="modal-overlay" id="quotaModal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Gestión Tarjetas</h3><button onclick="closeModal('quotaModal')" style="background:none; font-size:1.5rem; cursor:pointer;">&times;</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Gestión Tarjetas</h3><button onclick="closeModal('quotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="add-card-form">
                 <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
                 <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
                 <div class="form-group"><label>Día Pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" placeholder="Ej: 15"></div>
-                <button class="btn btn--primary btn--md" onclick="saveCard()" id="btnSaveCard"><i class="fas fa-plus"></i></button>
+                <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
                 <input type="hidden" id="editCardId">
             </div>
             <div id="quotaListContainer" style="max-height:300px; overflow-y:auto;"></div>
@@ -2713,7 +2727,7 @@
 
     <div class="modal-overlay" id="goalModal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" style="background:none; font-size:1.5rem; cursor:pointer;">&times;</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="form-group"><label>Nombre del Objetivo</label><input type="text" id="goalName" placeholder="Ej: Vacaciones"></div>
             <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
@@ -2726,7 +2740,7 @@
         <div class="modal-content" style="max-width:420px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 class="modal-title">📅 Programar Próxima Cuota</h3>
-                <button onclick="closeModal('pagoCuotaModal')" style="background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <button onclick="closeModal('pagoCuotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
             <div style="text-align:center; margin-bottom:15px;">
                 <div id="pagoCuotaInfo" style="font-size:0.9rem; color:var(--text-muted);"></div>
@@ -2743,8 +2757,8 @@
                 <div id="calendarDays" class="calendar-days"></div>
             </div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button class="btn btn--ghost btn--lg" onclick="closeModal('pagoCuotaModal')" style="flex:1;">Cancelar</button>
-                <button class="btn btn--primary btn--lg" onclick="confirmarPagoCuota()" style="flex:1;">💰 Confirmar Pago</button>
+                <button class="btn btn--ghost btn--lg btn--full" onclick="closeModal('pagoCuotaModal')">Cancelar</button>
+                <button class="btn btn--primary btn--lg btn--full" onclick="confirmarPagoCuota()">💰 Confirmar Pago</button>
             </div>
         </div>
     </div>
@@ -2900,8 +2914,8 @@
                         : '';
                 const actionButtons=t.pendingSync || t.pendingDelete
                     ? `<span style="color:${t.pendingDelete?'var(--danger)':'var(--warning)'};font-size:0.75rem;font-weight:600;">Pendiente</span>`
-                    : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action" style="color:var(--info);"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action" style="color:var(--danger);"><i class="fas fa-trash"></i></button>`;
+                    : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button>`;
                 const rowClass=t.pendingDelete?'pending-delete-row':'';
                 tbody.innerHTML += `<tr class="${rowClass}">
                     <td>${t.fecha}</td>
@@ -3005,7 +3019,7 @@
                         <div style="text-align:right;"><span style="font-weight:700;font-size:1.2rem;color:var(--primary);">${formatMoney(montoPorCuota)}</span>
                         <div style="font-size:0.8rem;color:${isVencida?'var(--danger)':'var(--success)'};">${isVencida?'Vencida':'Pago: '+nextPaymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</div></div>
                     </div>
-                    <button class="btn-cuota-pagar" style="width:100%;justify-content:center;" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${cardName}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Gestionar Pago</button>
+                    <button class="btn-cuota-pagar btn--full" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${cardName}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Gestionar Pago</button>
                 </div>`;
             });
         });
@@ -3283,7 +3297,7 @@
                 showToast('Eliminación pendiente','warning');
             }
         }
-        function openQuotaModal(){const d=document.getElementById('quotaListContainer');d.innerHTML='';cardsList.forEach(c=>{const db=globalDeudaPorTarjeta[c.name]||0;const av=(c.quota||0)-db;const el=document.createElement('div');el.className='quota-card';el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.diaPago||''}')" class="btn-icon-action" style="color:var(--info)"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action" style="color:var(--danger)"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp: ${formatMoney(av)}</span></div>`;d.appendChild(el);});document.getElementById('cardNameInput').value='';document.getElementById('cardQuotaInput').value='';document.getElementById('cardPaymentDayInput').value='';document.getElementById('editCardId').value='';document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';document.getElementById('quotaModal').style.display='flex';}
+        function openQuotaModal(){const d=document.getElementById('quotaListContainer');d.innerHTML='';cardsList.forEach(c=>{const db=globalDeudaPorTarjeta[c.name]||0;const av=(c.quota||0)-db;const el=document.createElement('div');el.className='quota-card';el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp: ${formatMoney(av)}</span></div>`;d.appendChild(el);});document.getElementById('cardNameInput').value='';document.getElementById('cardQuotaInput').value='';document.getElementById('cardPaymentDayInput').value='';document.getElementById('editCardId').value='';document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';document.getElementById('quotaModal').style.display='flex';}
         function closeModal(id){document.getElementById(id).style.display='none';}
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const p=document.getElementById('cardPaymentDayInput').value;const i=document.getElementById('editCardId').value;if(!n)return;try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago:p});else await db.collection('cards').add({name:n,quota:q,diaPago:p});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);}}
         async function deleteCard(id){if(!confirm("¿Borrar esta tarjeta?"))return;await db.collection('cards').doc(id).delete();loadCards();setTimeout(openQuotaModal,500);}
