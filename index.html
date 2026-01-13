@@ -1095,6 +1095,10 @@
         .btn-icon-action--danger {
             color: var(--danger);
         }
+
+        .btn-icon-action--success {
+            color: var(--success);
+        }
         
         .table-container {
             overflow-x: auto;
@@ -1519,6 +1523,43 @@
             box-shadow: var(--shadow-xl);
             animation: slideUp 0.3s ease-out;
             border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .modal-content--wide {
+            max-width: 960px;
+        }
+
+        .card-detail-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 16px 0 24px;
+        }
+
+        .card-detail-summary .summary-tile {
+            background: var(--bg-body);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .card-detail-summary .summary-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .card-detail-summary .summary-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .card-detail-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
         }
 
         .calendar-container {
@@ -2647,7 +2688,7 @@
                         <input type="hidden" id="editingId" value="">
                         <div class="form-grid">
                             <div class="form-group full-width"><label>Tipo</label><select id="tipo" required onchange="handleTipoChange()"><option value="gasto">💸 Gasto</option><option value="ingreso">💰 Ingreso</option><option value="credito">💳 Crédito</option><option value="pago_tarjeta">📉 Abono TC</option><option value="transferencia">🔄 Transferencia</option></select></div>
-                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;"><div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div><div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div><div class="form-group"><label style="color:var(--danger);">Primer Pago</label><input type="date" id="fechaPrimerPago"></div></div></div>
+                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;"><div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:15px;"><div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div><div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div><div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div><div class="form-group"><label style="color:var(--danger);">Primer Pago</label><input type="date" id="fechaPrimerPago"></div></div></div>
                             <div id="divPagoTarjeta" class="form-group full-width hidden" style="background:#ecfdf5; padding:15px; border-radius:12px; border:1px solid #6ee7b7;"><div class="form-group"><label style="color:var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div></div>
                             <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
                             <div class="form-group hidden" id="metodoDestinoDiv"><label>Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
@@ -2780,6 +2821,36 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="cardDetailModal">
+        <div class="modal-content modal-content--wide">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div>
+                    <h3 class="modal-title">Detalle de Tarjeta</h3>
+                    <div id="cardDetailName" style="font-size:1rem; font-weight:600; color:var(--primary);"></div>
+                    <div id="cardDetailMeta" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"></div>
+                </div>
+                <button onclick="closeModal('cardDetailModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="card-detail-summary" id="cardDetailSummary"></div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Monto total</th>
+                            <th>Cuotas</th>
+                            <th>Pagadas</th>
+                            <th>Saldo pendiente</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cardDetailTransactions"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="goalModal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
@@ -2827,7 +2898,7 @@
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[];
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null;
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
         const categorias=categories;
@@ -3066,6 +3137,94 @@
             return (card.quota||0)-debt+adjustment;
         }
 
+        function openCardDetail(cardName){
+            currentDetailCardName=cardName;
+            renderCardDetail();
+            document.getElementById('cardDetailModal').style.display='flex';
+        }
+
+        function openCardDetailFromModal(cardName){
+            closeModal('quotaModal');
+            openCardDetail(cardName);
+        }
+
+        function renderCardDetail(){
+            if(!currentDetailCardName)return;
+            const cardName=currentDetailCardName;
+            const card=cardsList.find(c=>c.name===cardName);
+            const creditos=transactions.filter(t=>t.tipo==='credito'&&t.esCredito&&resolveCreditCardName(t)===cardName);
+            const detailBody=document.getElementById('cardDetailTransactions');
+            const summary=document.getElementById('cardDetailSummary');
+            const meta=document.getElementById('cardDetailMeta');
+            document.getElementById('cardDetailName').textContent=`${cardName}`;
+            meta.textContent=`Cupo: ${formatMoney(card?.quota||0)} · Día pago: ${card?.diaPago||'No configurado'}`;
+
+            let totalDebt=0;
+            let nextInstallment=0;
+            detailBody.innerHTML='';
+
+            if(creditos.length===0){
+                detailBody.innerHTML='<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin compras a crédito registradas.</td></tr>';
+            }else{
+                creditos.forEach(cred=>{
+                    const total=cred.totalDeuda||cred.monto||0;
+                    const cuotas=cred.cuotas||1;
+                    const pagadas=cred.cuotasPagadas||0;
+                    const montoCuota=total/cuotas;
+                    const saldoPendiente=Math.max(0, montoCuota*(cuotas-pagadas));
+                    if(pagadas<cuotas){
+                        nextInstallment+=montoCuota;
+                    }
+                    totalDebt+=saldoPendiente;
+                    detailBody.innerHTML+=`<tr>
+                        <td>${formatDate(cred.fecha)}</td>
+                        <td>${cred.descripcion||'Compra crédito'}</td>
+                        <td>${formatMoney(total)}</td>
+                        <td>${cuotas}</td>
+                        <td>${pagadas}</td>
+                        <td>${formatMoney(saldoPendiente)}</td>
+                        <td>
+                            <div class="card-detail-actions">
+                                <button onclick="editCreditTransaction('${cred.id}')" class="btn-icon-action btn-icon-action--info" title="Editar compra" aria-label="Editar compra"><i class="fas fa-pen"></i></button>
+                                <button onclick="editCreditTransaction('${cred.id}','cuotasPagadas')" class="btn-icon-action btn-icon-action--success" title="Actualizar cuotas pagadas" aria-label="Actualizar cuotas pagadas"><i class="fas fa-check-circle"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            const available=card?calculateAvailableQuota(card):0;
+            summary.innerHTML=`
+                <div class="summary-tile">
+                    <div class="summary-label">Deuda total</div>
+                    <div class="summary-value" style="color:var(--danger);">${formatMoney(totalDebt)}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="summary-label">Cuota siguiente estimada</div>
+                    <div class="summary-value">${formatMoney(nextInstallment)}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="summary-label">Cupo disponible</div>
+                    <div class="summary-value" style="color:var(--success);">${formatMoney(available)}</div>
+                </div>`;
+        }
+
+        function editCreditTransaction(id, focusField=null){
+            closeModal('cardDetailModal');
+            editTransaction(id);
+            if(focusField){
+                setTimeout(()=>{
+                    const target=document.getElementById(focusField);
+                    if(target){
+                        target.focus();
+                        if(typeof target.select==='function'){
+                            target.select();
+                        }
+                    }
+                },200);
+            }
+        }
+
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
@@ -3125,8 +3284,11 @@
                 const fechaSiguiente=fechaSiguientePorTarjeta[k];
                 const cuotaLabel=cuotaSiguiente>0?formatMoney(cuotaSiguiente):'Sin cuotas pendientes';
                 const fechaLabel=cuotaSiguiente>0&&fechaSiguiente?`Fecha estimada: ${fechaSiguiente.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}`:'';
+                const safeCardName=k.replace(/'/g,"\\'");
                 dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
-            <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><span style="font-size:1.25rem;font-weight:700;color:var(--danger);">${formatMoney(dm[k])}</span></div>
+            <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><div style="display:flex; gap:10px; align-items:center;">
+                <button class="btn btn--ghost btn--sm" onclick="openCardDetail('${safeCardName}')"><i class="fas fa-eye"></i> Detalle</button>
+                <span style="font-size:1.25rem;font-weight:700;color:var(--danger);">${formatMoney(dm[k])}</span></div></div>
             <div class="next-installment-section">
                 <div class="next-installment-title"><i class="fas fa-calendar-alt"></i> Próxima cuota estimada</div>
                 <div class="next-installment-value">${cuotaLabel}</div>
@@ -3183,7 +3345,11 @@
             });
         });
         
-        updateFamilySummary();checkBudgetAlerts();renderReminders();}
+        updateFamilySummary();checkBudgetAlerts();renderReminders();
+        if(currentDetailCardName){
+            renderCardDetail();
+        }
+        }
         
         function updateFamilySummary(){const cont=document.getElementById('familySummary');const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const miembros={papa:{name:'Papá',icon:'👨'},mama:{name:'Mamá',icon:'👩'},hijo1:{name:'Hijo/a',icon:'👶'},compartido:{name:'Compartido',icon:'👨‍👩‍👧‍👦'}};const stats={};Object.keys(miembros).forEach(m=>stats[m]={gastos:0,ingresos:0});
         transactions.forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)===vm&&ty===vy){const m=parseFloat(t.monto);const mem=t.miembro||'compartido';if(t.tipo==='gasto'||t.tipo==='credito')stats[mem].gastos+=m;if(t.tipo==='ingreso')stats[mem].ingresos+=m;}});
@@ -3416,6 +3582,7 @@
             if(t==='credito'){
                 const tc=document.getElementById('tarjetaCredito').value;
                 const c=parseInt(document.getElementById('cuotas').value);
+                const pagadasRaw=parseInt(document.getElementById('cuotasPagadas').value);
                 const fp=document.getElementById('fechaPrimerPago').value;
                 if(!fp||!c||c<=0){showToast('Completa fecha y cuotas válidas','error');alert('Completa fecha y cuotas válidas');return;}
                 const cardData=findCardById(tc);
@@ -3431,7 +3598,8 @@
                 d.totalDeuda=m;
                 d.fechaPrimerPago=fp;
                 d.proximaFechaPago=proximaPago.toISOString().split('T')[0];
-                d.cuotasPagadas=0;
+                const pagadas=Number.isNaN(pagadasRaw)?0:Math.min(Math.max(pagadasRaw,0),c);
+                d.cuotasPagadas=pagadas;
                 tempTransactionData=d;
                 document.getElementById('modalTarjeta').textContent=cardName;
                 document.getElementById('modalCuotas').textContent=c;
@@ -3451,7 +3619,7 @@
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){const btn=document.getElementById('btnSubmitText');if(btn)btn.classList.add('is-loading');try{if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);else await db.collection('transactions').add(d); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success');}catch(e){saveToLocal(d);loadTransactions();showToast('Guardado localmente (offline)','warning');}finally{if(btn)btn.classList.remove('is-loading');}}
         function cancelEdit(){editingTransactionId=null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
-        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('fechaPrimerPago').value=t.fechaPrimerPago||'';}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
+        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;document.getElementById('fechaPrimerPago').value=t.fechaPrimerPago||'';}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         window.deleteTransaction=async function(id){
             if(!confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
             try{
@@ -3477,9 +3645,10 @@
                 const db=globalDeudaPorTarjeta[c.name]||0;
                 const adjustment=c.ajusteDisponible||0;
                 const av=calculateAvailableQuota(c);
+                const safeName=c.name.replace(/'/g,"\\'");
                 const el=document.createElement('div');
                 el.className='quota-card';
-                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="reconcileCard('${c.id}')" class="btn-icon-action btn-icon-action--info" title="Conciliar" aria-label="Conciliar"><i class="fas fa-balance-scale"></i></button><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span><span>Ajuste:${formatMoney(adjustment)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp real: ${formatMoney(av)}</span></div>`;
+                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="openCardDetailFromModal('${safeName}')" class="btn-icon-action btn-icon-action--info" title="Detalle de tarjeta" aria-label="Detalle de tarjeta"><i class="fas fa-eye"></i></button><button onclick="reconcileCard('${c.id}')" class="btn-icon-action btn-icon-action--info" title="Conciliar" aria-label="Conciliar"><i class="fas fa-balance-scale"></i></button><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span><span>Ajuste:${formatMoney(adjustment)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp real: ${formatMoney(av)}</span></div>`;
                 d.appendChild(el);
             });
             document.getElementById('cardNameInput').value='';
@@ -3490,7 +3659,7 @@
             document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';
             document.getElementById('quotaModal').style.display='flex';
         }
-        function closeModal(id){document.getElementById(id).style.display='none';}
+        function closeModal(id){document.getElementById(id).style.display='none';if(id==='cardDetailModal')currentDetailCardName=null;}
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
         async function reconcileCard(id){
             const card=findCardById(id);
