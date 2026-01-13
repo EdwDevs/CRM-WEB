@@ -3228,6 +3228,9 @@
             }
             return credit.cardName||credit.metodoPago||'';
         }
+        function isValidCardName(name){
+            return typeof name==='string'&&name.trim().length>0;
+        }
 
         function calculateDebtByCard(){
             let dm={};
@@ -3240,6 +3243,7 @@
                 }
                 if(!t.esCredito)return;
                 const c=resolveCreditCardName(t);
+                if(!isValidCardName(c))return;
                 if(dm[c]!==undefined){
                     const totalDeuda=t.totalDeuda||m;
                     const cuotas=t.cuotas||1;
@@ -3354,13 +3358,22 @@
         
         // Get all credit transactions grouped by card
         const creditosPorTarjeta={}; 
-        transactions.filter(t=>t.tipo==='credito'&&t.esCredito).forEach(t=>{const creditName=resolveCreditCardName(t);if(!creditosPorTarjeta[creditName])creditosPorTarjeta[creditName]=[]; creditosPorTarjeta[creditName].push(t);});
+        transactions
+            .filter(t=>t.tipo==='credito'&&t.esCredito)
+            .forEach(t=>{
+                const creditName=resolveCreditCardName(t);
+                if(!isValidCardName(creditName))return;
+                const normalizedName=creditName.trim();
+                if(!creditosPorTarjeta[normalizedName])creditosPorTarjeta[normalizedName]=[];
+                creditosPorTarjeta[normalizedName].push(t);
+            });
         const cuotaSiguientePorTarjeta={};
         const fechaSiguientePorTarjeta={};
         const today=new Date();
         const parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
 
         Object.keys(creditosPorTarjeta).forEach(cardName=>{
+            if(!isValidCardName(cardName))return;
             const cardData=cardsList.find(c=>c.name===cardName);
             const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
             const creditos=creditosPorTarjeta[cardName]||[];
@@ -3398,6 +3411,7 @@
         
         const resumenCuotas=Object.keys(cuotaSiguientePorTarjeta)
             .map(cardName=>({cardName,cuota:cuotaSiguientePorTarjeta[cardName]||0,fecha:fechaSiguientePorTarjeta[cardName]}))
+            .filter(item=>isValidCardName(item.cardName))
             .filter(item=>item.cuota>0)
             .sort((a,b)=>{
                 if(!a.fecha&&!b.fecha)return 0;
