@@ -2416,6 +2416,41 @@
             border-top: 1px solid rgba(148, 163, 184, 0.1);
         }
 
+        .next-installment-section {
+            background: rgba(15, 23, 42, 0.06);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-top: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        [data-theme="dark"] .next-installment-section {
+            background: rgba(148, 163, 184, 0.1);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        .next-installment-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .next-installment-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .next-installment-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
         .cuotas-title {
             font-size: 0.9rem;
             font-weight: 600;
@@ -3012,12 +3047,67 @@
         // Get all credit transactions grouped by card
         const creditosPorTarjeta={}; 
         transactions.filter(t=>t.tipo==='credito'&&t.esCredito).forEach(t=>{const creditName=resolveCreditCardName(t);if(!creditosPorTarjeta[creditName])creditosPorTarjeta[creditName]=[]; creditosPorTarjeta[creditName].push(t);});
+        const cuotaSiguientePorTarjeta={};
+        const fechaSiguientePorTarjeta={};
+        const today=new Date();
+        const parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
+
+        Object.keys(creditosPorTarjeta).forEach(cardName=>{
+            const cardData=cardsList.find(c=>c.name===cardName);
+            const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
+            const creditos=creditosPorTarjeta[cardName]||[];
+            let totalCuota=0;
+            let nearestDate=null;
+
+            creditos.forEach(cred=>{
+                const cuotas=cred.cuotas||1;
+                const pagadas=cred.cuotasPagadas||0;
+                if(pagadas>=cuotas)return;
+                const montoCuota=(cred.totalDeuda||cred.monto)/cuotas;
+                totalCuota+=montoCuota;
+
+                let nextPaymentDate=null;
+                if(cred.proximaFechaPago){
+                    nextPaymentDate=parseIsoDate(cred.proximaFechaPago);
+                }else{
+                    const baseDate=new Date(cred.fechaPrimerPago);
+                    const baseYear=Number.isNaN(baseDate.getTime())?today.getFullYear():baseDate.getFullYear();
+                    const baseMonth=Number.isNaN(baseDate.getTime())?today.getMonth():baseDate.getMonth();
+                    nextPaymentDate=new Date(baseYear, baseMonth, paymentDay);
+                    if(nextPaymentDate < today){
+                        nextPaymentDate=new Date(baseYear, baseMonth + 1, paymentDay);
+                    }
+                }
+
+                if(!nearestDate || nextPaymentDate < nearestDate){
+                    nearestDate=nextPaymentDate;
+                }
+            });
+
+            cuotaSiguientePorTarjeta[cardName]=totalCuota;
+            fechaSiguientePorTarjeta[cardName]=nearestDate;
+        });
         
-        Object.keys(dm).forEach(k=>{if(dm[k]!==0){td+=dm[k];const creditos=creditosPorTarjeta[k]||[];dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
+        Object.keys(dm).forEach(k=>{
+            const creditos=creditosPorTarjeta[k]||[];
+            if(dm[k]!==0||creditos.length>0){
+                td+=dm[k];
+                const cuotaSiguiente=cuotaSiguientePorTarjeta[k]||0;
+                const fechaSiguiente=fechaSiguientePorTarjeta[k];
+                const cuotaLabel=cuotaSiguiente>0?formatMoney(cuotaSiguiente):'Sin cuotas pendientes';
+                const fechaLabel=cuotaSiguiente>0&&fechaSiguiente?`Fecha estimada: ${fechaSiguiente.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}`:'';
+                dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
             <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><span style="font-size:1.25rem;font-weight:700;color:var(--danger);">${formatMoney(dm[k])}</span></div>
+            <div class="next-installment-section">
+                <div class="next-installment-title"><i class="fas fa-calendar-alt"></i> Próxima cuota estimada</div>
+                <div class="next-installment-value">${cuotaLabel}</div>
+                ${fechaLabel?`<div class="next-installment-date">${fechaLabel}</div>`:''}
+            </div>
             ${creditos.length>0?`<div class="cuotas-section"><div class="cuotas-title"><i class="fas fa-credit-card"></i> Gestión de Cuotas</div>
             <div id="cuotas-list-${k.replace(/\s/g,'_')}"></div></div>`:''}
-        </div>`;}}); 
+        </div>`;
+            }
+        }); 
         document.getElementById('deudaTotalTC').textContent=formatMoney(td);
         
         // Simple payment option - one per credit
