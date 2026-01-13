@@ -4016,7 +4016,7 @@
             document.getElementById('quotaModal').style.display='flex';
         }
         function closeModal(id){document.getElementById(id).style.display='none';if(id==='cardDetailModal')currentDetailCardName=null;}
-        async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
+        async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});await loadCards();openQuotaModal();}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
         async function reconcileCard(id){
             const card=findCardById(id);
             if(!card){showToast('Tarjeta no encontrada','error');return;}
@@ -4033,8 +4033,8 @@
             if(!confirm(confirmMsg))return;
             try{
                 await db.collection('cards').doc(id).update({ajusteDisponible:ajuste});
-                loadCards();
-                setTimeout(openQuotaModal,500);
+                await loadCards();
+                openQuotaModal();
                 showToast('Conciliación aplicada','success');
             }catch(e){
                 console.error(e);
@@ -4068,8 +4068,8 @@
                 });
                 batch.delete(db.collection('cards').doc(id));
                 await batch.commit();
-                loadCards();
-                setTimeout(openQuotaModal,500);
+                await loadCards();
+                openQuotaModal();
                 showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
             }catch(e){
                 console.error(e);
