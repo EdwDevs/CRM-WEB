@@ -3396,6 +3396,30 @@
             fechaSiguientePorTarjeta[cardName]=nearestDate;
         });
         
+        const resumenCuotas=Object.keys(cuotaSiguientePorTarjeta)
+            .map(cardName=>({cardName,cuota:cuotaSiguientePorTarjeta[cardName]||0,fecha:fechaSiguientePorTarjeta[cardName]}))
+            .filter(item=>item.cuota>0)
+            .sort((a,b)=>{
+                if(!a.fecha&&!b.fecha)return 0;
+                if(!a.fecha)return 1;
+                if(!b.fecha)return -1;
+                return a.fecha-b.fecha;
+            });
+        if(resumenCuotas.length>0){
+            const totalResumen=resumenCuotas.reduce((sum,item)=>sum+item.cuota,0);
+            const resumenItems=resumenCuotas.map(item=>`<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(148,163,184,0.2);">
+                <span>💳 ${item.cardName} - Próxima cuota aprox.</span>
+                <strong>${formatMoney(item.cuota)}</strong>
+            </div>`).join('');
+            dv.innerHTML+=`<div style="background:var(--card-bg); border:1px solid rgba(148,163,184,0.25); border-radius:12px; padding:12px 16px; margin-bottom:16px;">
+                ${resumenItems}
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; font-weight:700;">
+                    <span>Total general</span>
+                    <span>${formatMoney(totalResumen)}</span>
+                </div>
+            </div>`;
+        }
+
         Object.keys(dm).forEach(k=>{
             const creditos=creditosPorTarjeta[k]||[];
             if(dm[k]!==0||creditos.length>0){
