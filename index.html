@@ -2771,6 +2771,7 @@
             <div class="add-card-form">
                 <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
                 <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+                <div class="form-group"><label>Ajuste de cupo disponible</label><input type="text" id="cardAvailableAdjustmentInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
                 <div class="form-group"><label>Día Pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" placeholder="Ej: 15"></div>
                 <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
                 <input type="hidden" id="editCardId">
@@ -3037,10 +3038,38 @@
             return credit.cardName||credit.metodoPago||'';
         }
 
-        function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; let dm={}; cardsList.forEach(c=>dm[c.name]=0); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
+        function calculateDebtByCard(){
+            let dm={};
+            cardsList.forEach(c=>dm[c.name]=0);
+            transactions.forEach(t=>{
+                const m=parseFloat(t.monto);
+                if(t.tipo==='pago_tarjeta'){
+                    if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;
+                    return;
+                }
+                if(!t.esCredito)return;
+                const c=resolveCreditCardName(t);
+                if(dm[c]!==undefined){
+                    const totalDeuda=t.totalDeuda||m;
+                    const cuotas=t.cuotas||1;
+                    const pagadas=t.cuotasPagadas||0;
+                    const porPagar=Math.max(0,cuotas-pagadas);
+                    dm[c]+=(totalDeuda/cuotas)*porPagar;
+                }
+            });
+            return dm;
+        }
+
+        function calculateAvailableQuota(card, debtMap=globalDeudaPorTarjeta){
+            const debt=debtMap[card.name]||0;
+            const adjustment=card.ajusteDisponible||0;
+            return (card.quota||0)-debt+adjustment;
+        }
+
+        function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
-        if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;}
-        else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{const c=resolveCreditCardName(t);if(dm[c]!==undefined){const totalDeuda=t.totalDeuda||m;const cuotas=t.cuotas||1;const pagadas=t.cuotasPagadas||0;const porPagar=Math.max(0,cuotas-pagadas);dm[c]+=(totalDeuda/cuotas)*porPagar;}if(iv)g+=m;}});
+        if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
+        else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{if(iv)g+=m;}});
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
         const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
         
@@ -3356,7 +3385,7 @@
         function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); transactions.filter(t=>(t.tipo==='gasto'||t.tipo==='credito')).forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)===vm&&ty===vy){const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+parseFloat(t.monto);}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});}
         
         async function loadCards(){try{const s=await db.collection('cards').orderBy('name').get(); cardsList=[]; s.forEach(d=>cardsList.push({id:d.id,...d.data()})); if(cardsList.length===0){await seedDefaultCards();return;} populateCardSelects(); populateMethodFilter(); loadTransactions();}catch(e){console.error(e);}}
-        async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago})); await b.commit(); loadCards();}
+        async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago,ajusteDisponible:0})); await b.commit(); loadCards();}
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){
             const s=await db.collection('transactions').orderBy('fecha','desc').get();
@@ -3441,9 +3470,52 @@
                 showToast('Eliminación pendiente','warning');
             }
         }
-        function openQuotaModal(){const d=document.getElementById('quotaListContainer');d.innerHTML='';cardsList.forEach(c=>{const db=globalDeudaPorTarjeta[c.name]||0;const av=(c.quota||0)-db;const el=document.createElement('div');el.className='quota-card';el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp: ${formatMoney(av)}</span></div>`;d.appendChild(el);});document.getElementById('cardNameInput').value='';document.getElementById('cardQuotaInput').value='';document.getElementById('cardPaymentDayInput').value='';document.getElementById('editCardId').value='';document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';document.getElementById('quotaModal').style.display='flex';}
+        function openQuotaModal(){
+            const d=document.getElementById('quotaListContainer');
+            d.innerHTML='';
+            cardsList.forEach(c=>{
+                const db=globalDeudaPorTarjeta[c.name]||0;
+                const adjustment=c.ajusteDisponible||0;
+                const av=calculateAvailableQuota(c);
+                const el=document.createElement('div');
+                el.className='quota-card';
+                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="reconcileCard('${c.id}')" class="btn-icon-action btn-icon-action--info" title="Conciliar" aria-label="Conciliar"><i class="fas fa-balance-scale"></i></button><button onclick="editCard('${c.id}','${c.name}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span><span>Ajuste:${formatMoney(adjustment)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp real: ${formatMoney(av)}</span></div>`;
+                d.appendChild(el);
+            });
+            document.getElementById('cardNameInput').value='';
+            document.getElementById('cardQuotaInput').value='';
+            document.getElementById('cardAvailableAdjustmentInput').value='';
+            document.getElementById('cardPaymentDayInput').value='';
+            document.getElementById('editCardId').value='';
+            document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';
+            document.getElementById('quotaModal').style.display='flex';
+        }
         function closeModal(id){document.getElementById(id).style.display='none';}
-        async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago});else await db.collection('cards').add({name:n,quota:q,diaPago});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
+        async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});loadCards();setTimeout(openQuotaModal,500);}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
+        async function reconcileCard(id){
+            const card=findCardById(id);
+            if(!card){showToast('Tarjeta no encontrada','error');return;}
+            const debtMap=calculateDebtByCard();
+            const debt=debtMap[card.name]||0;
+            const baseAvailable=(card.quota||0)-debt;
+            const currentAvailable=baseAvailable+(card.ajusteDisponible||0);
+            const input=prompt(`Saldo real disponible para "${card.name}" (base: ${formatMoney(baseAvailable)}).`, formatMoney(currentAvailable));
+            if(input===null)return;
+            const saldoReal=parseCurrencyInput(input);
+            if(Number.isNaN(saldoReal)){showToast('Saldo inválido','warning');return;}
+            const ajuste=saldoReal-baseAvailable;
+            const confirmMsg=`Se aplicará un ajuste de ${formatMoney(ajuste)} para "${card.name}".\n¿Confirmar conciliación?`;
+            if(!confirm(confirmMsg))return;
+            try{
+                await db.collection('cards').doc(id).update({ajusteDisponible:ajuste});
+                loadCards();
+                setTimeout(openQuotaModal,500);
+                showToast('Conciliación aplicada','success');
+            }catch(e){
+                console.error(e);
+                showToast('Error al conciliar','error');
+            }
+        }
         async function deleteCard(id){
             const card=findCardById(id);
             const cardName=card?.name||'';
@@ -3468,7 +3540,7 @@
                 showToast('Error al borrar','error');
             }
         }
-        function editCard(id,n,q,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
+        function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
         function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='objetivos'){s[4].classList.add('active');renderGoals();}if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}closeSidebar();}
         function goToAddTransaction(){switchView('transacciones');}
 
