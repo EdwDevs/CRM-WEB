@@ -2563,6 +2563,111 @@
             font-weight: 700;
             color: var(--text-primary);
         }
+
+        .audit-panel {
+            margin-top: 24px;
+            padding: 18px;
+            background: var(--bg-body);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        [data-theme="dark"] .audit-panel {
+            background: var(--bg-elevated);
+        }
+
+        .audit-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .audit-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .audit-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .audit-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .audit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .audit-item {
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            background: var(--bg-surface);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            box-shadow: var(--shadow-xs);
+        }
+
+        [data-theme="dark"] .audit-item {
+            background: rgba(15, 23, 42, 0.2);
+        }
+
+        .audit-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .audit-item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .audit-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+            background: var(--warning-light);
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .audit-badge--danger {
+            background: var(--danger-light);
+            color: #b91c1c;
+        }
+
+        .audit-item-body {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .audit-item-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .audit-empty {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px 0;
+        }
     </style>
 </head>
 <body>
@@ -2818,6 +2923,21 @@
                 <input type="hidden" id="editCardId">
             </div>
             <div id="quotaListContainer" style="max-height:300px; overflow-y:auto;"></div>
+            <div class="audit-panel">
+                <div class="audit-header">
+                    <div>
+                        <div class="audit-title">Alertas de consistencia</div>
+                        <div class="audit-subtitle">Comparación de deuda, cupo disponible y cuotas restantes.</div>
+                    </div>
+                    <div class="audit-actions">
+                        <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar</button>
+                        <button class="btn btn--primary btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
+                    </div>
+                </div>
+                <div id="consistencyAlertList" class="audit-list">
+                    <div class="audit-empty">Ejecuta la auditoría para ver diferencias.</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2898,7 +3018,7 @@
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null;
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]};
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
         const categorias=categories;
@@ -3638,6 +3758,217 @@
                 showToast('Eliminación pendiente','warning');
             }
         }
+
+        function queueConsistencyCorrection(map, entry) {
+            const key = `${entry.entity}:${entry.id}`;
+            if (!map.has(key)) {
+                map.set(key, { ...entry, reasons: entry.reasons || [] });
+                return;
+            }
+            const existing = map.get(key);
+            existing.data = { ...existing.data, ...entry.data };
+            existing.reasons = Array.from(new Set([...(existing.reasons || []), ...(entry.reasons || [])]));
+            if (entry.label) {
+                existing.label = existing.label ? `${existing.label}; ${entry.label}` : entry.label;
+            }
+        }
+
+        function runConsistencyAudit() {
+            const issues = [];
+            const correctionMap = new Map();
+            const debtMap = calculateDebtByCard();
+            const creditTransactions = transactions.filter(t => t.tipo === 'credito' && t.esCredito && !t.pendingDelete);
+
+            cardsList.forEach(card => {
+                const debt = debtMap[card.name] || 0;
+                const baseAvailable = (card.quota || 0) - debt;
+                const adjustment = card.ajusteDisponible || 0;
+                const adjustedAvailable = baseAvailable + adjustment;
+                const diff = adjustment;
+                if (Math.abs(diff) > 0.01) {
+                    issues.push({
+                        title: `${card.name} · Cupo vs deuda`,
+                        badge: 'Cupo',
+                        badgeClass: '',
+                        body: `Deuda calculada: ${formatMoney(debt)} · Cupo disponible ajustado: ${formatMoney(adjustedAvailable)} · Diferencia: ${formatMoney(diff)}.`,
+                        meta: `Sugerencia: ajustar ajusteDisponible a ${formatMoney(0)} para alinear cálculos.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'cards',
+                        id: card.id,
+                        data: { ajusteDisponible: 0 },
+                        label: `Ajuste de cupo en ${card.name} → ${formatMoney(0)}`,
+                        reasons: ['Ajuste distinto a la deuda calculada.']
+                    });
+                }
+            });
+
+            creditTransactions.forEach(tx => {
+                if (String(tx.id).startsWith('offline-')) {
+                    return;
+                }
+                const cuotasRaw = Number(tx.cuotas);
+                const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
+                const pagadasRaw = Number(tx.cuotasPagadas || 0);
+                const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
+                const totalRaw = Number(tx.totalDeuda || 0);
+                const monto = Number(tx.monto || 0);
+                const total = totalRaw > 0 ? totalRaw : monto;
+                const remaining = Math.max(0, cuotas - pagadas);
+                const remainingDebt = (total / cuotas) * remaining;
+                const label = tx.descripcion ? `${tx.descripcion}` : 'Compra crédito';
+
+                if (cuotasRaw !== cuotas) {
+                    issues.push({
+                        title: `${label} · Cuotas inválidas`,
+                        badge: 'Cuotas',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Cuotas registradas: ${Number.isFinite(cuotasRaw) ? cuotasRaw : 'N/A'}. Se recomienda usar ${cuotas}.`,
+                        meta: `Sugerencia: ajustar cuotas a ${cuotas}.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'transactions',
+                        id: tx.id,
+                        data: { cuotas },
+                        label: `Cuotas corregidas en ${label} → ${cuotas}`,
+                        reasons: ['Cuotas inválidas.']
+                    });
+                }
+
+                if (pagadasRaw !== pagadas) {
+                    issues.push({
+                        title: `${label} · Cuotas pagadas fuera de rango`,
+                        badge: 'Cuotas',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Cuotas pagadas: ${pagadasRaw}. Rango esperado: 0 - ${cuotas}.`,
+                        meta: `Sugerencia: ajustar cuotasPagadas a ${pagadas}.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'transactions',
+                        id: tx.id,
+                        data: { cuotasPagadas: pagadas },
+                        label: `Cuotas pagadas corregidas en ${label} → ${pagadas}`,
+                        reasons: ['Cuotas pagadas fuera de rango.']
+                    });
+                }
+
+                if (totalRaw <= 0 && monto > 0) {
+                    issues.push({
+                        title: `${label} · Total deuda vacío`,
+                        badge: 'Deuda',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Total deuda registrado: ${formatMoney(totalRaw)} · Monto: ${formatMoney(monto)}.`,
+                        meta: `Sugerencia: registrar totalDeuda como ${formatMoney(monto)}.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'transactions',
+                        id: tx.id,
+                        data: { totalDeuda: monto },
+                        label: `Total deuda corregido en ${label} → ${formatMoney(monto)}`,
+                        reasons: ['Total deuda faltante.']
+                    });
+                }
+
+                if (remainingDebt > total + 1) {
+                    issues.push({
+                        title: `${label} · Cuotas restantes vs deuda`,
+                        badge: 'Deuda',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Suma de cuotas restantes: ${formatMoney(remainingDebt)} · Deuda total registrada: ${formatMoney(total)}.`,
+                        meta: 'Revisa cuotas o totalDeuda para evitar sobreestimación.'
+                    });
+                }
+            });
+
+            cardsList.forEach(card => {
+                const cardCredits = creditTransactions.filter(t => resolveCreditCardName(t) === card.name);
+                if (!cardCredits.length) return;
+                const totalDebtRecorded = cardCredits.reduce((sum, tx) => sum + Number(tx.totalDeuda || tx.monto || 0), 0);
+                const remainingSum = cardCredits.reduce((sum, tx) => {
+                    const cuotas = Number(tx.cuotas) > 0 ? Number(tx.cuotas) : 1;
+                    const pagadas = Math.min(Math.max(Number(tx.cuotasPagadas || 0), 0), cuotas);
+                    const total = Number(tx.totalDeuda || tx.monto || 0);
+                    return sum + (total / cuotas) * Math.max(0, cuotas - pagadas);
+                }, 0);
+
+                if (remainingSum > totalDebtRecorded + 1) {
+                    issues.push({
+                        title: `${card.name} · Cuotas restantes vs deuda`,
+                        badge: 'Deuda',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Suma de cuotas restantes: ${formatMoney(remainingSum)} · Deuda total registrada: ${formatMoney(totalDebtRecorded)}.`,
+                        meta: 'Revisa totales de crédito para ajustar el saldo real.'
+                    });
+                }
+            });
+
+            consistencyAudit = { issues, corrections: Array.from(correctionMap.values()) };
+            renderConsistencyAlerts();
+        }
+
+        function renderConsistencyAlerts() {
+            const container = document.getElementById('consistencyAlertList');
+            const btn = document.getElementById('btnApplyConsistencyCorrections');
+            if (!container) return;
+            if (!consistencyAudit.issues.length) {
+                container.innerHTML = '<div class="audit-empty">No se encontraron inconsistencias.</div>';
+                if (btn) btn.disabled = true;
+                return;
+            }
+            container.innerHTML = consistencyAudit.issues.map(issue => `
+                <div class="audit-item">
+                    <div class="audit-item-header">
+                        <span class="audit-item-title">${issue.title}</span>
+                        <span class="audit-badge ${issue.badgeClass || ''}">${issue.badge}</span>
+                    </div>
+                    <div class="audit-item-body">${issue.body}</div>
+                    <div class="audit-item-meta">${issue.meta || 'Sin acción sugerida.'}</div>
+                </div>
+            `).join('');
+            if (btn) btn.disabled = !consistencyAudit.corrections.length;
+        }
+
+        async function applyConsistencyCorrections() {
+            const corrections = consistencyAudit.corrections || [];
+            if (!corrections.length) {
+                showToast('No hay correcciones disponibles', 'info');
+                return;
+            }
+            const summary = corrections.map(c => `• ${c.label}`).join('\n');
+            if (!confirm(`Se aplicarán ${corrections.length} correcciones:\n${summary}\n\n¿Deseas continuar?`)) return;
+            const btn = document.getElementById('btnApplyConsistencyCorrections');
+            if (btn) btn.classList.add('is-loading');
+            try {
+                for (const correction of corrections) {
+                    if (correction.entity === 'cards') {
+                        await db.collection('cards').doc(correction.id).update({
+                            ...correction.data,
+                            auditUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                    if (correction.entity === 'transactions') {
+                        if (String(correction.id).startsWith('offline-')) {
+                            continue;
+                        }
+                        await db.collection('transactions').doc(correction.id).update({
+                            ...correction.data,
+                            auditUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }
+                showToast('Correcciones aplicadas', 'success');
+                loadCards();
+                setTimeout(() => {
+                    openQuotaModal();
+                    runConsistencyAudit();
+                }, 500);
+            } catch (e) {
+                console.error(e);
+                showToast('Error al aplicar correcciones', 'error');
+            } finally {
+                if (btn) btn.classList.remove('is-loading');
+            }
+        }
         function openQuotaModal(){
             const d=document.getElementById('quotaListContainer');
             d.innerHTML='';
@@ -3657,6 +3988,8 @@
             document.getElementById('cardPaymentDayInput').value='';
             document.getElementById('editCardId').value='';
             document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';
+            consistencyAudit = { issues: [], corrections: [] };
+            renderConsistencyAlerts();
             document.getElementById('quotaModal').style.display='flex';
         }
         function closeModal(id){document.getElementById(id).style.display='none';if(id==='cardDetailModal')currentDetailCardName=null;}
