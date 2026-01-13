@@ -2917,8 +2917,8 @@
             <div class="add-card-form">
                 <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
                 <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
-                <div class="form-group"><label>Ajuste de cupo disponible</label><input type="text" id="cardAvailableAdjustmentInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
-                <div class="form-group"><label>Día Pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" placeholder="Ej: 15"></div>
+                <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
+                <input type="hidden" id="cardPaymentDayInput">
                 <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
                 <input type="hidden" id="editCardId">
             </div>
@@ -3998,12 +3998,11 @@
             d.innerHTML='';
             cardsList.forEach(c=>{
                 const db=globalDeudaPorTarjeta[c.name]||0;
-                const adjustment=c.ajusteDisponible||0;
                 const av=calculateAvailableQuota(c);
                 const safeName=c.name.replace(/'/g,"\\'");
                 const el=document.createElement('div');
                 el.className='quota-card';
-                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="openCardDetailFromModal('${safeName}')" class="btn-icon-action btn-icon-action--info" title="Detalle de tarjeta" aria-label="Detalle de tarjeta"><i class="fas fa-eye"></i></button><button onclick="reconcileCard('${c.id}')" class="btn-icon-action btn-icon-action--info" title="Conciliar" aria-label="Conciliar"><i class="fas fa-balance-scale"></i></button><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span>Cupo:${formatMoney(c.quota)}</span><span class="text-danger">Deuda:${formatMoney(db)}</span><span>Ajuste:${formatMoney(adjustment)}</span></div><div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem;"><span style="color:var(--text-light);">Día Pago: <strong style="color:var(--primary);">${c.diaPago||'No configurado'}</strong></span><span style="color:var(--success);">Disp real: ${formatMoney(av)}</span></div>`;
+                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span class="text-danger">Deuda a la fecha: ${formatMoney(db)}</span><span style="color:var(--success);">Cupo disponible: ${formatMoney(av)}</span></div>`;
                 d.appendChild(el);
             });
             document.getElementById('cardNameInput').value='';
