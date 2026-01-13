@@ -4021,22 +4021,33 @@
         async function deleteCard(id){
             const card=findCardById(id);
             const cardName=card?.name||'';
-            const relatedTransactions=transactions.filter(t=>t.cardId===id||t.metodoPago===cardName);
-            if(relatedTransactions.length){
-                const msg=`Esta tarjeta tiene ${relatedTransactions.length} transacción(es) asociada(s).\n`+
-                `Si la borras, podrías perder la referencia histórica.\n`+
-                `¿Deseas continuar con la eliminación?`;
-                if(!confirm(msg)){
-                    showToast('Eliminación cancelada: hay transacciones asociadas.','warning');
-                    return;
-                }
-            }else if(!confirm("¿Borrar esta tarjeta?")){
+            const relatedTransactions=transactions.filter(t=>t.cardId===id||resolveCreditCardName(t)===cardName||t.metodoPago===cardName||t.tarjetaDestino===cardName);
+            const txCount=relatedTransactions.length;
+            const confirmMsg=txCount?
+                `Esta tarjeta tiene ${txCount} transacción(es) asociada(s).\n`+
+                `Se desvincularán y quedarán marcadas como tarjeta eliminada.\n`+
+                `¿Deseas continuar con la eliminación?`:
+                `Se eliminará la tarjeta "${cardName}".\nTransacciones afectadas: ${txCount}.\n¿Confirmar?`;
+            if(!confirm(confirmMsg)){
+                showToast('Eliminación cancelada.','warning');
                 return;
             }
             try{
-                await db.collection('cards').doc(id).delete();
+                const batch=db.batch();
+                relatedTransactions.forEach(t=>{
+                    const updateData={cardDeleted:true};
+                    if(t.cardId===id)updateData.cardId='';
+                    if(t.cardName===cardName)updateData.cardName='';
+                    if(resolveCreditCardName(t)===cardName&&!t.cardName)updateData.cardName='';
+                    if(t.metodoPago===cardName)updateData.metodoPago='';
+                    if(t.tarjetaDestino===cardName)updateData.tarjetaDestino='';
+                    batch.update(db.collection('transactions').doc(t.id),updateData);
+                });
+                batch.delete(db.collection('cards').doc(id));
+                await batch.commit();
                 loadCards();
                 setTimeout(openQuotaModal,500);
+                showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
             }catch(e){
                 console.error(e);
                 showToast('Error al borrar','error');
