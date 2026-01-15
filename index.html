@@ -2753,6 +2753,14 @@
                     <div class="mini-stat debt"><div class="mini-label">Gastos + Compras TC</div><div class="mini-value" id="totalGastosMes">$0</div></div>
                     <div class="mini-stat"><div class="mini-label">Balance Neto</div><div class="mini-value" id="balanceMes">$0</div></div>
                 </div>
+                <div class="card" id="dailyCapCard">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3 style="margin:0;"><i class="fas fa-calendar-day"></i> Tope diario</h3>
+                        <span id="dailyCapMonthLabel" style="font-size:0.8rem; color:var(--text-muted);"></span>
+                    </div>
+                    <div id="dailyCapCurrent" style="padding:12px; border-radius:12px; background:var(--bg-body); border:1px solid rgba(148,163,184,0.15);"></div>
+                    <div id="dailyCapList" style="margin-top:12px;"></div>
+                </div>
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
@@ -3349,6 +3357,105 @@
             }
         }
 
+        function updateDailyCapIndicator(){
+            const currentContainer=document.getElementById('dailyCapCurrent');
+            const listContainer=document.getElementById('dailyCapList');
+            const monthLabel=document.getElementById('dailyCapMonthLabel');
+            if(!currentContainer||!listContainer||!monthLabel)return;
+
+            let d=0,e=0,n=0;
+            transactions.forEach(t=>{
+                const m=parseFloat(t.monto);
+                if(t.tipo==='pago_tarjeta'){
+                    if(t.metodoPago==='debito')d-=m;
+                    if(t.metodoPago==='efectivo')e-=m;
+                    if(t.metodoPago==='nequi')n-=m;
+                }else if(!t.esCredito){
+                    if(t.tipo==='ingreso'){
+                        if(t.metodoPago==='debito')d+=m;
+                        if(t.metodoPago==='efectivo')e+=m;
+                        if(t.metodoPago==='nequi')n+=m;
+                    }else if(t.tipo==='gasto'){
+                        if(t.metodoPago==='debito')d-=m;
+                        if(t.metodoPago==='efectivo')e-=m;
+                        if(t.metodoPago==='nequi')n-=m;
+                    }else if(t.tipo==='transferencia'){
+                        if(t.metodoPago==='debito')d-=m;
+                        if(t.metodoPago==='efectivo')e-=m;
+                        if(t.metodoPago==='nequi')n-=m;
+                        if(t.metodoDestino==='debito')d+=m;
+                        if(t.metodoDestino==='efectivo')e+=m;
+                        if(t.metodoDestino==='nequi')n+=m;
+                    }
+                }
+            });
+            const saldoDisponible=d+e+n;
+
+            const vm=currentViewDate.getMonth();
+            const vy=currentViewDate.getFullYear();
+            const daysInMonth=new Date(vy, vm+1, 0).getDate();
+            const excludedCategories=new Set(['vivienda','servicios_publicos']);
+            const dailyTotals=Array(daysInMonth).fill(0);
+
+            transactions.forEach(t=>{
+                if(t.tipo!=='gasto'&&t.tipo!=='credito')return;
+                if(excludedCategories.has(t.categoria))return;
+                const [ty,tm,td]=t.fecha.split('-').map(Number);
+                if((tm-1)!==vm||ty!==vy)return;
+                dailyTotals[td-1]+=parseFloat(t.monto);
+            });
+
+            let acumulado=0;
+            const resumen=[];
+            for(let day=1;day<=daysInMonth;day++){
+                const gastoDia=dailyTotals[day-1]||0;
+                const gastoAcumuladoHastaAyer=acumulado;
+                const disponibleAlInicioDia=saldoDisponible-gastoAcumuladoHastaAyer;
+                const diasRestantesIncluyendoHoy=daysInMonth-day+1;
+                const topeDia=Math.max(0,disponibleAlInicioDia/diasRestantesIncluyendoHoy);
+                const excedido=gastoDia>topeDia;
+                resumen.push({day,gastoDia,topeDia,excedido});
+                acumulado+=gastoDia;
+            }
+
+            const today=new Date();
+            const isCurrentMonth=today.getMonth()===vm&&today.getFullYear()===vy;
+            const currentDay=isCurrentMonth?Math.min(today.getDate(),daysInMonth):1;
+            const currentData=resumen[currentDay-1];
+            const statusLabel=currentData.excedido?'Excedido':'OK';
+            const statusColor=currentData.excedido?'var(--danger)':'var(--success)';
+            const statusBg=currentData.excedido?'var(--danger-light)':'var(--success-light)';
+
+            currentContainer.style.background=statusBg;
+            currentContainer.style.borderColor=statusColor;
+            currentContainer.innerHTML=`
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600;">Día ${currentDay}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);">Tope sugerido: ${formatMoney(currentData.topeDia)}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:700;color:${statusColor};">${statusLabel}</div>
+                        <div style="font-size:0.85rem;color:var(--text-muted);">Gasto: ${formatMoney(currentData.gastoDia)}</div>
+                    </div>
+                </div>`;
+
+            monthLabel.textContent=currentViewDate.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
+            listContainer.innerHTML=resumen.map(item=>{
+                const rowStatus=item.excedido?'Excedido':'OK';
+                const rowColor=item.excedido?'var(--danger)':'var(--success)';
+                const rowBg=item.excedido?'var(--danger-light)':'transparent';
+                const isToday=item.day===currentDay;
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid rgba(148,163,184,0.2); background:${isToday?rowBg:'transparent'};">
+                    <div>
+                        <div style="font-weight:600;">Día ${item.day}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">Gasto ${formatMoney(item.gastoDia)} · Tope ${formatMoney(item.topeDia)}</div>
+                    </div>
+                    <div style="font-weight:700;color:${rowColor};">${rowStatus}</div>
+                </div>`;
+            }).join('');
+        }
+
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
@@ -3503,7 +3610,7 @@
             });
         });
         
-        updateFamilySummary();checkBudgetAlerts();renderReminders();
+        updateDailyCapIndicator();updateFamilySummary();checkBudgetAlerts();renderReminders();
         if(currentDetailCardName){
             renderCardDetail();
         }
@@ -3704,7 +3811,7 @@
         if(btn.classList.contains('recording')){recognition.stop();btn.classList.remove('recording');return;}
         recognition.start();btn.classList.add('recording');recognition.onresult=(event=>{const text=event.results[0][0].transcript;document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
 
-        function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); currentViewDate=new Date(parseInt(y),parseInt(m)-1,1); updateDashboard(); renderCharts();}}
+        function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); currentViewDate=new Date(parseInt(y),parseInt(m)-1,1); updateDashboard(); updateDailyCapIndicator(); renderCharts();}}
         function renderTrendChart(){const c=document.getElementById('chartTendencias'); if(trendChartInstance)trendChartInstance.destroy(); const l=[],i=[],g=[],t=new Date(),b={}; for(let x=5;x>=0;x--){const d=new Date(t.getFullYear(),t.getMonth()-x,1);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;b[k]={i:0,g:0};l.push(d.toLocaleString('es-CO',{month:'short'}));} transactions.forEach(tx=>{const k=tx.fecha.substring(0,7);if(b[k]){if(tx.tipo==='ingreso')b[k].i+=parseFloat(tx.monto);else if(tx.tipo==='gasto'||tx.tipo==='credito')b[k].g+=parseFloat(tx.monto);}}); Object.keys(b).sort().forEach(k=>{i.push(b[k].i);g.push(b[k].g);}); trendChartInstance=new Chart(c,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}});}
         function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); transactions.filter(t=>(t.tipo==='gasto'||t.tipo==='credito')).forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)===vm&&ty===vy){const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+parseFloat(t.monto);}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});}
         
