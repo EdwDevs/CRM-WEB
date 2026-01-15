@@ -2769,7 +2769,10 @@
                             <div class="mini-value" id="dailyCapStatus">OK</div>
                         </div>
                     </div>
-                    <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">Tope del día (no incluye Vivienda ni Servicios Públicos).</div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+                        Tope del día (no incluye Vivienda ni Servicios Públicos).
+                        <span>Tope diario = Patrimonio Líquido Total / días pendientes del mes.</span>
+                    </div>
                 </div>
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -3408,7 +3411,6 @@
             const today=new Date();
             const isCurrentMonth=today.getMonth()===vm&&today.getFullYear()===vy;
             const currentDay=isCurrentMonth?Math.min(today.getDate(),daysInMonth):1;
-            let gastoHastaAyer=0;
             let gastoDia=0;
 
             transactions.forEach(t=>{
@@ -3420,14 +3422,11 @@
                 const monto=parseFloat(t.monto);
                 if(td===currentDay){
                     gastoDia+=monto;
-                }else if(td<currentDay){
-                    gastoHastaAyer+=monto;
                 }
             });
 
-            const disponibleAlInicioDia=saldoDisponible-gastoHastaAyer;
             const diasRestantesIncluyendoHoy=daysInMonth-currentDay+1;
-            const topeDia=Math.max(0,disponibleAlInicioDia/diasRestantesIncluyendoHoy);
+            const topeDia=Math.max(0,saldoDisponible/diasRestantesIncluyendoHoy);
             const excedido=gastoDia>topeDia;
 
             dailyCapValue.textContent=formatMoney(topeDia);
@@ -3441,6 +3440,7 @@
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
         else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{if(iv)g+=m;}});
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
+        updateDailyCapIndicator();
         const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
         
         // Get all credit transactions grouped by card
