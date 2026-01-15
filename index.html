@@ -2760,6 +2760,7 @@
                     </div>
                     <div id="dailyCapCurrent" style="padding:12px; border-radius:12px; background:var(--bg-body); border:1px solid rgba(148,163,184,0.15);"></div>
                     <div id="dailyCapList" style="margin-top:12px;"></div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">No incluye Vivienda ni Servicios Públicos.</div>
                 </div>
                 <div class="card">
                     <h3 style="margin-bottom:15px;"><i class="fas fa-calendar-day"></i> Tope Diario</h3>
@@ -3433,7 +3434,8 @@
 
             transactions.forEach(t=>{
                 if(t.tipo!=='gasto'&&t.tipo!=='credito')return;
-                if(excludedCategories.has(t.categoria))return;
+                const categoryId=(t.categoria||'').toLowerCase();
+                if(excludedCategories.has(categoryId))return;
                 const [ty,tm,td]=t.fecha.split('-').map(Number);
                 if((tm-1)!==vm||ty!==vy)return;
                 dailyTotals[td-1]+=parseFloat(t.monto);
