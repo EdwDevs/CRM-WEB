@@ -3012,7 +3012,7 @@
             <div style="text-align:center; margin-bottom:15px;">
                 <div id="pagoCuotaInfo" style="font-size:0.9rem; color:var(--text-muted);"></div>
             </div>
-            <div class="calendar-container">
+            <div class="calendar-container" style="display:none;">
                 <div class="calendar-header">
                     <button class="calendar-nav-btn" onclick="cambiarMesCalendario(-1)">&#8249;</button>
                     <span id="calendarMonthYear" class="calendar-month-year"></span>
@@ -3458,6 +3458,21 @@
         const fechaSiguientePorTarjeta={};
         const today=new Date();
         const parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
+        const buildPaymentDate=(year,monthIndex,day)=>{
+            const lastDay=new Date(year, monthIndex+1, 0).getDate();
+            return new Date(year, monthIndex, Math.min(day, lastDay));
+        };
+        const resolveNextPaymentDate=(cred,paymentDay,baseDate)=>{
+            if(cred.proximaFechaPago){
+                return parseIsoDate(cred.proximaFechaPago);
+            }
+            const base=baseDate||today;
+            let next=buildPaymentDate(base.getFullYear(), base.getMonth(), paymentDay);
+            if(next < today){
+                next=buildPaymentDate(base.getFullYear(), base.getMonth()+1, paymentDay);
+            }
+            return next;
+        };
 
         Object.keys(creditosPorTarjeta).forEach(cardName=>{
             if(!isValidCardName(cardName))return;
@@ -3474,18 +3489,7 @@
                 const montoCuota=(cred.totalDeuda||cred.monto)/cuotas;
                 totalCuota+=montoCuota;
 
-                let nextPaymentDate=null;
-                if(cred.proximaFechaPago){
-                    nextPaymentDate=parseIsoDate(cred.proximaFechaPago);
-                }else{
-                    const baseDate=new Date(cred.fechaPrimerPago);
-                    const baseYear=Number.isNaN(baseDate.getTime())?today.getFullYear():baseDate.getFullYear();
-                    const baseMonth=Number.isNaN(baseDate.getTime())?today.getMonth():baseDate.getMonth();
-                    nextPaymentDate=new Date(baseYear, baseMonth, paymentDay);
-                    if(nextPaymentDate < today){
-                        nextPaymentDate=new Date(baseYear, baseMonth + 1, paymentDay);
-                    }
-                }
+                const nextPaymentDate=resolveNextPaymentDate(cred, paymentDay, today);
 
                 if(!nearestDate || nextPaymentDate < nearestDate){
                     nearestDate=nextPaymentDate;
@@ -3557,22 +3561,7 @@
                 const montoPorCuota=(cred.totalDeuda||cred.monto)/cuotaTotal;
                 
                 // --- CORRECCIÓN DE FECHA ---
-                let nextPaymentDate;
-                if (cred.proximaFechaPago) {
-                    // Si existe una fecha guardada explícitamente, la usamos directamente
-                    // Usamos split y constructor manual para evitar problemas de zona horaria
-                    const parts = cred.proximaFechaPago.split('-');
-                    nextPaymentDate = new Date(parts[0], parts[1] - 1, parts[2]);
-                } else {
-                    // Lógica de fallback original
-                    nextPaymentDate = new Date(cred.fechaPrimerPago);
-                    if(!nextPaymentDate.getTime()) nextPaymentDate = new Date();
-                    nextPaymentDate = new Date(nextPaymentDate.getFullYear(), nextPaymentDate.getMonth(), paymentDay);
-                    
-                    if(today.getDate() > paymentDay){
-                         nextPaymentDate = new Date(today.getFullYear(), today.getMonth() + 1, paymentDay);
-                    }
-                }
+                const nextPaymentDate=resolveNextPaymentDate(cred, paymentDay, today);
                 // ---------------------------
                 
                 const isVencida=today>nextPaymentDate;
@@ -3705,6 +3694,27 @@
         }
         
         let tempPagoCuotaData=null;
+        function buildPaymentDate(year,monthIndex,day){
+            const lastDay=new Date(year, monthIndex+1, 0).getDate();
+            return new Date(year, monthIndex, Math.min(day, lastDay));
+        }
+        function resolveCurrentPaymentDate(credito,paymentDay){
+            if(credito.proximaFechaPago){
+                const parts=credito.proximaFechaPago.split('-');
+                return new Date(parts[0], parts[1]-1, parts[2]);
+            }
+            const today=new Date();
+            let next=buildPaymentDate(today.getFullYear(), today.getMonth(), paymentDay);
+            if(next < today){
+                next=buildPaymentDate(today.getFullYear(), today.getMonth()+1, paymentDay);
+            }
+            return next;
+        }
+        function addNextPaymentMonth(baseDate,paymentDay){
+            const year=baseDate.getFullYear();
+            const month=baseDate.getMonth()+1;
+            return buildPaymentDate(year, month, paymentDay);
+        }
         
         // Función unificada para pagar cuota
         window.pagarCuota = function(creditId, cuotaNum, monto, cardName, paymentDay) {
@@ -3714,56 +3724,55 @@
                 return;
             }
             // Importante: Guardar el ID correctamente
-            tempPagoCuotaData = { creditId, cuotaNum, monto, cardName };
+            const resolvedPaymentDay=parseInt(paymentDay, 10) || 15;
+            const paymentDate=resolveCurrentPaymentDate(credito, resolvedPaymentDay);
+            tempPagoCuotaData = { creditId, cuotaNum, monto, cardName, paymentDay: resolvedPaymentDay, paymentDate };
             
             const infoDiv = document.getElementById('pagoCuotaInfo');
-            infoDiv.innerHTML = `Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}`;
-            
-            const today = new Date();
-            let suggestedDate = new Date(today.getFullYear(), today.getMonth(), paymentDay || 15);
-            
-            // Si ya hay una fecha, usar esa
-            if (credito.proximaFechaPago) {
-                const parts = credito.proximaFechaPago.split('-');
-                suggestedDate = new Date(parts[0], parts[1]-1, parts[2]);
-            }
-            
-            // Configurar calendario con fecha sugerida
-            calendarioMesActual = suggestedDate.getMonth();
-            calendarioAnoActual = suggestedDate.getFullYear();
-            fechaSeleccionadaCalendario = suggestedDate;
-            
-            // Inicializar calendario
-            initCalendarioPagoCuota();
+            infoDiv.innerHTML = `Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}<br>Fecha de pago automática: <strong>${paymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}</strong>`;
             
             document.getElementById('pagoCuotaModal').style.display = 'flex';
         }
         
         window.confirmarPagoCuota = async function() {
             if (!tempPagoCuotaData) return;
-            if (!fechaSeleccionadaCalendario) {
-                showToast('Por favor selecciona una fecha', 'warning');
-                return;
-            }
-            
-            const año = fechaSeleccionadaCalendario.getFullYear();
-            const mes = String(fechaSeleccionadaCalendario.getMonth() + 1).padStart(2, '0');
-            const dia = String(fechaSeleccionadaCalendario.getDate()).padStart(2, '0');
-            const nuevaFecha = `${año}-${mes}-${dia}`;
+            const paymentDate=tempPagoCuotaData.paymentDate;
+            const año=paymentDate.getFullYear();
+            const mes=String(paymentDate.getMonth() + 1).padStart(2, '0');
+            const dia=String(paymentDate.getDate()).padStart(2, '0');
+            const fechaPagoActual=`${año}-${mes}-${dia}`;
             const btn = document.getElementById('btnConfirmarPagoCuota');
             if (btn) btn.classList.add('is-loading');
             
             try {
                 const credito = transactions.find(t => t.id === tempPagoCuotaData.creditId);
                 const nuevasPagadas = Math.max(credito.cuotasPagadas || 0, tempPagoCuotaData.cuotaNum);
-                
-                await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({
-                    cuotasPagadas: nuevasPagadas,
-                    proximaFechaPago: nuevaFecha // Guardamos la fecha seleccionada en DB
-                });
+                const totalCuotas = credito.cuotas || 1;
+                if (nuevasPagadas >= totalCuotas) {
+                    await db.collection('transactions').doc(tempPagoCuotaData.creditId).delete();
+                } else {
+                    const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
+                    const añoProximo = proximaFecha.getFullYear();
+                    const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
+                    const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
+                    const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
+                    await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({
+                        cuotasPagadas: nuevasPagadas,
+                        proximaFechaPago: nuevaFecha
+                    });
+                }
                 
                 closeModal('pagoCuotaModal');
-                showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} programada para ${formatDate(nuevaFecha)}`, 'success');
+                if (nuevasPagadas >= totalCuotas) {
+                    showToast(`✅ Crédito liquidado con el pago de la cuota ${tempPagoCuotaData.cuotaNum} (${formatDate(fechaPagoActual)})`, 'success');
+                } else {
+                    const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
+                    const añoProximo = proximaFecha.getFullYear();
+                    const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
+                    const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
+                    const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
+                    showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} registrada (${formatDate(fechaPagoActual)}). Próximo pago: ${formatDate(nuevaFecha)}`, 'success');
+                }
                 loadTransactions();
             } catch (e) {
                 console.error(e);
