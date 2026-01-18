@@ -524,6 +524,65 @@
             color: var(--text-muted);
         }
 
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 16px;
+        }
+
+        .kpi-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .kpi-delta {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .top-category-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(260px, 2fr);
+            gap: 24px;
+            align-items: center;
+        }
+
+        .top-category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .top-category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            background: rgba(80, 70, 229, 0.06);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .top-category-item {
+            background: rgba(99, 102, 241, 0.12);
+        }
+
+        .top-category-amount {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 960px) {
+            .top-category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .mini-stat.debt .mini-value {
             color: var(--danger);
         }
@@ -3062,8 +3121,36 @@
             </div>
 
             <div id="view-estadisticas" class="tab-content">
+                <div class="card">
+                    <h3>KPIs rápidos</h3>
+                    <div class="kpi-grid">
+                        <div class="mini-stat">
+                            <div class="mini-label"><i class="fas fa-calendar-day"></i> Promedio diario</div>
+                            <div class="mini-value" id="kpiDailyAverage">$0</div>
+                            <div class="kpi-subtitle">Gasto promedio del mes</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-label"><i class="fas fa-piggy-bank"></i> Tasa de ahorro</div>
+                            <div class="mini-value" id="kpiSavingsRate">0%</div>
+                            <div class="kpi-subtitle">Ingresos netos vs ingresos</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-label"><i class="fas fa-chart-line"></i> Variación mensual</div>
+                            <div class="mini-value" id="kpiMonthlyVariation">$0</div>
+                            <div class="kpi-delta" id="kpiMonthlyVariationDetail">--</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="card"><h3>Tendencia (6 Meses)</h3><div style="height:300px;"><canvas id="chartTendencias"></canvas></div></div>
+                <div class="card"><h3>Ingresos vs Gastos (6 Meses)</h3><div style="height:320px;"><canvas id="chartIngresosGastos"></canvas></div></div>
                 <div class="card"><h3>Distribución de Gastos</h3><div style="height:350px;"><canvas id="chartCategorias"></canvas></div></div>
+                <div class="card">
+                    <h3>Top categorías del mes</h3>
+                    <div class="top-category-grid">
+                        <div class="top-category-list" id="topCategoriasList"></div>
+                        <div style="height:280px;"><canvas id="chartTopCategorias"></canvas></div>
+                    </div>
+                </div>
             </div>
 
             <div id="view-objetivos" class="tab-content">
@@ -3280,7 +3367,7 @@
             }
         }
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]};
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]};
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
         const categorias=categories;
@@ -4086,8 +4173,53 @@
         recognition.start();btn.classList.add('recording');recognition.onresult=(event=>{const text=event.results[0][0].transcript;document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
 
         function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); currentViewDate=new Date(parseInt(y),parseInt(m)-1,1); updateDashboard(); updateDailyCapIndicator(); renderCharts();}}
-        function renderTrendChart(){const c=document.getElementById('chartTendencias'); if(trendChartInstance)trendChartInstance.destroy(); const l=[],i=[],g=[],t=new Date(),b={}; for(let x=5;x>=0;x--){const d=new Date(t.getFullYear(),t.getMonth()-x,1);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;b[k]={i:0,g:0};l.push(d.toLocaleString('es-CO',{month:'short'}));} transactions.forEach(tx=>{const k=tx.fecha.substring(0,7);if(b[k]){if(tx.tipo==='ingreso')b[k].i+=parseFloat(tx.monto);else if(tx.tipo==='gasto'||tx.tipo==='credito')b[k].g+=parseFloat(tx.monto);}}); Object.keys(b).sort().forEach(k=>{i.push(b[k].i);g.push(b[k].g);}); trendChartInstance=new Chart(c,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}});}
-        function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); transactions.filter(t=>(t.tipo==='gasto'||t.tipo==='credito')).forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)===vm&&ty===vy){const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+parseFloat(t.monto);}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});}
+        function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas)return; const l=[],i=[],g=[],t=new Date(),b={}; for(let x=5;x>=0;x--){const d=new Date(t.getFullYear(),t.getMonth()-x,1);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;b[k]={i:0,g:0};l.push(d.toLocaleString('es-CO',{month:'short'}));} transactions.forEach(tx=>{const k=tx.fecha.substring(0,7);if(b[k]){if(tx.tipo==='ingreso')b[k].i+=parseFloat(tx.monto);else if(tx.tipo==='gasto'||tx.tipo==='credito')b[k].g+=parseFloat(tx.monto);}}); Object.keys(b).sort().forEach(k=>{i.push(b[k].i);g.push(b[k].g);}); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
+        function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); let monthlyIncome=0; let monthlyExpenses=0; const daysInMonth=new Date(vy, vm+1, 0).getDate(); transactions.forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)!==vm||ty!==vy)return; const m=parseFloat(t.monto); if(t.tipo==='ingreso'&&!t.esCredito){monthlyIncome+=m;} else if(t.tipo==='gasto'||t.tipo==='credito'){monthlyExpenses+=m; const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+            const avgDaily=daysInMonth>0?monthlyExpenses/daysInMonth:0;
+            const savingsRate=monthlyIncome===0?0:((monthlyIncome-monthlyExpenses)/monthlyIncome)*100;
+            const balance=monthlyIncome-monthlyExpenses;
+            const prevDate=new Date(vy, vm-1, 1);
+            const prevTotals=calculateMonthlyTotals(prevDate);
+            const prevBalance=prevTotals.income-prevTotals.expenses;
+            const variation=balance-prevBalance;
+            const variationPercent=prevBalance===0?(balance===0?0:null):Math.abs((variation/prevBalance)*100);
+            const variationLabel=variation===0?'→':(variation>0?'▲':'▼');
+            const variationSign=variation>0?'+':'-';
+            const variationValue=document.getElementById('kpiMonthlyVariation');
+            const variationDetail=document.getElementById('kpiMonthlyVariationDetail');
+            const dailyAverageEl=document.getElementById('kpiDailyAverage');
+            const savingsRateEl=document.getElementById('kpiSavingsRate');
+            if(dailyAverageEl)dailyAverageEl.textContent=formatMoney(avgDaily);
+            if(savingsRateEl)savingsRateEl.textContent=`${savingsRate.toFixed(1)}%`;
+            if(variationValue)variationValue.textContent=`${variationLabel} ${variation===0?'':variationSign}${formatMoney(Math.abs(variation))}`;
+            if(variationDetail){
+                const percentText=variationPercent===null?'N/A':`${variationPercent.toFixed(1)}%`;
+                variationDetail.textContent=`${percentText} vs mes anterior`;
+                variationDetail.style.color=variation===0?'var(--text-muted)':(variation>0?'var(--success)':'var(--danger)');
+            }
+
+            const topList=document.getElementById('topCategoriasList');
+            const topCanvas=document.getElementById('chartTopCategorias');
+            const sortedEntries=Object.entries(ct).sort(([,a],[,b])=>b-a);
+            if(topList){
+                if(sortedEntries.length===0){
+                    topList.innerHTML='<div class="top-category-item">Sin datos</div>';
+                }else{
+                    const totalExpenses=monthlyExpenses||1;
+                    topList.innerHTML=sortedEntries.slice(0,5).map(([name,value])=>`
+                        <div class="top-category-item">
+                            <span>${name}</span>
+                            <span class="top-category-amount">${formatMoney(value)} · ${((value/totalExpenses)*100).toFixed(1)}%</span>
+                        </div>`).join('');
+                }
+            }
+            if(topCategoriesChartInstance)topCategoriesChartInstance.destroy();
+            if(topCanvas){
+                const topLabels=sortedEntries.slice(0,5).map(([name])=>name);
+                const topValues=sortedEntries.slice(0,5).map(([,value])=>value);
+                topCategoriesChartInstance=new Chart(topCanvas,{type:'bar',data:{labels:topLabels,datasets:[{label:'Gasto',data:topValues,backgroundColor:'rgba(79,70,229,0.6)',borderColor:'#4f46e5',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+            }
+        }
         
         async function loadCards(){try{const s=await db.collection('cards').orderBy('name').get(); cardsList=[]; s.forEach(d=>cardsList.push({id:d.id,...d.data()})); if(cardsList.length===0){await seedDefaultCards();return;} localStorage.setItem('cardsCache', JSON.stringify(cardsList)); populateCardSelects(); populateMethodFilter(); loadTransactions();}catch(e){console.error(e); const cached=localStorage.getItem('cardsCache'); if(cached){cardsList=JSON.parse(cached); populateCardSelects(); populateMethodFilter(); loadTransactions();} showToast('Usando datos locales por fallo en Firestore', 'warning'); showSyncStatus('offline');}}
         async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago,ajusteDisponible:0})); await b.commit(); loadCards();}
