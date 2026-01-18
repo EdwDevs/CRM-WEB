@@ -875,10 +875,32 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            padding: 14px 16px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.6) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
         }
 
         .form-group.full-width {
             grid-column: 1 / -1;
+        }
+
+        .form-card {
+            padding: var(--card-padding);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.7) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            transition: background var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+        }
+
+        [data-theme="dark"] .form-group,
+        [data-theme="dark"] .form-card {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.85) 100%);
+            border-color: rgba(148, 163, 184, 0.2);
+            box-shadow: var(--shadow-sm);
         }
 
         label {
@@ -890,24 +912,25 @@
         input, select {
             padding: 14px 16px;
             border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: var(--radius-md);
+            border-radius: var(--radius-lg);
             font-size: 1rem;
-            background: var(--bg-body);
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(226, 232, 240, 0.45) 100%);
             color: var(--text-primary);
             outline: none;
-            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-xs);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
             font-family: inherit;
         }
 
         [data-theme="dark"] input, [data-theme="dark"] select {
             border-color: rgba(148, 163, 184, 0.2);
-            background: var(--bg-elevated);
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);
         }
 
         input:focus, select:focus {
             border-color: var(--primary);
             background: var(--bg-surface);
-            box-shadow: 0 0 0 4px rgba(80, 70, 229, 0.08);
+            box-shadow: 0 0 0 3px rgba(80, 70, 229, 0.18);
         }
 
         button {
