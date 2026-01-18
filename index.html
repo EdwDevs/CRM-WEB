@@ -587,6 +587,26 @@
             background: rgba(80, 70, 229, 0.04);
         }
 
+        #view-historial .table-container tbody tr.row-income td {
+            background: rgba(16, 185, 129, 0.08);
+            border-bottom-color: rgba(16, 185, 129, 0.2);
+        }
+
+        #view-historial .table-container tbody tr.row-expense td {
+            background: rgba(239, 68, 68, 0.08);
+            border-bottom-color: rgba(239, 68, 68, 0.2);
+        }
+
+        #view-historial .table-container tbody tr.row-credit td {
+            background: rgba(236, 72, 153, 0.08);
+            border-bottom-color: rgba(236, 72, 153, 0.2);
+        }
+
+        #view-historial .table-container tbody tr.row-transfer td {
+            background: rgba(59, 130, 246, 0.08);
+            border-bottom-color: rgba(59, 130, 246, 0.2);
+        }
+
         [data-theme="dark"] #view-historial .table-container {
             border-color: rgba(148, 163, 184, 0.12);
         }
@@ -598,6 +618,26 @@
 
         [data-theme="dark"] #view-historial .table-container tbody tr:hover td {
             background: rgba(51, 65, 85, 0.6);
+        }
+
+        [data-theme="dark"] #view-historial .table-container tbody tr.row-income td {
+            background: rgba(16, 185, 129, 0.04);
+            border-bottom-color: rgba(16, 185, 129, 0.12);
+        }
+
+        [data-theme="dark"] #view-historial .table-container tbody tr.row-expense td {
+            background: rgba(239, 68, 68, 0.04);
+            border-bottom-color: rgba(239, 68, 68, 0.12);
+        }
+
+        [data-theme="dark"] #view-historial .table-container tbody tr.row-credit td {
+            background: rgba(236, 72, 153, 0.04);
+            border-bottom-color: rgba(236, 72, 153, 0.12);
+        }
+
+        [data-theme="dark"] #view-historial .table-container tbody tr.row-transfer td {
+            background: rgba(59, 130, 246, 0.04);
+            border-bottom-color: rgba(59, 130, 246, 0.12);
         }
 
         .filter-row {
@@ -3314,7 +3354,14 @@
                     ? `<span style="color:${t.pendingDelete?'var(--danger)':'var(--warning)'};font-size:0.75rem;font-weight:600;">Pendiente</span>`
                     : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button>`;
-                const rowClass=t.pendingDelete?'pending-delete-row':'';
+                const typeClassMap={
+                    ingreso:'row-income',
+                    gasto:'row-expense',
+                    credito:'row-credit',
+                    transferencia:'row-transfer',
+                    pago_tarjeta:'row-transfer'
+                };
+                const rowClass=[typeClassMap[t.tipo], t.pendingDelete?'pending-delete-row':''].filter(Boolean).join(' ');
                 tbody.innerHTML += `<tr class="${rowClass}">
                     <td>${t.fecha}</td>
                     <td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
