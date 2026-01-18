@@ -3536,9 +3536,12 @@
         incomeDeltaEl.style.color=incomeDelta.diff===0?'var(--text-muted)':(incomeDelta.isImprovement?'var(--success)':'var(--danger)');
         expenseDeltaEl.style.color=expenseDelta.diff===0?'var(--text-muted)':(expenseDelta.isImprovement?'var(--success)':'var(--danger)');
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
-        document.getElementById('avgDailySpend').textContent=formatMoney(avgDailySpend);
-        document.getElementById('savingsRate').textContent=`${(savingsRate*100).toFixed(1)}%`;
-        document.getElementById('creditUtilization').textContent=`${creditUtilization.toFixed(1)}%`;
+        const avgDailySpendEl=document.getElementById('avgDailySpend');
+        if(avgDailySpendEl) avgDailySpendEl.textContent=formatMoney(avgDailySpend);
+        const savingsRateEl=document.getElementById('savingsRate');
+        if(savingsRateEl) savingsRateEl.textContent=`${(savingsRate*100).toFixed(1)}%`;
+        const creditUtilizationEl=document.getElementById('creditUtilization');
+        if(creditUtilizationEl) creditUtilizationEl.textContent=`${creditUtilization.toFixed(1)}%`;
         updateDailyCapIndicator();
         const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
         
