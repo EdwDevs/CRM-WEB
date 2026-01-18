@@ -545,6 +545,61 @@
             border-color: rgba(148, 163, 184, 0.1);
         }
 
+        #view-historial .card h3 {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.05));
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            border-top-left-radius: var(--radius-lg);
+            border-top-right-radius: var(--radius-lg);
+            margin-left: calc(-1 * var(--card-padding));
+            margin-right: calc(-1 * var(--card-padding));
+            margin-top: calc(-1 * var(--card-padding));
+            padding: 18px 24px;
+        }
+
+        #view-historial .advanced-filters {
+            background: rgba(80, 70, 229, 0.04);
+            border-radius: 16px;
+            border-color: rgba(148, 163, 184, 0.14);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        [data-theme="dark"] #view-historial .card h3 {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), rgba(14, 165, 233, 0.08));
+            border-bottom-color: rgba(148, 163, 184, 0.22);
+        }
+
+        [data-theme="dark"] #view-historial .advanced-filters {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(148, 163, 184, 0.18);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+        }
+
+        #view-historial .table-container {
+            border-color: rgba(148, 163, 184, 0.08);
+        }
+
+        #view-historial .table-container th,
+        #view-historial .table-container td {
+            border-bottom-color: rgba(148, 163, 184, 0.06);
+        }
+
+        #view-historial .table-container tbody tr:hover td {
+            background: rgba(80, 70, 229, 0.04);
+        }
+
+        [data-theme="dark"] #view-historial .table-container {
+            border-color: rgba(148, 163, 184, 0.12);
+        }
+
+        [data-theme="dark"] #view-historial .table-container th,
+        [data-theme="dark"] #view-historial .table-container td {
+            border-bottom-color: rgba(148, 163, 184, 0.12);
+        }
+
+        [data-theme="dark"] #view-historial .table-container tbody tr:hover td {
+            background: rgba(51, 65, 85, 0.6);
+        }
+
         .filter-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
