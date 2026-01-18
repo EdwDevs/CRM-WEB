@@ -3521,10 +3521,14 @@
         else if(!t.esCredito){if(t.tipo==='ingreso'){if(t.metodoPago==='debito')d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(t.metodoDestino==='debito')d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{if(iv)g+=m;}});
         const daysInMonth=new Date(vy, vm+1, 0).getDate();
         const avgDailySpend=daysInMonth>0?g/daysInMonth:0;
-        const savingsRate=i===0?0:(i-g)/i;
+        const savingsRatePercent=i===0?0:((i-g)/i)*100;
         const deudaTotal=Object.values(dm).reduce((sum,value)=>sum+value,0);
         const cupoTotal=cardsList.reduce((sum,card)=>sum+(parseFloat(card.quota)||0),0);
-        const creditUtilization=cupoTotal>0?(deudaTotal/cupoTotal)*100:0;
+        const creditUtilizationPercent=cupoTotal>0?(deudaTotal/cupoTotal)*100:0;
+        const formatPercentValue=(value,fallback='--')=>{
+            if(!Number.isFinite(value))return fallback;
+            return `${value.toFixed(1)}%`;
+        };
         const prevDate=new Date(vy, vm-1, 1);
         const prevTotals=calculateMonthlyTotals(prevDate);
         const incomeDelta=formatMoMDelta(i, prevTotals.income, true);
@@ -3539,9 +3543,9 @@
         const avgDailySpendEl=document.getElementById('avgDailySpend');
         if(avgDailySpendEl) avgDailySpendEl.textContent=formatMoney(avgDailySpend);
         const savingsRateEl=document.getElementById('savingsRate');
-        if(savingsRateEl) savingsRateEl.textContent=`${(savingsRate*100).toFixed(1)}%`;
+        if(savingsRateEl) savingsRateEl.textContent=formatPercentValue(savingsRatePercent);
         const creditUtilizationEl=document.getElementById('creditUtilization');
-        if(creditUtilizationEl) creditUtilizationEl.textContent=`${creditUtilization.toFixed(1)}%`;
+        if(creditUtilizationEl) creditUtilizationEl.textContent=formatPercentValue(creditUtilizationPercent);
         updateDailyCapIndicator();
         const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
         
