@@ -517,6 +517,13 @@
             letter-spacing: -0.02em;
         }
 
+        .mini-delta {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
         .mini-stat.debt .mini-value {
             color: var(--danger);
         }
@@ -2772,8 +2779,16 @@
                 </div>
                 <h3 style="margin-bottom: 15px; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Flujo del Mes (<span id="lblPeriodoResumen">Actual</span>)</h3>
                 <div class="stats-grid">
-                    <div class="mini-stat income"><div class="mini-label">Ingresos</div><div class="mini-value" id="totalIngresosMes">$0</div></div>
-                    <div class="mini-stat debt"><div class="mini-label">Gastos + Compras TC</div><div class="mini-value" id="totalGastosMes">$0</div></div>
+                    <div class="mini-stat income">
+                        <div class="mini-label">Ingresos</div>
+                        <div class="mini-value" id="totalIngresosMes">$0</div>
+                        <div class="mini-delta" id="deltaIncomeMoM">--</div>
+                    </div>
+                    <div class="mini-stat debt">
+                        <div class="mini-label">Gastos + Compras TC</div>
+                        <div class="mini-value" id="totalGastosMes">$0</div>
+                        <div class="mini-delta" id="deltaExpenseMoM">--</div>
+                    </div>
                     <div class="mini-stat"><div class="mini-label">Balance Neto</div><div class="mini-value" id="balanceMes">$0</div></div>
                 </div>
                 <div class="card" id="dailyCapCard">
@@ -3458,6 +3473,15 @@
             dailyCapStatus.style.color=excedido?'var(--danger)':'var(--success)';
         }
 
+        function calculateMonthlyTotals(targetDate){let income=0, expenses=0; const month=targetDate.getMonth(); const year=targetDate.getFullYear();
+        transactions.forEach(t=>{const amount=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); if((tm-1)!==month||ty!==year)return;
+        if(t.tipo==='ingreso'&&!t.esCredito){income+=amount;} else if(t.esCredito){expenses+=amount;} else if(t.tipo==='gasto'){expenses+=amount;}}); return {income,expenses};}
+
+        function formatMoMDelta(current, previous, positiveIsGood){const diff=current-previous; const isImprovement=positiveIsGood?diff>=0:diff<=0; const arrow=diff===0?'→':(diff>0?'▲':'▼');
+        const sign=diff===0?'':(diff>0?'+':'-'); const absValue=formatMoney(Math.abs(diff));
+        let percentText=''; if(previous===0){percentText=current===0?'0%':'N/A';}else{percentText=`${Math.abs((diff/previous)*100).toFixed(1)}%`;}
+        return {text:`${arrow} ${sign}${absValue} (${percentText}) vs mes anterior`, isImprovement, diff};}
+
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(t.metodoPago==='debito')d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
@@ -3468,6 +3492,16 @@
         const deudaTotal=Object.values(dm).reduce((sum,value)=>sum+value,0);
         const cupoTotal=cardsList.reduce((sum,card)=>sum+(parseFloat(card.quota)||0),0);
         const creditUtilization=cupoTotal>0?(deudaTotal/cupoTotal)*100:0;
+        const prevDate=new Date(vy, vm-1, 1);
+        const prevTotals=calculateMonthlyTotals(prevDate);
+        const incomeDelta=formatMoMDelta(i, prevTotals.income, true);
+        const expenseDelta=formatMoMDelta(g, prevTotals.expenses, false);
+        const incomeDeltaEl=document.getElementById('deltaIncomeMoM');
+        const expenseDeltaEl=document.getElementById('deltaExpenseMoM');
+        incomeDeltaEl.textContent=incomeDelta.text;
+        expenseDeltaEl.textContent=expenseDelta.text;
+        incomeDeltaEl.style.color=incomeDelta.diff===0?'var(--text-muted)':(incomeDelta.isImprovement?'var(--success)':'var(--danger)');
+        expenseDeltaEl.style.color=expenseDelta.diff===0?'var(--text-muted)':(expenseDelta.isImprovement?'var(--success)':'var(--danger)');
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
         document.getElementById('avgDailySpend').textContent=formatMoney(avgDailySpend);
         document.getElementById('savingsRate').textContent=`${(savingsRate*100).toFixed(1)}%`;
