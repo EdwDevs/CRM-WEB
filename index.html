@@ -2818,7 +2818,7 @@
                             <div id="divPagoTarjeta" class="form-group full-width hidden" style="background:#ecfdf5; padding:15px; border-radius:12px; border:1px solid #6ee7b7;"><div class="form-group"><label style="color:var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div></div>
                             <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
                             <div class="form-group hidden" id="metodoDestinoDiv"><label>Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
-                            <div class="form-group"><label>Monto</label><input type="text" id="monto" required oninput="formatCurrencyInput(this)" style="font-size:1.2rem; font-weight:bold; color:var(--primary);"></div>
+                            <div class="form-group"><label>Monto</label><input type="text" id="monto" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" style="font-size:1.2rem; font-weight:bold; color:var(--primary);"></div>
                             <div class="form-group"><label>Categoría</label><select id="categoria" required></select></div>
                             <div class="form-group hidden" id="subcategoriaDiv"><label>Subcategoría</label><select id="subcategoria"></select></div>
                             <div class="form-group"><label>Responsable</label><select id="miembro"><option value="papa">Papá</option><option value="mama">Mamá</option><option value="hijo1">Hijo/a 1</option><option value="compartido">Compartido</option></select></div>
@@ -2937,7 +2937,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Gestión Tarjetas</h3><button onclick="closeModal('quotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="add-card-form">
                 <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
-                <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+                <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
                 <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
                 <input type="hidden" id="cardPaymentDayInput">
                 <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
@@ -2996,8 +2996,8 @@
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="form-group"><label>Nombre del Objetivo</label><input type="text" id="goalName" placeholder="Ej: Vacaciones"></div>
-            <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
-            <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+            <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+            <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Fecha Límite</label><input type="date" id="goalDeadline"></div>
             <button class="btn btn--primary btn--lg btn--block" onclick="saveGoal()">Guardar Objetivo</button>
         </div>
