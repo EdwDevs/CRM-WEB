@@ -3104,6 +3104,8 @@
 
         function getStoredOfflineTransactions(){try{return JSON.parse(localStorage.getItem('offlineTransactions')||'[]');}catch(e){return [];}}
         function setStoredOfflineTransactions(data){localStorage.setItem('offlineTransactions',JSON.stringify(data));}
+        function getStoredCachedTransactions(){try{return JSON.parse(localStorage.getItem('cachedTransactions')||'[]');}catch(e){return [];}}
+        function setStoredCachedTransactions(data){localStorage.setItem('cachedTransactions',JSON.stringify(data));}
         function getStoredPendingDeletes(){try{return JSON.parse(localStorage.getItem('pendingDeletes')||'[]');}catch(e){return [];}}
         function setStoredPendingDeletes(data){localStorage.setItem('pendingDeletes',JSON.stringify(data));}
         function normalizeOfflineDataForSync(item){const {id,pendingSync,...data}=item;return data;}
@@ -3874,13 +3876,24 @@
         async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago,ajusteDisponible:0})); await b.commit(); loadCards();}
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){
-            const s=await db.collection('transactions').orderBy('fecha','desc').get();
             const offlineData=getStoredOfflineTransactions();
             const pendingDeletes=getStoredPendingDeletes();
             const offlineTransactions=offlineData.map(item=>({...item,id:`offline-${item.id}`,pendingSync:true}));
-            transactions=[];
-            s.forEach(d=>transactions.push({id:d.id,...d.data(),pendingDelete:pendingDeletes.includes(d.id)}));
-            transactions=[...offlineTransactions,...transactions].map(t=>{
+            let fetchedTransactions=[];
+            try{
+                const s=await db.collection('transactions').orderBy('fecha','desc').get();
+                s.forEach(d=>fetchedTransactions.push({id:d.id,...d.data()}));
+                setStoredCachedTransactions(fetchedTransactions);
+            }catch(e){
+                console.error('Load transactions error:',e);
+                showToast('Error de conexión con Firestore','error');
+                const cachedTransactions=getStoredCachedTransactions();
+                if(cachedTransactions.length>0){
+                    fetchedTransactions=cachedTransactions;
+                }
+            }
+            const normalizedTransactions=fetchedTransactions.map(t=>({...t,pendingDelete:pendingDeletes.includes(t.id)}));
+            transactions=[...offlineTransactions,...normalizedTransactions].map(t=>{
                 if(t.tipo==='credito'){
                     const legacyName=t.cardName||t.metodoPago;
                     const cardId=t.cardId||cardsList.find(c=>c.name===legacyName)?.id||'';
@@ -3889,7 +3902,11 @@
                 }
                 return t;
             }).sort((a,b)=>a.fecha<b.fecha?1:-1);
-            updateDashboard(); renderHistory(); renderCharts(); renderTrendChart();
+            updateDashboard();
+            updateDailyCapIndicator();
+            renderHistory();
+            renderCharts();
+            renderTrendChart();
         }
         
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
