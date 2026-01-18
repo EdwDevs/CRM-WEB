@@ -3077,6 +3077,19 @@
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
         if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
+        async function runFirestoreHealthCheck() {
+            try {
+                await db.collection('status').doc('ping').get();
+                showSyncStatus('online');
+                return true;
+            } catch (error) {
+                console.error('Firestore health check failed:', error);
+                showSyncStatus('offline');
+                showToast('No se pudo acceder a Firestore. Las reglas o permisos podrían estar bloqueando el acceso.', 'error');
+                return false;
+            }
+        }
+
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]};
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
@@ -3093,7 +3106,7 @@
         function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeModal('goalModal');closeModal('pagoCuotaModal');}});}
         
         document.addEventListener('DOMContentLoaded', () => { 
-            initTheme();initKeyboardShortcuts();initOfflineSupport();
+            initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
             const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0');
             document.getElementById('dashboardMonth').value=`${yyyy}-${mm}`;document.getElementById('fecha').valueAsDate=t;
             const firstDay=`${yyyy}-${mm}-01`;const lastDay=new Date(yyyy,t.getMonth()+1,0).toISOString().split('T')[0];
