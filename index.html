@@ -607,6 +607,53 @@
             border-bottom-color: rgba(59, 130, 246, 0.2);
         }
 
+        #view-historial .table-container td:nth-child(1) {
+            background: rgba(15, 23, 42, 0.03);
+        }
+
+        #view-historial .table-container td:nth-child(2) {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        #view-historial .table-container td:nth-child(6) {
+            background: rgba(148, 163, 184, 0.14);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        #view-historial .type-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        #view-historial .type-gasto {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        #view-historial .type-ingreso {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        #view-historial .type-credito {
+            background: var(--credit-light);
+            color: var(--credit);
+        }
+
+        #view-historial .type-transferencia,
+        #view-historial .type-pago_tarjeta {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
         [data-theme="dark"] #view-historial .table-container {
             border-color: rgba(148, 163, 184, 0.12);
         }
@@ -638,6 +685,36 @@
         [data-theme="dark"] #view-historial .table-container tbody tr.row-transfer td {
             background: rgba(59, 130, 246, 0.04);
             border-bottom-color: rgba(59, 130, 246, 0.12);
+        }
+
+        [data-theme="dark"] #view-historial .table-container td:nth-child(1) {
+            background: rgba(15, 23, 42, 0.45);
+        }
+
+        [data-theme="dark"] #view-historial .table-container td:nth-child(6) {
+            background: rgba(148, 163, 184, 0.18);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] #view-historial .type-gasto {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fecaca;
+        }
+
+        [data-theme="dark"] #view-historial .type-ingreso {
+            background: rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+        }
+
+        [data-theme="dark"] #view-historial .type-credito {
+            background: rgba(236, 72, 153, 0.2);
+            color: #fbcfe8;
+        }
+
+        [data-theme="dark"] #view-historial .type-transferencia,
+        [data-theme="dark"] #view-historial .type-pago_tarjeta {
+            background: rgba(59, 130, 246, 0.2);
+            color: #bfdbfe;
         }
 
         .filter-row {
@@ -3364,7 +3441,7 @@
                 const rowClass=[typeClassMap[t.tipo], t.pendingDelete?'pending-delete-row':''].filter(Boolean).join(' ');
                 tbody.innerHTML += `<tr class="${rowClass}">
                     <td>${t.fecha}</td>
-                    <td style="text-transform:capitalize;font-size:0.85rem;">${t.tipo.replace('_',' ')}</td>
+                    <td><span class="type-badge type-${t.tipo}">${t.tipo.replace('_',' ')}</span></td>
                     <td style="font-size:0.85rem;color:#4b5563;">${met}</td>
                     <td>${t.categoria||'-'}</td>
                     <td>${t.descripcion} ${pendingLabel}</td>
