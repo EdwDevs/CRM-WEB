@@ -2853,6 +2853,37 @@
             margin-top: 24px;
         }
 
+        .modal-feedback {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .modal-feedback__loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .modal-feedback__error {
+            display: none;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.18);
+            font-size: 0.85rem;
+        }
+
+        .spinner--sm {
+            width: 16px;
+            height: 16px;
+            border-width: 2px;
+        }
+
         .modal-title {
             font-size: 1.25rem;
             font-weight: 700;
@@ -3280,6 +3311,24 @@
     </div>
 
     <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
+
+    <div class="modal-overlay" id="confirmActionModal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 class="modal-title" id="confirmActionTitle">Confirmar acción</h3>
+                <button onclick="closeConfirmActionModal()" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+            </div>
+            <div id="confirmActionBody"></div>
+            <div class="modal-feedback">
+                <div class="modal-feedback__loading" id="confirmActionLoading"><div class="spinner spinner--sm"></div><span>Procesando...</span></div>
+                <div class="modal-feedback__error" id="confirmActionError"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--ghost btn--md" id="confirmActionCancelBtn" onclick="closeConfirmActionModal()">Cancelar</button>
+                <button class="btn btn--primary btn--md" id="confirmActionConfirmBtn" onclick="confirmActionModalConfirm()">Confirmar</button>
+            </div>
+        </div>
+    </div>
     
     <div class="modal-overlay" id="quotaModal">
         <div class="modal-content">
@@ -3334,26 +3383,6 @@
                         <tbody id="quotaCreditList"></tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="creditDeleteModal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 class="modal-title">Eliminar crédito</h3>
-                <button onclick="closeModal('creditDeleteModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
-            </div>
-            <div class="modal-details" style="margin-bottom:20px;">
-                <div class="modal-row"><span>Tarjeta:</span><strong id="deleteCreditCard">-</strong></div>
-                <div class="modal-row"><span>Fecha:</span><span id="deleteCreditDate">-</span></div>
-                <div class="modal-row"><span>Descripción:</span><span id="deleteCreditDescription">-</span></div>
-                <div class="modal-row"><span>Monto:</span><span id="deleteCreditAmount">-</span></div>
-                <div class="modal-row total"><span>Saldo pendiente:</span><span id="deleteCreditBalance">-</span></div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn--ghost btn--md" onclick="closeModal('creditDeleteModal')">Cancelar</button>
-                <button class="btn btn--danger btn--md" onclick="confirmCreditDelete()">Eliminar</button>
             </div>
         </div>
     </div>
@@ -3448,7 +3477,8 @@
             }
         }
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', pendingCreditDeleteId=null, returnToQuotaModal=false;
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
+        const confirmActionState = { onConfirm: null };
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
         const categorias=categories;
@@ -3462,7 +3492,7 @@
         function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
         function closeSidebar(){document.body.classList.remove('sidebar-open');}
         
-        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeModal('creditDeleteModal');closeModal('goalModal');closeModal('pagoCuotaModal');}});}
+        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeConfirmActionModal();closeModal('goalModal');closeModal('pagoCuotaModal');}});}
         
         document.addEventListener('DOMContentLoaded', () => { 
             initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
@@ -4436,6 +4466,20 @@
             }
         }
         window.deleteTransaction=async function(id){
+            const tx = transactions.find(item => item.id === id);
+            if (tx?.tipo === 'credito') {
+                const body = buildCreditDeleteBody(tx);
+                openConfirmActionModal({
+                    title: 'Eliminar crédito',
+                    body,
+                    confirmLabel: 'Eliminar',
+                    confirmClass: 'btn--danger',
+                    onConfirm: async () => {
+                        await performDeleteTransaction(id, { skipConfirm: true });
+                    }
+                });
+                return;
+            }
             await performDeleteTransaction(id);
         }
 
@@ -4705,31 +4749,41 @@
             editTransaction(id);
         }
 
-        function requestCreditDelete(id) {
-            const tx = transactions.find(t => t.id === id);
-            if (!tx) return;
-            pendingCreditDeleteId = id;
-            document.getElementById('deleteCreditCard').textContent = resolveCreditCardName(tx) || 'Sin tarjeta';
-            document.getElementById('deleteCreditDate').textContent = formatDate(tx.fecha);
-            document.getElementById('deleteCreditDescription').textContent = tx.descripcion || 'Compra crédito';
+        function buildCreditDeleteBody(tx) {
+            const cardName = resolveCreditCardName(tx) || 'Sin tarjeta';
             const total = Number(tx.totalDeuda || tx.monto || 0);
             const cuotasRaw = Number(tx.cuotas);
             const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
             const pagadasRaw = Number(tx.cuotasPagadas || 0);
             const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
             const saldoPendiente = (total / cuotas) * Math.max(0, cuotas - pagadas);
-            document.getElementById('deleteCreditAmount').textContent = formatMoney(total);
-            document.getElementById('deleteCreditBalance').textContent = formatMoney(saldoPendiente);
-            document.getElementById('creditDeleteModal').style.display = 'flex';
+
+            return `
+                <p>¿Deseas eliminar este crédito? Esta acción no se puede deshacer.</p>
+                <div class="modal-details" style="margin-bottom:0;">
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${cardName}</strong></div>
+                    <div class="modal-row"><span>Fecha:</span><span>${formatDate(tx.fecha)}</span></div>
+                    <div class="modal-row"><span>Descripción:</span><span>${tx.descripcion || 'Compra crédito'}</span></div>
+                    <div class="modal-row"><span>Monto:</span><span>${formatMoney(total)}</span></div>
+                    <div class="modal-row total"><span>Saldo pendiente:</span><span>${formatMoney(saldoPendiente)}</span></div>
+                </div>
+            `;
         }
 
-        async function confirmCreditDelete() {
-            if (!pendingCreditDeleteId) return;
-            const id = pendingCreditDeleteId;
-            pendingCreditDeleteId = null;
-            closeModal('creditDeleteModal');
-            await performDeleteTransaction(id, { skipConfirm: true });
-            openQuotaModal();
+        function requestCreditDelete(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+            const body = buildCreditDeleteBody(tx);
+            openConfirmActionModal({
+                title: 'Eliminar crédito',
+                body,
+                confirmLabel: 'Eliminar',
+                confirmClass: 'btn--danger',
+                onConfirm: async () => {
+                    await performDeleteTransaction(id, { skipConfirm: true });
+                    openQuotaModal();
+                }
+            });
         }
         function openQuotaModal(){
             const d=document.getElementById('quotaListContainer');
@@ -4755,10 +4809,100 @@
             setQuotaTab(currentQuotaTab);
             document.getElementById('quotaModal').style.display='flex';
         }
+        function openConfirmActionModal({ title, body, confirmLabel = 'Confirmar', confirmClass = 'btn--primary', onConfirm }) {
+            const modal = document.getElementById('confirmActionModal');
+            const titleEl = document.getElementById('confirmActionTitle');
+            const bodyEl = document.getElementById('confirmActionBody');
+            const confirmBtn = document.getElementById('confirmActionConfirmBtn');
+            const cancelBtn = document.getElementById('confirmActionCancelBtn');
+            const errorEl = document.getElementById('confirmActionError');
+            const loadingEl = document.getElementById('confirmActionLoading');
+
+            confirmActionState.onConfirm = onConfirm;
+            if (titleEl) titleEl.textContent = title || 'Confirmar acción';
+            if (bodyEl) bodyEl.innerHTML = body || '';
+            if (confirmBtn) {
+                confirmBtn.textContent = confirmLabel;
+                confirmBtn.className = `btn ${confirmClass} btn--md`;
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('is-loading');
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeConfirmActionModal() {
+            const modal = document.getElementById('confirmActionModal');
+            const confirmBtn = document.getElementById('confirmActionConfirmBtn');
+            const cancelBtn = document.getElementById('confirmActionCancelBtn');
+            const errorEl = document.getElementById('confirmActionError');
+            const loadingEl = document.getElementById('confirmActionLoading');
+
+            confirmActionState.onConfirm = null;
+            if (confirmBtn) {
+                confirmBtn.classList.remove('is-loading');
+                confirmBtn.disabled = false;
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function confirmActionModalConfirm() {
+            const confirmBtn = document.getElementById('confirmActionConfirmBtn');
+            const cancelBtn = document.getElementById('confirmActionCancelBtn');
+            const errorEl = document.getElementById('confirmActionError');
+            const loadingEl = document.getElementById('confirmActionLoading');
+
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            if (loadingEl) loadingEl.style.display = 'flex';
+            if (confirmBtn) {
+                confirmBtn.classList.add('is-loading');
+                confirmBtn.disabled = true;
+            }
+            if (cancelBtn) cancelBtn.disabled = true;
+
+            let completed = false;
+            try {
+                if (confirmActionState.onConfirm) {
+                    await confirmActionState.onConfirm();
+                }
+                completed = true;
+                closeConfirmActionModal();
+            } catch (error) {
+                console.error(error);
+                if (errorEl) {
+                    errorEl.textContent = error?.message || 'No se pudo completar la acción.';
+                    errorEl.style.display = 'block';
+                }
+                showToast(error?.message || 'Error en la acción', 'error');
+            } finally {
+                if (!completed) {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    if (confirmBtn) {
+                        confirmBtn.classList.remove('is-loading');
+                        confirmBtn.disabled = false;
+                    }
+                    if (cancelBtn) cancelBtn.disabled = false;
+                }
+            }
+        }
+
         function closeModal(id){
             document.getElementById(id).style.display='none';
             if(id==='cardDetailModal')currentDetailCardName=null;
-            if(id==='creditDeleteModal')pendingCreditDeleteId=null;
         }
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});await loadCards();openQuotaModal();}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
         async function reconcileCard(id){
@@ -4790,35 +4934,42 @@
             const cardName=card?.name||'';
             const relatedTransactions=transactions.filter(t=>t.cardId===id||resolveCreditCardName(t)===cardName||t.metodoPago===cardName||t.tarjetaDestino===cardName);
             const txCount=relatedTransactions.length;
-            const confirmMsg=txCount?
-                `Esta tarjeta tiene ${txCount} transacción(es) asociada(s).\n`+
-                `Se desvincularán y quedarán marcadas como tarjeta eliminada.\n`+
-                `¿Deseas continuar con la eliminación?`:
-                `Se eliminará la tarjeta "${cardName}".\nTransacciones afectadas: ${txCount}.\n¿Confirmar?`;
-            if(!confirm(confirmMsg)){
-                showToast('Eliminación cancelada.','warning');
-                return;
-            }
-            try{
-                const batch=db.batch();
-                relatedTransactions.forEach(t=>{
-                    const updateData={cardDeleted:true};
-                    if(t.cardId===id)updateData.cardId='';
-                    if(t.cardName===cardName)updateData.cardName='';
-                    if(resolveCreditCardName(t)===cardName&&!t.cardName)updateData.cardName='';
-                    if(t.metodoPago===cardName)updateData.metodoPago='';
-                    if(t.tarjetaDestino===cardName)updateData.tarjetaDestino='';
-                    batch.update(db.collection('transactions').doc(t.id),updateData);
-                });
-                batch.delete(db.collection('cards').doc(id));
-                await batch.commit();
-                await loadCards();
-                openQuotaModal();
-                showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
-            }catch(e){
-                console.error(e);
-                showToast('Error al borrar','error');
-            }
+            const confirmBody = `
+                <p>${txCount ? `Esta tarjeta tiene <strong>${txCount}</strong> transacción(es) asociada(s). Se desvincularán y quedarán marcadas como tarjeta eliminada.` : `Se eliminará la tarjeta "<strong>${cardName || 'Sin nombre'}</strong>".`}</p>
+                <div class="modal-details" style="margin-bottom:0;">
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${cardName || 'Sin nombre'}</strong></div>
+                    <div class="modal-row"><span>Transacciones afectadas:</span><span>${txCount}</span></div>
+                </div>
+            `;
+            openConfirmActionModal({
+                title: 'Eliminar tarjeta',
+                body: confirmBody,
+                confirmLabel: 'Eliminar',
+                confirmClass: 'btn--danger',
+                onConfirm: async () => {
+                    try {
+                        const batch=db.batch();
+                        relatedTransactions.forEach(t=>{
+                            const updateData={cardDeleted:true};
+                            if(t.cardId===id)updateData.cardId='';
+                            if(t.cardName===cardName)updateData.cardName='';
+                            if(resolveCreditCardName(t)===cardName&&!t.cardName)updateData.cardName='';
+                            if(t.metodoPago===cardName)updateData.metodoPago='';
+                            if(t.tarjetaDestino===cardName)updateData.tarjetaDestino='';
+                            batch.update(db.collection('transactions').doc(t.id),updateData);
+                        });
+                        batch.delete(db.collection('cards').doc(id));
+                        await batch.commit();
+                        await loadCards();
+                        openQuotaModal();
+                        showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
+                    } catch (e) {
+                        console.error(e);
+                        showToast('Error al borrar','error');
+                        throw new Error('No se pudo eliminar la tarjeta. Intenta nuevamente.');
+                    }
+                }
+            });
         }
         function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
         function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='objetivos'){s[4].classList.add('active');renderGoals();}if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}closeSidebar();}
