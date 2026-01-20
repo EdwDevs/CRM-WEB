@@ -911,6 +911,40 @@
             border-color: rgba(239, 68, 68, 0.2);
         }
 
+        .modal-tabs {
+            display: inline-flex;
+            gap: 8px;
+            background: rgba(148, 163, 184, 0.12);
+            padding: 6px;
+            border-radius: var(--radius-full);
+            margin-bottom: 16px;
+        }
+
+        .modal-tab {
+            border: none;
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .modal-tab.active {
+            background: var(--bg-surface);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quota-tab-section {
+            display: none;
+        }
+
+        .quota-tab-section.active {
+            display: block;
+        }
+
         .ai-welcome-card {
             background: var(--ai-gradient);
             color: white;
@@ -3249,30 +3283,77 @@
     
     <div class="modal-overlay" id="quotaModal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Gestión Tarjetas</h3><button onclick="closeModal('quotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
-            <div class="add-card-form">
-                <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
-                <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
-                <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
-                <input type="hidden" id="cardPaymentDayInput">
-                <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
-                <input type="hidden" id="editCardId">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 class="modal-title">Gestión de Créditos y Tarjetas</h3>
+                <button onclick="closeModal('quotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
-            <div id="quotaListContainer" style="max-height:300px; overflow-y:auto;"></div>
-            <div class="audit-panel">
-                <div class="audit-header">
-                    <div>
-                        <div class="audit-title">Alertas de consistencia</div>
-                        <div class="audit-subtitle">Comparación de deuda, cupo disponible y cuotas restantes.</div>
+            <div class="modal-tabs" role="tablist" aria-label="Gestión de tarjetas y créditos">
+                <button class="modal-tab active" data-tab="cards" role="tab" aria-selected="true" onclick="setQuotaTab('cards')">Tarjetas</button>
+                <button class="modal-tab" data-tab="credits" role="tab" aria-selected="false" onclick="setQuotaTab('credits')">Créditos</button>
+            </div>
+            <div id="quotaTabCards" class="quota-tab-section active" role="tabpanel">
+                <div class="add-card-form">
+                    <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
+                    <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+                    <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
+                    <input type="hidden" id="cardPaymentDayInput">
+                    <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
+                    <input type="hidden" id="editCardId">
+                </div>
+                <div id="quotaListContainer" style="max-height:300px; overflow-y:auto;"></div>
+                <div class="audit-panel">
+                    <div class="audit-header">
+                        <div>
+                            <div class="audit-title">Alertas de consistencia</div>
+                            <div class="audit-subtitle">Comparación de deuda, cupo disponible y cuotas restantes.</div>
+                        </div>
+                        <div class="audit-actions">
+                            <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar</button>
+                            <button class="btn btn--primary btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
+                        </div>
                     </div>
-                    <div class="audit-actions">
-                        <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar</button>
-                        <button class="btn btn--primary btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
+                    <div id="consistencyAlertList" class="audit-list">
+                        <div class="audit-empty">Ejecuta la auditoría para ver diferencias.</div>
                     </div>
                 </div>
-                <div id="consistencyAlertList" class="audit-list">
-                    <div class="audit-empty">Ejecuta la auditoría para ver diferencias.</div>
+            </div>
+            <div id="quotaTabCredits" class="quota-tab-section" role="tabpanel">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tarjeta</th>
+                                <th>Fecha</th>
+                                <th>Descripción</th>
+                                <th>Cuotas</th>
+                                <th>Monto</th>
+                                <th>Saldo pendiente</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="quotaCreditList"></tbody>
+                    </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="creditDeleteModal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 class="modal-title">Eliminar crédito</h3>
+                <button onclick="closeModal('creditDeleteModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-details" style="margin-bottom:20px;">
+                <div class="modal-row"><span>Tarjeta:</span><strong id="deleteCreditCard">-</strong></div>
+                <div class="modal-row"><span>Fecha:</span><span id="deleteCreditDate">-</span></div>
+                <div class="modal-row"><span>Descripción:</span><span id="deleteCreditDescription">-</span></div>
+                <div class="modal-row"><span>Monto:</span><span id="deleteCreditAmount">-</span></div>
+                <div class="modal-row total"><span>Saldo pendiente:</span><span id="deleteCreditBalance">-</span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--ghost btn--md" onclick="closeModal('creditDeleteModal')">Cancelar</button>
+                <button class="btn btn--danger btn--md" onclick="confirmCreditDelete()">Eliminar</button>
             </div>
         </div>
     </div>
@@ -3367,7 +3448,7 @@
             }
         }
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]};
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', pendingCreditDeleteId=null, returnToQuotaModal=false;
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
         const categorias=categories;
@@ -3381,7 +3462,7 @@
         function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
         function closeSidebar(){document.body.classList.remove('sidebar-open');}
         
-        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeModal('goalModal');closeModal('pagoCuotaModal');}});}
+        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeModal('creditDeleteModal');closeModal('goalModal');closeModal('pagoCuotaModal');}});}
         
         document.addEventListener('DOMContentLoaded', () => { 
             initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
@@ -4258,6 +4339,10 @@
             renderHistory();
             renderCharts();
             renderTrendChart();
+            const quotaModal=document.getElementById('quotaModal');
+            if(quotaModal&&quotaModal.style.display==='flex'){
+                openQuotaModal();
+            }
         }
         
         function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
@@ -4308,26 +4393,50 @@
             }
         }
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
-        async function saveTransaction(d){const btn=document.getElementById('btnSubmitText');if(btn)btn.classList.add('is-loading');try{if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);else await db.collection('transactions').add(d); cancelEdit(); loadTransactions(); showToast(editingTransactionId?'Actualizado':'Guardado','success');}catch(e){saveToLocal(d);loadTransactions();showToast('Guardado localmente (offline)','warning');}finally{if(btn)btn.classList.remove('is-loading');}}
-        function cancelEdit(){editingTransactionId=null; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
+        async function saveTransaction(d){
+            const btn=document.getElementById('btnSubmitText');
+            const shouldReturnToQuota = returnToQuotaModal;
+            if(btn)btn.classList.add('is-loading');
+            try{
+                if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);
+                else await db.collection('transactions').add(d);
+                cancelEdit();
+                await loadTransactions();
+                showToast(editingTransactionId?'Actualizado':'Guardado','success');
+            }catch(e){
+                saveToLocal(d);
+                await loadTransactions();
+                showToast('Guardado localmente (offline)','warning');
+            }finally{
+                if(btn)btn.classList.remove('is-loading');
+                if(shouldReturnToQuota){
+                    returnToQuotaModal=false;
+                    openQuotaModal();
+                }
+            }
+        }
+        function cancelEdit(){editingTransactionId=null; returnToQuotaModal=false; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
         window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
-        window.deleteTransaction=async function(id){
-            if(!confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
+        async function performDeleteTransaction(id,{skipConfirm=false}={}){
+            if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
             try{
                 if(String(id).startsWith('offline-')){
                     saveToLocal(null,true,id);
-                    loadTransactions();
+                    await loadTransactions();
                     showToast('Eliminación local completada','success');
                     return;
                 }
                 await db.collection('transactions').doc(id).delete();
-                loadTransactions();
+                await loadTransactions();
                 showToast('Borrado','success');
             }catch(e){
                 saveToLocal(null,true,id);
-                loadTransactions();
+                await loadTransactions();
                 showToast('Eliminación pendiente','warning');
             }
+        }
+        window.deleteTransaction=async function(id){
+            await performDeleteTransaction(id);
         }
 
         function queueConsistencyCorrection(map, entry) {
@@ -4540,6 +4649,88 @@
                 if (btn) btn.classList.remove('is-loading');
             }
         }
+
+        function setQuotaTab(tab) {
+            currentQuotaTab = tab;
+            const tabs = document.querySelectorAll('#quotaModal .modal-tab');
+            tabs.forEach(btn => {
+                const isActive = btn.dataset.tab === tab;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            const cardsSection = document.getElementById('quotaTabCards');
+            const creditsSection = document.getElementById('quotaTabCredits');
+            if (cardsSection) cardsSection.classList.toggle('active', tab === 'cards');
+            if (creditsSection) creditsSection.classList.toggle('active', tab === 'credits');
+        }
+
+        function renderQuotaCreditList() {
+            const tbody = document.getElementById('quotaCreditList');
+            if (!tbody) return;
+            const creditTransactions = transactions.filter(t => t.tipo === 'credito' && !t.pendingDelete);
+            if (!creditTransactions.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:16px;">Sin créditos registrados.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = creditTransactions.map(tx => {
+                const cardName = resolveCreditCardName(tx) || 'Sin tarjeta';
+                const total = Number(tx.totalDeuda || tx.monto || 0);
+                const cuotasRaw = Number(tx.cuotas);
+                const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
+                const pagadasRaw = Number(tx.cuotasPagadas || 0);
+                const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
+                const saldoPendiente = (total / cuotas) * Math.max(0, cuotas - pagadas);
+                const cuotasLabel = `${pagadas}/${cuotas}`;
+                const actionButtons = tx.pendingSync
+                    ? '<span style="color:var(--warning);font-size:0.75rem;font-weight:600;">Pendiente</span>'
+                    : `<button onclick="editCreditFromQuotaModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Editar crédito" aria-label="Editar crédito"><i class="fas fa-pen"></i></button>
+                       <button onclick="requestCreditDelete('${tx.id}')" class="btn-icon-action btn-icon-action--danger" title="Eliminar crédito" aria-label="Eliminar crédito"><i class="fas fa-trash"></i></button>`;
+                return `
+                    <tr class="row-credit">
+                        <td>${cardName}</td>
+                        <td>${formatDate(tx.fecha)}</td>
+                        <td>${tx.descripcion || 'Compra crédito'}</td>
+                        <td>${cuotasLabel}</td>
+                        <td class="text-danger" style="font-weight:600;">${formatMoney(total)}</td>
+                        <td>${formatMoney(saldoPendiente)}</td>
+                        <td style="text-align:right;">${actionButtons}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function editCreditFromQuotaModal(id) {
+            closeModal('quotaModal');
+            returnToQuotaModal = true;
+            editTransaction(id);
+        }
+
+        function requestCreditDelete(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+            pendingCreditDeleteId = id;
+            document.getElementById('deleteCreditCard').textContent = resolveCreditCardName(tx) || 'Sin tarjeta';
+            document.getElementById('deleteCreditDate').textContent = formatDate(tx.fecha);
+            document.getElementById('deleteCreditDescription').textContent = tx.descripcion || 'Compra crédito';
+            const total = Number(tx.totalDeuda || tx.monto || 0);
+            const cuotasRaw = Number(tx.cuotas);
+            const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
+            const pagadasRaw = Number(tx.cuotasPagadas || 0);
+            const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
+            const saldoPendiente = (total / cuotas) * Math.max(0, cuotas - pagadas);
+            document.getElementById('deleteCreditAmount').textContent = formatMoney(total);
+            document.getElementById('deleteCreditBalance').textContent = formatMoney(saldoPendiente);
+            document.getElementById('creditDeleteModal').style.display = 'flex';
+        }
+
+        async function confirmCreditDelete() {
+            if (!pendingCreditDeleteId) return;
+            const id = pendingCreditDeleteId;
+            pendingCreditDeleteId = null;
+            closeModal('creditDeleteModal');
+            await performDeleteTransaction(id, { skipConfirm: true });
+            openQuotaModal();
+        }
         function openQuotaModal(){
             const d=document.getElementById('quotaListContainer');
             d.innerHTML='';
@@ -4560,9 +4751,15 @@
             document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';
             consistencyAudit = { issues: [], corrections: [] };
             renderConsistencyAlerts();
+            renderQuotaCreditList();
+            setQuotaTab(currentQuotaTab);
             document.getElementById('quotaModal').style.display='flex';
         }
-        function closeModal(id){document.getElementById(id).style.display='none';if(id==='cardDetailModal')currentDetailCardName=null;}
+        function closeModal(id){
+            document.getElementById(id).style.display='none';
+            if(id==='cardDetailModal')currentDetailCardName=null;
+            if(id==='creditDeleteModal')pendingCreditDeleteId=null;
+        }
         async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});await loadCards();openQuotaModal();}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
         async function reconcileCard(id){
             const card=findCardById(id);
