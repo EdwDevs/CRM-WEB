@@ -4727,7 +4727,8 @@
                 const cuotasLabel = `${pagadas}/${cuotas}`;
                 const actionButtons = tx.pendingSync
                     ? '<span style="color:var(--warning);font-size:0.75rem;font-weight:600;">Pendiente</span>'
-                    : `<button onclick="editCreditFromQuotaModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Editar crédito" aria-label="Editar crédito"><i class="fas fa-pen"></i></button>
+                    : `<button onclick="openAdjustPaymentDateModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Ajustar fecha de pago" aria-label="Ajustar fecha de pago"><i class="fas fa-calendar-alt"></i></button>
+                       <button onclick="editCreditFromQuotaModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Editar crédito" aria-label="Editar crédito"><i class="fas fa-pen"></i></button>
                        <button onclick="requestCreditDelete('${tx.id}')" class="btn-icon-action btn-icon-action--danger" title="Eliminar crédito" aria-label="Eliminar crédito"><i class="fas fa-trash"></i></button>`;
                 return `
                     <tr class="row-credit">
@@ -4782,6 +4783,48 @@
                 onConfirm: async () => {
                     await performDeleteTransaction(id, { skipConfirm: true });
                     openQuotaModal();
+                }
+            });
+        }
+
+        function openAdjustPaymentDateModal(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+            const cardName = resolveCreditCardName(tx) || 'Sin tarjeta';
+            const cardData = tx.cardId ? findCardById(tx.cardId) : cardsList.find(c => c.name === cardName);
+            const paymentDay = cardData?.diaPago ? parseInt(cardData.diaPago, 10) : 15;
+            const resolvedDate = tx.proximaFechaPago || formatLocalDate(resolveCurrentPaymentDate(tx, paymentDay));
+            const body = `
+                <p>Selecciona la fecha de pago para este crédito. Se usará como próxima fecha de pago.</p>
+                <div class="modal-details" style="margin-bottom:0;">
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${cardName}</strong></div>
+                    <div class="modal-row"><span>Crédito:</span><span>${tx.descripcion || 'Compra crédito'}</span></div>
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label for="adjustPaymentDateInput">Nueva fecha de pago</label>
+                    <input type="date" id="adjustPaymentDateInput" value="${resolvedDate}">
+                </div>
+            `;
+            openConfirmActionModal({
+                title: 'Ajustar fecha de pago',
+                body,
+                confirmLabel: 'Guardar fecha',
+                confirmClass: 'btn--primary',
+                onConfirm: async () => {
+                    const dateInput = document.getElementById('adjustPaymentDateInput');
+                    const newDate = dateInput?.value;
+                    if (!newDate) {
+                        throw new Error('Selecciona una fecha válida.');
+                    }
+                    try {
+                        await db.collection('transactions').doc(id).update({ proximaFechaPago: newDate });
+                        await loadTransactions();
+                        openQuotaModal();
+                        showToast('Fecha de pago actualizada', 'success');
+                    } catch (error) {
+                        console.error(error);
+                        throw new Error('No se pudo actualizar la fecha de pago.');
+                    }
                 }
             });
         }
