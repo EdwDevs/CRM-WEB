@@ -2510,11 +2510,12 @@
             border-radius: var(--radius-full);
             font-size: 0.8rem;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            gap: 10px;
             z-index: 100;
             font-weight: 500;
             box-shadow: var(--shadow-sm);
+            min-width: 240px;
         }
 
         .sync-indicator.offline {
@@ -2535,8 +2536,55 @@
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
+        .sync-indicator.failed {
+            background: var(--warning-light);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
         .sync-indicator i {
             animation: spin 1s infinite linear;
+        }
+
+        .sync-indicator__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .sync-indicator__status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sync-indicator__count {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(15, 23, 42, 0.08);
+            color: inherit;
+        }
+
+        .sync-indicator__message {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .sync-indicator__failures {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.72rem;
+        }
+
+        .sync-indicator__failure {
+            background: rgba(15, 23, 42, 0.06);
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
         }
 
         .pending-label {
@@ -3026,7 +3074,16 @@
     </nav>
 
     <div class="sync-indicator offline" id="syncIndicator">
-        <i class="fas fa-wifi"></i> <span id="syncText">Sin conexión</span>
+        <div class="sync-indicator__header">
+            <div class="sync-indicator__status">
+                <i class="fas fa-wifi" id="syncIcon"></i>
+                <span id="syncText">Sin conexión</span>
+                <span class="sync-indicator__count" id="syncPendingCount">0 pendientes</span>
+            </div>
+            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" onclick="syncOfflineQueue()">Reintentar</button>
+        </div>
+        <div class="sync-indicator__message" id="syncNotice"></div>
+        <div class="sync-indicator__failures" id="syncFailures"></div>
     </div>
 
     <button class="fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
@@ -3467,18 +3524,19 @@
         async function runFirestoreHealthCheck() {
             try {
                 await db.collection('status').doc('ping').get();
-                showSyncStatus('online');
+                updateSyncIndicator();
                 return true;
             } catch (error) {
                 console.error('Firestore health check failed:', error);
-                showSyncStatus('offline');
+                updateSyncIndicator('offline');
                 showToast('No se pudo acceder a Firestore. Las reglas o permisos podrían estar bloqueando el acceso.', 'error');
                 return false;
             }
         }
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], pendingSync=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
         const confirmActionState = { onConfirm: null };
+        let isSyncingOfflineQueue = false;
         
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
         const categorias=categories;
@@ -3505,67 +3563,309 @@
             loadCards();loadGoals();
         });
 
-        function getStoredOfflineTransactions(){try{return JSON.parse(localStorage.getItem('offlineTransactions')||'[]');}catch(e){return [];}}
-        function setStoredOfflineTransactions(data){localStorage.setItem('offlineTransactions',JSON.stringify(data));}
+        function getStoredOfflineQueue(){try{return JSON.parse(localStorage.getItem('offlineQueue')||'[]');}catch(e){return [];}}
+        function setStoredOfflineQueue(data){localStorage.setItem('offlineQueue',JSON.stringify(data));}
         function getStoredCachedTransactions(){try{return JSON.parse(localStorage.getItem('cachedTransactions')||'[]');}catch(e){return [];}}
         function setStoredCachedTransactions(data){localStorage.setItem('cachedTransactions',JSON.stringify(data));}
-        function getStoredPendingDeletes(){try{return JSON.parse(localStorage.getItem('pendingDeletes')||'[]');}catch(e){return [];}}
-        function setStoredPendingDeletes(data){localStorage.setItem('pendingDeletes',JSON.stringify(data));}
-        function normalizeOfflineDataForSync(item){const {id,pendingSync,...data}=item;return data;}
-        function initOfflineSupport(){
-            const offlineData=getStoredOfflineTransactions();
-            const pendingDeletes=getStoredPendingDeletes();
-            pendingSync=[];
-            if(offlineData.length>0){pendingSync=offlineData.map(item=>({type:'add',data:normalizeOfflineDataForSync(item)}));}
-            if(pendingDeletes.length>0){pendingSync.push(...pendingDeletes.map(id=>({type:'delete',id})));}
-            window.addEventListener('online',()=>{syncPendingTransactions();});
-            window.addEventListener('offline',()=>{showSyncStatus('offline');});
-            if(navigator.onLine){showSyncStatus('online');if(pendingSync.length>0)syncPendingTransactions();}else{showSyncStatus('offline');}
+        function getStoredCardsCache(){try{return JSON.parse(localStorage.getItem('cardsCache')||'[]');}catch(e){return [];}}
+        function setStoredCardsCache(data){localStorage.setItem('cardsCache',JSON.stringify(data));}
+        function generateQueueId(){return `q_${Date.now()}_${Math.random().toString(16).slice(2,8)}`;}
+        function normalizeSyncError(error){
+            if(!error)return 'Error desconocido';
+            return error.message || error.code || 'Error desconocido';
         }
-        function showSyncStatus(status){const ind=document.getElementById('syncIndicator');const txt=document.getElementById('syncText');ind.className='sync-indicator '+status;txt.textContent=status==='online'?'Conectado':status==='syncing'?'Sincronizando...':'Sin conexión';}
-        async function syncPendingTransactions(){
-            if(pendingSync.length===0)return;
-            showSyncStatus('syncing');
-            const items=[...pendingSync];
-            try{
-                for(const item of items){
-                    if(item.type==='add'){await db.collection('transactions').add(item.data);}
-                    else if(item.type==='delete'){await db.collection('transactions').doc(item.id).delete();}
+        function isPermanentSyncError(error){
+            const msg=(error?.code||error?.message||'').toString().toLowerCase();
+            return msg.includes('not-found')||msg.includes('not found')||msg.includes('conflict')||msg.includes('already-exists')||msg.includes('already exists');
+        }
+        function persistOfflineQueue(){
+            setStoredOfflineQueue(offlineQueue);
+            updateSyncIndicator();
+        }
+        function initOfflineSupport(){
+            offlineQueue=getStoredOfflineQueue();
+            updateSyncIndicator();
+            window.addEventListener('online',()=>{syncOfflineQueue();});
+            window.addEventListener('offline',()=>{updateSyncIndicator();});
+            if(navigator.onLine){syncOfflineQueue();}else{updateSyncIndicator();}
+        }
+        function updateSyncIndicator(statusOverride){
+            const indicator=document.getElementById('syncIndicator');
+            const text=document.getElementById('syncText');
+            const count=document.getElementById('syncPendingCount');
+            const retry=document.getElementById('syncRetryBtn');
+            const failures=document.getElementById('syncFailures');
+            const notice=document.getElementById('syncNotice');
+            if(!indicator)return;
+            const pendingItems=offlineQueue.filter(item=>item.status!=='synced');
+            const failedItems=pendingItems.filter(item=>item.status==='failed');
+            const status=statusOverride || (!navigator.onLine ? 'offline' : (isSyncingOfflineQueue ? 'syncing' : (failedItems.length ? 'failed' : 'online')));
+            indicator.className=`sync-indicator ${status}`;
+            if(text){
+                text.textContent=status==='online'
+                    ? 'Conectado'
+                    : status==='syncing'
+                        ? 'Sincronizando...'
+                        : status==='failed'
+                            ? 'Fallos de sincronización'
+                            : 'Sin conexión';
+            }
+            if(count){
+                count.textContent=`${pendingItems.length} pendientes`;
+                count.style.display=pendingItems.length? 'inline-flex':'none';
+            }
+            if(retry){
+                retry.style.display=pendingItems.length? 'inline-flex':'none';
+                retry.disabled=isSyncingOfflineQueue;
+            }
+            if(notice){
+                if(!navigator.onLine && pendingItems.length){
+                    notice.textContent='Guardado local. Se sincronizará al reconectar.';
+                }else if(isSyncingOfflineQueue){
+                    notice.textContent='Aplicando cambios en la nube...';
+                }else{
+                    notice.textContent='';
                 }
-                pendingSync=[];
-                setStoredOfflineTransactions([]);
-                setStoredPendingDeletes([]);
-                showSyncStatus('online');
-                showToast('Datos sincronizados','success');
-                loadTransactions();
-            }catch(e){
-                console.error('Sync error:',e);
+            }
+            if(failures){
+                if(failedItems.length){
+                    failures.style.display='flex';
+                    failures.innerHTML=failedItems.map(item=>`
+                        <div class="sync-indicator__failure">
+                            ${item.entity} · ${item.action} · ${item.payload?.id || item.localId || 'nuevo'}: ${item.error || 'Error desconocido'}
+                        </div>
+                    `).join('');
+                }else{
+                    failures.style.display='none';
+                    failures.innerHTML='';
+                }
             }
         }
-        function saveToLocal(data,isDelete=false,id=null){
-            const normalizedId=id?String(id).replace(/^offline-/,''):null;
-            if(isDelete){
-                if(id && !String(id).startsWith('offline-')){
-                    pendingSync.push({type:'delete',id});
-                    const pendingDeletes=getStoredPendingDeletes();
-                    if(!pendingDeletes.includes(id)){
-                        pendingDeletes.push(id);
-                        setStoredPendingDeletes(pendingDeletes);
+        async function executeFirestoreAction({entity, action, payload}){
+            if(entity==='cards'){
+                if(action==='add')return db.collection('cards').add(payload.data);
+                if(action==='update')return db.collection('cards').doc(payload.id).update(payload.data);
+                if(action==='delete')return db.collection('cards').doc(payload.id).delete();
+            }
+            if(entity==='transactions'){
+                if(action==='add')return db.collection('transactions').add(payload.data);
+                if(action==='update')return db.collection('transactions').doc(payload.id).update(payload.data);
+                if(action==='delete')return db.collection('transactions').doc(payload.id).delete();
+            }
+            throw new Error('Acción offline no soportada');
+        }
+        function updateCachedTransactions(action, payload, queueId){
+            const cached=getStoredCachedTransactions();
+            if(action==='add'){
+                cached.unshift({id:`offline-${queueId}`,...payload.data,pendingSync:true});
+            }else if(action==='update'){
+                const idx=cached.findIndex(t=>t.id===payload.id);
+                if(idx>-1){
+                    cached[idx]={...cached[idx],...payload.data};
+                }else if(payload.id && String(payload.id).startsWith('offline-')){
+                    cached.unshift({id:payload.id,...payload.data,pendingSync:true});
+                }
+            }else if(action==='delete'){
+                if(payload.id && String(payload.id).startsWith('offline-')){
+                    const idx=cached.findIndex(t=>t.id===payload.id);
+                    if(idx>-1)cached.splice(idx,1);
+                }
+            }
+            setStoredCachedTransactions(cached);
+        }
+        function updateCachedCards(action, payload, queueId){
+            const cached=getStoredCardsCache();
+            if(action==='add'){
+                cached.push({id:`offline-${queueId}`,...payload.data,pendingSync:true});
+            }else if(action==='update'){
+                const idx=cached.findIndex(c=>c.id===payload.id);
+                if(idx>-1){
+                    cached[idx]={...cached[idx],...payload.data};
+                }else if(payload.id && String(payload.id).startsWith('offline-')){
+                    cached.push({id:payload.id,...payload.data,pendingSync:true});
+                }
+            }else if(action==='delete'){
+                const idx=cached.findIndex(c=>c.id===payload.id);
+                if(idx>-1)cached.splice(idx,1);
+            }
+            setStoredCardsCache(cached);
+        }
+        function mergeOfflineQueueIntoTransactions(list){
+            let result=[...list];
+            const queueItems=offlineQueue.filter(item=>item.entity==='transactions'&&item.status!=='synced');
+            queueItems.forEach(item=>{
+                if(item.action==='add'){
+                    const offlineId=`offline-${item.localId}`;
+                    if(!result.some(t=>t.id===offlineId)){
+                        result.unshift({id:offlineId,...item.payload.data,pendingSync:true});
                     }
                 }
-            }else{
-                pendingSync.push({type:'add',data});
-            }
-            const offlineData=getStoredOfflineTransactions();
-            if(isDelete){
-                const idx=offlineData.findIndex(t=>t.id===normalizedId);
-                if(idx>-1)offlineData.splice(idx,1);
-            }else{
-                offlineData.push({...data,id:Date.now().toString()});
-            }
-            setStoredOfflineTransactions(offlineData);
+            });
+            queueItems.forEach(item=>{
+                if(item.action==='update'){
+                    const targetId=item.payload.id;
+                    const idx=result.findIndex(t=>t.id===targetId);
+                    if(idx>-1){
+                        result[idx]={...result[idx],...item.payload.data,pendingSync:true};
+                    }
+                }
+                if(item.action==='delete'){
+                    const idx=result.findIndex(t=>t.id===item.payload.id);
+                    if(idx>-1){
+                        result[idx]={...result[idx],pendingDelete:true};
+                    }
+                }
+            });
+            return result;
         }
-
+        function mergeOfflineQueueIntoCards(list){
+            let result=[...list];
+            const queueItems=offlineQueue.filter(item=>item.entity==='cards'&&item.status!=='synced');
+            queueItems.forEach(item=>{
+                if(item.action==='add'){
+                    const offlineId=`offline-${item.localId}`;
+                    if(!result.some(c=>c.id===offlineId)){
+                        result.push({id:offlineId,...item.payload.data,pendingSync:true});
+                    }
+                }
+            });
+            queueItems.forEach(item=>{
+                if(item.action==='update'){
+                    const idx=result.findIndex(c=>c.id===item.payload.id);
+                    if(idx>-1){
+                        result[idx]={...result[idx],...item.payload.data,pendingSync:true};
+                    }
+                }
+                if(item.action==='delete'){
+                    result=result.filter(c=>c.id!==item.payload.id);
+                }
+            });
+            return result;
+        }
+        function updateQueuedAddPayload(entity, localId, data){
+            const idx=offlineQueue.findIndex(item=>item.entity===entity&&item.action==='add'&&item.localId===localId);
+            if(idx>-1){
+                offlineQueue[idx].payload.data={...offlineQueue[idx].payload.data,...data};
+                offlineQueue[idx].status='pending';
+                offlineQueue[idx].error='';
+                persistOfflineQueue();
+                return true;
+            }
+            return false;
+        }
+        function removeQueuedAdd(entity, localId){
+            const idx=offlineQueue.findIndex(item=>item.entity===entity&&item.action==='add'&&item.localId===localId);
+            if(idx>-1){
+                offlineQueue.splice(idx,1);
+                persistOfflineQueue();
+                return true;
+            }
+            return false;
+        }
+        async function enqueueOrExecute({entity, action, payload, silent=false}){
+            const queueId=generateQueueId();
+            const localId=queueId;
+            const queuedItem={
+                id:queueId,
+                localId,
+                entity,
+                action,
+                payload,
+                createdAt:new Date().toISOString(),
+                status:navigator.onLine?'processing':'pending',
+                error:''
+            };
+            if(action==='update'&&payload.id&&String(payload.id).startsWith('offline-')){
+                const localRef=String(payload.id).replace('offline-','');
+                if(updateQueuedAddPayload(entity, localRef, payload.data)){
+                    if(entity==='transactions')updateCachedTransactions('update',{id:payload.id,data:payload.data});
+                    if(entity==='cards')updateCachedCards('update',{id:payload.id,data:payload.data});
+                    updateSyncIndicator();
+                    return {queued:true,localOnly:true};
+                }
+            }
+            if(action==='delete'&&payload.id&&String(payload.id).startsWith('offline-')){
+                const localRef=String(payload.id).replace('offline-','');
+                if(removeQueuedAdd(entity, localRef)){
+                    if(entity==='transactions')updateCachedTransactions('delete',{id:payload.id});
+                    if(entity==='cards')updateCachedCards('delete',{id:payload.id});
+                    updateSyncIndicator();
+                    return {queued:true,localOnly:true};
+                }
+            }
+            if(!navigator.onLine){
+                if(action==='add')queuedItem.payload={...payload,localId};
+                offlineQueue.push(queuedItem);
+                persistOfflineQueue();
+                if(entity==='transactions')updateCachedTransactions(action, payload, localId);
+                if(entity==='cards')updateCachedCards(action, payload, localId);
+                if(!silent){
+                    showToast('Guardado local. Se sincronizará al reconectar.', 'info');
+                }
+                return {queued:true};
+            }
+            try{
+                await executeFirestoreAction({entity, action, payload});
+                return {queued:false};
+            }catch(error){
+                queuedItem.status='pending';
+                queuedItem.error=normalizeSyncError(error);
+                if(action==='add')queuedItem.payload={...payload,localId};
+                offlineQueue.push(queuedItem);
+                persistOfflineQueue();
+                if(entity==='transactions')updateCachedTransactions(action, payload, localId);
+                if(entity==='cards')updateCachedCards(action, payload, localId);
+                if(!silent){
+                    showToast('No se pudo guardar en línea. Se sincronizará al reconectar.', 'warning');
+                }
+                return {queued:true,error};
+            }
+        }
+        async function syncOfflineQueue(){
+            if(isSyncingOfflineQueue||!navigator.onLine)return;
+            if(!offlineQueue.length){
+                updateSyncIndicator();
+                return;
+            }
+            isSyncingOfflineQueue=true;
+            updateSyncIndicator('syncing');
+            const queueSnapshot=[...offlineQueue];
+            const orderedItems=[
+                ...queueSnapshot.filter(item=>item.entity==='cards'&&(item.action==='add'||item.action==='update')),
+                ...queueSnapshot.filter(item=>item.entity==='transactions'&&(item.action==='add'||item.action==='update')),
+                ...queueSnapshot.filter(item=>item.action==='delete')
+            ];
+            let cardsTouched=false;
+            let transactionsTouched=false;
+            for(const item of orderedItems){
+                try{
+                    const payload=item.payload;
+                    await executeFirestoreAction({entity:item.entity, action:item.action, payload});
+                    offlineQueue=offlineQueue.filter(q=>q.id!==item.id);
+                    persistOfflineQueue();
+                    if(item.entity==='cards')cardsTouched=true;
+                    if(item.entity==='transactions')transactionsTouched=true;
+                }catch(error){
+                    const idx=offlineQueue.findIndex(q=>q.id===item.id);
+                    if(idx>-1){
+                        offlineQueue[idx].error=normalizeSyncError(error);
+                        offlineQueue[idx].status=isPermanentSyncError(error)?'failed':'pending';
+                    }
+                    persistOfflineQueue();
+                    if(isPermanentSyncError(error)){
+                        continue;
+                    }
+                    break;
+                }
+            }
+            isSyncingOfflineQueue=false;
+            updateSyncIndicator();
+            if(cardsTouched)await loadCards();
+            if(transactionsTouched)await loadTransactions();
+            if(cardsTouched||transactionsTouched){
+                showToast('Sincronización completada','success');
+            }
+        }
         function clearFilters() {
             document.getElementById('filterText').value = '';
             document.getElementById('filterType').value = 'all';
@@ -4227,7 +4527,6 @@
         
         window.confirmarPagoCuota = async function() {
             if (!tempPagoCuotaData) return;
-            if (!requireOnline('Confirmar el pago de la cuota')) return;
             const paymentDate=tempPagoCuotaData.paymentDate;
             const año=paymentDate.getFullYear();
             const mes=String(paymentDate.getMonth() + 1).padStart(2, '0');
@@ -4240,30 +4539,44 @@
                 const credito = transactions.find(t => t.id === tempPagoCuotaData.creditId);
                 const nuevasPagadas = Math.max(credito.cuotasPagadas || 0, tempPagoCuotaData.cuotaNum);
                 const totalCuotas = credito.cuotas || 1;
+                let result=null;
                 if (nuevasPagadas >= totalCuotas) {
-                    await db.collection('transactions').doc(tempPagoCuotaData.creditId).delete();
+                    result=await enqueueOrExecute({
+                        entity: 'transactions',
+                        action: 'delete',
+                        payload: { id: tempPagoCuotaData.creditId }
+                    });
                 } else {
                     const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
                     const añoProximo = proximaFecha.getFullYear();
                     const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
                     const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
                     const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
-                    await db.collection('transactions').doc(tempPagoCuotaData.creditId).update({
-                        cuotasPagadas: nuevasPagadas,
-                        proximaFechaPago: nuevaFecha
+                    result=await enqueueOrExecute({
+                        entity: 'transactions',
+                        action: 'update',
+                        payload: {
+                            id: tempPagoCuotaData.creditId,
+                            data: {
+                                cuotasPagadas: nuevasPagadas,
+                                proximaFechaPago: nuevaFecha
+                            }
+                        }
                     });
                 }
                 
                 closeModal('pagoCuotaModal');
-                if (nuevasPagadas >= totalCuotas) {
-                    showToast(`✅ Crédito liquidado con el pago de la cuota ${tempPagoCuotaData.cuotaNum} (${formatDate(fechaPagoActual)})`, 'success');
-                } else {
-                    const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
-                    const añoProximo = proximaFecha.getFullYear();
-                    const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
-                    const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
-                    const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
-                    showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} registrada (${formatDate(fechaPagoActual)}). Próximo pago: ${formatDate(nuevaFecha)}`, 'success');
+                if (!result?.queued) {
+                    if (nuevasPagadas >= totalCuotas) {
+                        showToast(`✅ Crédito liquidado con el pago de la cuota ${tempPagoCuotaData.cuotaNum} (${formatDate(fechaPagoActual)})`, 'success');
+                    } else {
+                        const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
+                        const añoProximo = proximaFecha.getFullYear();
+                        const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
+                        const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
+                        const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
+                        showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} registrada (${formatDate(fechaPagoActual)}). Próximo pago: ${formatDate(nuevaFecha)}`, 'success');
+                    }
                 }
                 loadTransactions();
             } catch (e) {
@@ -4341,13 +4654,44 @@
             }
         }
         
-        async function loadCards(){try{const s=await db.collection('cards').orderBy('name').get(); cardsList=[]; s.forEach(d=>cardsList.push({id:d.id,...d.data()})); if(cardsList.length===0){await seedDefaultCards();return;} localStorage.setItem('cardsCache', JSON.stringify(cardsList)); populateCardSelects(); populateMethodFilter(); loadTransactions();}catch(e){console.error(e); const cached=localStorage.getItem('cardsCache'); if(cached){cardsList=JSON.parse(cached); populateCardSelects(); populateMethodFilter(); loadTransactions();} showToast('Usando datos locales por fallo en Firestore', 'warning'); showSyncStatus('offline');}}
-        async function seedDefaultCards(){const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}]; const b=db.batch(); cards.forEach(c=>b.set(db.collection('cards').doc(),{name:c.name,quota:0,diaPago:c.diaPago,ajusteDisponible:0})); await b.commit(); loadCards();}
+        async function loadCards(){
+            try{
+                const s=await db.collection('cards').orderBy('name').get();
+                cardsList=[];
+                s.forEach(d=>cardsList.push({id:d.id,...d.data()}));
+                if(cardsList.length===0){
+                    await seedDefaultCards();
+                    return;
+                }
+                setStoredCardsCache(cardsList);
+            }catch(e){
+                console.error(e);
+                const cached=getStoredCardsCache();
+                if(cached.length){
+                    cardsList=cached;
+                }
+                showToast('Usando datos locales por fallo en Firestore', 'warning');
+                updateSyncIndicator('offline');
+            }
+            cardsList=mergeOfflineQueueIntoCards(cardsList);
+            populateCardSelects();
+            populateMethodFilter();
+            loadTransactions();
+        }
+        async function seedDefaultCards(){
+            const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}];
+            for(const card of cards){
+                await enqueueOrExecute({
+                    entity:'cards',
+                    action:'add',
+                    payload:{data:{name:card.name,quota:0,diaPago:card.diaPago,ajusteDisponible:0}},
+                    silent:true
+                });
+            }
+            loadCards();
+        }
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){
-            const offlineData=getStoredOfflineTransactions();
-            const pendingDeletes=getStoredPendingDeletes();
-            const offlineTransactions=offlineData.map(item=>({...item,id:`offline-${item.id}`,pendingSync:true}));
             let fetchedTransactions=[];
             try{
                 const s=await db.collection('transactions').orderBy('fecha','desc').get();
@@ -4361,8 +4705,8 @@
                     fetchedTransactions=cachedTransactions;
                 }
             }
-            const normalizedTransactions=fetchedTransactions.map(t=>({...t,pendingDelete:pendingDeletes.includes(t.id)}));
-            transactions=[...offlineTransactions,...normalizedTransactions].map(t=>{
+            const mergedTransactions=mergeOfflineQueueIntoTransactions(fetchedTransactions);
+            transactions=mergedTransactions.map(t=>{
                 if(t.tipo==='credito'){
                     const legacyName=t.cardName||t.metodoPago;
                     const cardId=t.cardId||cardsList.find(c=>c.name===legacyName)?.id||'';
@@ -4431,16 +4775,29 @@
         }
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){
-            if(!requireOnline('Guardar la transacción')) return;
             const btn=document.getElementById('btnSubmitText');
             const shouldReturnToQuota = returnToQuotaModal;
             if(btn)btn.classList.add('is-loading');
             try{
-                if(editingTransactionId)await db.collection('transactions').doc(editingTransactionId).update(d);
-                else await db.collection('transactions').add(d);
+                let result=null;
+                if(editingTransactionId){
+                    result=await enqueueOrExecute({
+                        entity: 'transactions',
+                        action: 'update',
+                        payload: { id: editingTransactionId, data: d }
+                    });
+                } else {
+                    result=await enqueueOrExecute({
+                        entity: 'transactions',
+                        action: 'add',
+                        payload: { data: d }
+                    });
+                }
                 cancelEdit();
                 await loadTransactions();
-                showToast(editingTransactionId?'Actualizado':'Guardado','success');
+                if(!result?.queued){
+                    showToast(editingTransactionId?'Actualizado':'Guardado','success');
+                }
             }catch(e){
                 console.error(e);
                 showToast('Error al guardar. Verifica tu conexión.', 'error');
@@ -4456,15 +4813,16 @@
         window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         async function performDeleteTransaction(id,{skipConfirm=false}={}){
             if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
-            if(!requireOnline('Eliminar la transacción')) return;
             try{
-                if(String(id).startsWith('offline-')){
-                    showToast('La transacción está pendiente de sincronización. Conéctate y sincroniza antes de eliminar.', 'warning');
-                    return;
-                }
-                await db.collection('transactions').doc(id).delete();
+                const result=await enqueueOrExecute({
+                    entity: 'transactions',
+                    action: 'delete',
+                    payload: { id }
+                });
                 await loadTransactions();
-                showToast('Borrado','success');
+                if(!result?.queued){
+                    showToast('Borrado','success');
+                }
             }catch(e){
                 console.error(e);
                 showToast('Error al eliminar. Verifica tu conexión.', 'error');
@@ -4663,30 +5021,49 @@
                 showToast('No hay correcciones disponibles', 'info');
                 return;
             }
-            if (!requireOnline('Aplicar correcciones')) return;
             const summary = corrections.map(c => `• ${c.label}`).join('\n');
             if (!confirm(`Se aplicarán ${corrections.length} correcciones:\n${summary}\n\n¿Deseas continuar?`)) return;
             const btn = document.getElementById('btnApplyConsistencyCorrections');
             if (btn) btn.classList.add('is-loading');
             try {
+                let queued=false;
                 for (const correction of corrections) {
                     if (correction.entity === 'cards') {
-                        await db.collection('cards').doc(correction.id).update({
-                            ...correction.data,
-                            auditUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        const result=await enqueueOrExecute({
+                            entity: 'cards',
+                            action: 'update',
+                            payload: {
+                                id: correction.id,
+                                data: {
+                                    ...correction.data,
+                                    auditUpdatedAt: new Date().toISOString()
+                                }
+                            },
+                            silent: true
                         });
+                        if(result?.queued)queued=true;
                     }
                     if (correction.entity === 'transactions') {
-                        if (String(correction.id).startsWith('offline-')) {
-                            continue;
-                        }
-                        await db.collection('transactions').doc(correction.id).update({
-                            ...correction.data,
-                            auditUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        const result=await enqueueOrExecute({
+                            entity: 'transactions',
+                            action: 'update',
+                            payload: {
+                                id: correction.id,
+                                data: {
+                                    ...correction.data,
+                                    auditUpdatedAt: new Date().toISOString()
+                                }
+                            },
+                            silent: true
                         });
+                        if(result?.queued)queued=true;
                     }
                 }
-                showToast('Correcciones aplicadas', 'success');
+                if(queued){
+                    showToast('Correcciones guardadas localmente. Se sincronizarán al reconectar.', 'info');
+                }else{
+                    showToast('Correcciones aplicadas', 'success');
+                }
                 loadCards();
                 setTimeout(() => {
                     openQuotaModal();
@@ -4823,10 +5200,16 @@
                         throw new Error('Selecciona una fecha válida.');
                     }
                     try {
-                        await db.collection('transactions').doc(id).update({ proximaFechaPago: newDate });
+                        const result=await enqueueOrExecute({
+                            entity: 'transactions',
+                            action: 'update',
+                            payload: { id, data: { proximaFechaPago: newDate } }
+                        });
                         await loadTransactions();
                         openQuotaModal();
-                        showToast('Fecha de pago actualizada', 'success');
+                        if(!result?.queued){
+                            showToast('Fecha de pago actualizada', 'success');
+                        }
                     } catch (error) {
                         console.error(error);
                         throw new Error('No se pudo actualizar la fecha de pago.');
@@ -4961,7 +5344,6 @@
             const i=document.getElementById('editCardId').value;
             const btn=document.getElementById('btnSaveCard');
             if(!n)return;
-            if(!requireOnline('Guardar la tarjeta')) return;
             const dupe=cardsList.some(c=>c.name===n&&c.id!==i);
             if(dupe){
                 showToast('Nombre ya existe','warning');
@@ -4978,10 +5360,25 @@
             }
             if(btn)btn.classList.add('is-loading');
             try{
-                if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});
-                else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});
+                let result=null;
+                if(i){
+                    result=await enqueueOrExecute({
+                        entity: 'cards',
+                        action: 'update',
+                        payload: { id: i, data: { name:n,quota:q,diaPago,ajusteDisponible:adj } }
+                    });
+                }else{
+                    result=await enqueueOrExecute({
+                        entity: 'cards',
+                        action: 'add',
+                        payload: { data: { name:n,quota:q,diaPago,ajusteDisponible:adj } }
+                    });
+                }
                 await loadCards();
                 openQuotaModal();
+                if(!result?.queued){
+                    showToast(i ? 'Tarjeta actualizada' : 'Tarjeta guardada','success');
+                }
             }catch(e){
                 console.error(e);
                 showToast('Error al guardar','error');
@@ -5004,10 +5401,16 @@
             const confirmMsg=`Se aplicará un ajuste de ${formatMoney(ajuste)} para "${card.name}".\n¿Confirmar conciliación?`;
             if(!confirm(confirmMsg))return;
             try{
-                await db.collection('cards').doc(id).update({ajusteDisponible:ajuste});
+                const result=await enqueueOrExecute({
+                    entity: 'cards',
+                    action: 'update',
+                    payload: { id, data: { ajusteDisponible: ajuste } }
+                });
                 await loadCards();
                 openQuotaModal();
-                showToast('Conciliación aplicada','success');
+                if(!result?.queued){
+                    showToast('Conciliación aplicada','success');
+                }
             }catch(e){
                 console.error(e);
                 showToast('Error al conciliar','error');
@@ -5032,21 +5435,36 @@
                 confirmClass: 'btn--danger',
                 onConfirm: async () => {
                     try {
-                        const batch=db.batch();
-                        relatedTransactions.forEach(t=>{
+                        let queued=false;
+                        for(const t of relatedTransactions){
                             const updateData={cardDeleted:true};
                             if(t.cardId===id)updateData.cardId='';
                             if(t.cardName===cardName)updateData.cardName='';
                             if(resolveCreditCardName(t)===cardName&&!t.cardName)updateData.cardName='';
                             if(t.metodoPago===cardName)updateData.metodoPago='';
                             if(t.tarjetaDestino===cardName)updateData.tarjetaDestino='';
-                            batch.update(db.collection('transactions').doc(t.id),updateData);
+                            const result=await enqueueOrExecute({
+                                entity: 'transactions',
+                                action: 'update',
+                                payload: { id: t.id, data: updateData },
+                                silent: true
+                            });
+                            if(result?.queued)queued=true;
+                        }
+                        const deleteResult=await enqueueOrExecute({
+                            entity: 'cards',
+                            action: 'delete',
+                            payload: { id },
+                            silent: true
                         });
-                        batch.delete(db.collection('cards').doc(id));
-                        await batch.commit();
+                        if(deleteResult?.queued)queued=true;
                         await loadCards();
                         openQuotaModal();
-                        showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
+                        if(queued){
+                            showToast('Eliminación guardada localmente. Se sincronizará al reconectar.', 'info');
+                        }else{
+                            showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
+                        }
                     } catch (e) {
                         console.error(e);
                         showToast('Error al borrar','error');
