@@ -3344,8 +3344,8 @@
                 <div class="add-card-form">
                     <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
                     <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+                    <div class="form-group"><label for="cardPaymentDayInput">Día de pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" step="1" placeholder="1-31"></div>
                     <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
-                    <input type="hidden" id="cardPaymentDayInput">
                     <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
                     <input type="hidden" id="editCardId">
                 </div>
