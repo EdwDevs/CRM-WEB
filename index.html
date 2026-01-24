@@ -3683,6 +3683,12 @@
         function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
         function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
         function showToast(m,t){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),4000);}
+        function requireOnline(action){
+            if(navigator.onLine)return true;
+            const label=action||'Esta acción';
+            showToast(`Sin conexión. ${label} requiere estar en línea.`, 'error');
+            return false;
+        }
 
         function findCardById(cardId){return cardsList.find(c=>c.id===cardId);}
         function resolveCreditCardId(credit){
@@ -4221,6 +4227,7 @@
         
         window.confirmarPagoCuota = async function() {
             if (!tempPagoCuotaData) return;
+            if (!requireOnline('Confirmar el pago de la cuota')) return;
             const paymentDate=tempPagoCuotaData.paymentDate;
             const año=paymentDate.getFullYear();
             const mes=String(paymentDate.getMonth() + 1).padStart(2, '0');
@@ -4424,6 +4431,7 @@
         }
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){
+            if(!requireOnline('Guardar la transacción')) return;
             const btn=document.getElementById('btnSubmitText');
             const shouldReturnToQuota = returnToQuotaModal;
             if(btn)btn.classList.add('is-loading');
@@ -4434,9 +4442,8 @@
                 await loadTransactions();
                 showToast(editingTransactionId?'Actualizado':'Guardado','success');
             }catch(e){
-                saveToLocal(d);
-                await loadTransactions();
-                showToast('Guardado localmente (offline)','warning');
+                console.error(e);
+                showToast('Error al guardar. Verifica tu conexión.', 'error');
             }finally{
                 if(btn)btn.classList.remove('is-loading');
                 if(shouldReturnToQuota){
@@ -4449,20 +4456,18 @@
         window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         async function performDeleteTransaction(id,{skipConfirm=false}={}){
             if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
+            if(!requireOnline('Eliminar la transacción')) return;
             try{
                 if(String(id).startsWith('offline-')){
-                    saveToLocal(null,true,id);
-                    await loadTransactions();
-                    showToast('Eliminación local completada','success');
+                    showToast('La transacción está pendiente de sincronización. Conéctate y sincroniza antes de eliminar.', 'warning');
                     return;
                 }
                 await db.collection('transactions').doc(id).delete();
                 await loadTransactions();
                 showToast('Borrado','success');
             }catch(e){
-                saveToLocal(null,true,id);
-                await loadTransactions();
-                showToast('Eliminación pendiente','warning');
+                console.error(e);
+                showToast('Error al eliminar. Verifica tu conexión.', 'error');
             }
         }
         window.deleteTransaction=async function(id){
@@ -4658,6 +4663,7 @@
                 showToast('No hay correcciones disponibles', 'info');
                 return;
             }
+            if (!requireOnline('Aplicar correcciones')) return;
             const summary = corrections.map(c => `• ${c.label}`).join('\n');
             if (!confirm(`Se aplicarán ${corrections.length} correcciones:\n${summary}\n\n¿Deseas continuar?`)) return;
             const btn = document.getElementById('btnApplyConsistencyCorrections');
@@ -4947,7 +4953,42 @@
             document.getElementById(id).style.display='none';
             if(id==='cardDetailModal')currentDetailCardName=null;
         }
-        async function saveCard(){const n=document.getElementById('cardNameInput').value.trim();const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);const pRaw=document.getElementById('cardPaymentDayInput').value.trim();const i=document.getElementById('editCardId').value;const btn=document.getElementById('btnSaveCard');if(!n)return;const dupe=cardsList.some(c=>c.name===n&&c.id!==i);if(dupe){showToast('Nombre ya existe','warning');return;}let diaPago=null;if(pRaw!==''){const pNum=Number(pRaw);if(!Number.isInteger(pNum)||pNum<1||pNum>31){showToast('Día de pago inválido','warning');return;}diaPago=pNum;}if(btn)btn.classList.add('is-loading');try{if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});await loadCards();openQuotaModal();}catch(e){console.error(e);showToast('Error al guardar','error');}finally{if(btn)btn.classList.remove('is-loading');}}
+        async function saveCard(){
+            const n=document.getElementById('cardNameInput').value.trim();
+            const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);
+            const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);
+            const pRaw=document.getElementById('cardPaymentDayInput').value.trim();
+            const i=document.getElementById('editCardId').value;
+            const btn=document.getElementById('btnSaveCard');
+            if(!n)return;
+            if(!requireOnline('Guardar la tarjeta')) return;
+            const dupe=cardsList.some(c=>c.name===n&&c.id!==i);
+            if(dupe){
+                showToast('Nombre ya existe','warning');
+                return;
+            }
+            let diaPago=null;
+            if(pRaw!==''){
+                const pNum=Number(pRaw);
+                if(!Number.isInteger(pNum)||pNum<1||pNum>31){
+                    showToast('Día de pago inválido','warning');
+                    return;
+                }
+                diaPago=pNum;
+            }
+            if(btn)btn.classList.add('is-loading');
+            try{
+                if(i)await db.collection('cards').doc(i).update({name:n,quota:q,diaPago,ajusteDisponible:adj});
+                else await db.collection('cards').add({name:n,quota:q,diaPago,ajusteDisponible:adj});
+                await loadCards();
+                openQuotaModal();
+            }catch(e){
+                console.error(e);
+                showToast('Error al guardar','error');
+            }finally{
+                if(btn)btn.classList.remove('is-loading');
+            }
+        }
         async function reconcileCard(id){
             const card=findCardById(id);
             if(!card){showToast('Tarjeta no encontrada','error');return;}
