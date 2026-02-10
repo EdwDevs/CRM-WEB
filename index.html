@@ -3516,15 +3516,57 @@
     <div id="toastContainer"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
-        if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+        if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let authReadyPromise = null;
+
+        async function getCurrentUserUid() {
+            if (auth.currentUser?.uid) return auth.currentUser.uid;
+            if (!authReadyPromise) {
+                authReadyPromise = new Promise((resolve, reject) => {
+                    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+                        if (user?.uid) {
+                            unsubscribe();
+                            resolve(user.uid);
+                            return;
+                        }
+                        try {
+                            const credential = await auth.signInAnonymously();
+                            unsubscribe();
+                            resolve(credential.user.uid);
+                        } catch (error) {
+                            unsubscribe();
+                            reject(error);
+                        }
+                    }, (error) => {
+                        unsubscribe();
+                        reject(error);
+                    });
+                });
+            }
+            return authReadyPromise;
+        }
+
+        async function getUserCardsCollection() {
+            const uid = await getCurrentUserUid();
+            return db.collection('users').doc(uid).collection('cards');
+        }
+
+        async function getUserTransactionsCollection() {
+            const uid = await getCurrentUserUid();
+            return db.collection('users').doc(uid).collection('transactions');
+        }
 
         async function runFirestoreHealthCheck() {
             try {
-                await db.collection('status').doc('ping').get();
+                const cardsRef = await getUserCardsCollection();
+                await cardsRef.limit(1).get();
                 updateSyncIndicator();
                 return true;
             } catch (error) {
@@ -3644,14 +3686,16 @@
         }
         async function executeFirestoreAction({entity, action, payload}){
             if(entity==='cards'){
-                if(action==='add')return db.collection('cards').add(payload.data);
-                if(action==='update')return db.collection('cards').doc(payload.id).update(payload.data);
-                if(action==='delete')return db.collection('cards').doc(payload.id).delete();
+                const cardsRef = await getUserCardsCollection();
+                if(action==='add')return cardsRef.add(payload.data);
+                if(action==='update')return cardsRef.doc(payload.id).update(payload.data);
+                if(action==='delete')return cardsRef.doc(payload.id).delete();
             }
             if(entity==='transactions'){
-                if(action==='add')return db.collection('transactions').add(payload.data);
-                if(action==='update')return db.collection('transactions').doc(payload.id).update(payload.data);
-                if(action==='delete')return db.collection('transactions').doc(payload.id).delete();
+                const transactionsRef = await getUserTransactionsCollection();
+                if(action==='add')return transactionsRef.add(payload.data);
+                if(action==='update')return transactionsRef.doc(payload.id).update(payload.data);
+                if(action==='delete')return transactionsRef.doc(payload.id).delete();
             }
             throw new Error('Acción offline no soportada');
         }
@@ -4657,7 +4701,8 @@
         
         async function loadCards(){
             try{
-                const s=await db.collection('cards').orderBy('name').get();
+                const cardsRef = await getUserCardsCollection();
+                const s=await cardsRef.orderBy('name').get();
                 cardsList=[];
                 s.forEach(d=>cardsList.push({id:d.id,...d.data()}));
                 if(cardsList.length===0){
@@ -4695,7 +4740,8 @@
         async function loadTransactions(){
             let fetchedTransactions=[];
             try{
-                const s=await db.collection('transactions').orderBy('fecha','desc').get();
+                const transactionsRef = await getUserTransactionsCollection();
+                const s=await transactionsRef.orderBy('fecha','desc').get();
                 s.forEach(d=>fetchedTransactions.push({id:d.id,...d.data()}));
                 setStoredCachedTransactions(fetchedTransactions);
             }catch(e){
