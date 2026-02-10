@@ -4027,6 +4027,7 @@
         function formatMoney(n){return '$ '+parseFloat(n).toLocaleString('es-CO',{maximumFractionDigits:0});}
         function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
         function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
+        function isValidPositiveAmount(m){return Number.isFinite(m)&&m>0;}
         function showToast(m,t){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),4000);}
         function requireOnline(action){
             if(navigator.onLine)return true;
@@ -4778,7 +4779,7 @@
         function preSubmit(){
             const t=document.getElementById('tipo').value;
             const m=parseCurrencyInput(document.getElementById('monto').value);
-            if(m<=0){alert('Monto inválido');return;}
+            if(!Number.isFinite(m)||m<=0){alert('Monto inválido');return;}
             const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
             if(t==='credito'){
                 const tc=document.getElementById('tarjetaCredito').value;
@@ -4822,6 +4823,12 @@
         }
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
         async function saveTransaction(d){
+            const monto=Number(d?.monto);
+            if(!isValidPositiveAmount(monto)){
+                showToast('Monto inválido','error');
+                return;
+            }
+            d.monto=monto;
             const btn=document.getElementById('btnSubmitText');
             const shouldReturnToQuota = returnToQuotaModal;
             if(btn)btn.classList.add('is-loading');
