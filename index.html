@@ -3081,7 +3081,7 @@
                 <span id="syncText">Sin conexión</span>
                 <span class="sync-indicator__count" id="syncPendingCount">0 pendientes</span>
             </div>
-            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" onclick="syncOfflineQueue()">Reintentar</button>
+            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" onclick="syncOfflineQueue({ includeFailed: true })">Reintentar</button>
         </div>
         <div class="sync-indicator__message" id="syncNotice"></div>
         <div class="sync-indicator__failures" id="syncFailures"></div>
@@ -3618,9 +3618,28 @@
             if(!error)return 'Error desconocido';
             return error.message || error.code || 'Error desconocido';
         }
+        function getPermanentSyncErrorCode(error){
+            const code=(error?.code||'').toString().toLowerCase();
+            const msg=(error?.message||'').toString().toLowerCase();
+            if(code.includes('permission-denied')||msg.includes('permission-denied'))return 'permission-denied';
+            if(code.includes('unauthenticated')||msg.includes('unauthenticated'))return 'unauthenticated';
+            if(code.includes('failed-precondition')||msg.includes('failed-precondition'))return 'failed-precondition';
+            if(code.includes('not-found')||msg.includes('not-found')||msg.includes('not found'))return 'not-found';
+            if(code.includes('conflict')||msg.includes('conflict'))return 'conflict';
+            if(code.includes('already-exists')||msg.includes('already-exists')||msg.includes('already exists'))return 'already-exists';
+            return null;
+        }
+        function getActionableSyncErrorMessage(error){
+            const errorCode=getPermanentSyncErrorCode(error);
+            if(errorCode==='permission-denied')return 'Sin permisos para sincronizar. Revisa reglas/permisos de Firestore y vuelve a intentar.';
+            if(errorCode==='unauthenticated')return 'Tu sesión expiró. Inicia sesión de nuevo y luego pulsa "Reintentar".';
+            if(errorCode==='failed-precondition')return 'No se cumple una precondición de Firestore. Revisa reglas, índices o estado del dato antes de reintentar.';
+            if(errorCode==='not-found')return 'El recurso ya no existe en la nube. Actualiza tus datos antes de reintentar.';
+            if(errorCode==='conflict'||errorCode==='already-exists')return 'Hay un conflicto con un cambio remoto. Revisa el dato y vuelve a intentarlo.';
+            return normalizeSyncError(error);
+        }
         function isPermanentSyncError(error){
-            const msg=(error?.code||error?.message||'').toString().toLowerCase();
-            return msg.includes('not-found')||msg.includes('not found')||msg.includes('conflict')||msg.includes('already-exists')||msg.includes('already exists');
+            return Boolean(getPermanentSyncErrorCode(error));
         }
         function persistOfflineQueue(){
             setStoredOfflineQueue(offlineQueue);
@@ -3643,7 +3662,11 @@
             if(!indicator)return;
             const pendingItems=offlineQueue.filter(item=>item.status!=='synced');
             const failedItems=pendingItems.filter(item=>item.status==='failed');
-            const status=statusOverride || (!navigator.onLine ? 'offline' : (isSyncingOfflineQueue ? 'syncing' : (failedItems.length ? 'failed' : 'online')));
+            const status=statusOverride || (isSyncingOfflineQueue
+                ? 'syncing'
+                : (failedItems.length
+                    ? 'failed'
+                    : (!navigator.onLine ? 'offline' : 'online')));
             indicator.className=`sync-indicator ${status}`;
             if(text){
                 text.textContent=status==='online'
@@ -3663,7 +3686,9 @@
                 retry.disabled=isSyncingOfflineQueue;
             }
             if(notice){
-                if(!navigator.onLine && pendingItems.length){
+                if(failedItems.length){
+                    notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
+                }else if(!navigator.onLine && pendingItems.length){
                     notice.textContent='Guardado local. Se sincronizará al reconectar.';
                 }else if(isSyncingOfflineQueue){
                     notice.textContent='Aplicando cambios en la nube...';
@@ -3879,16 +3904,21 @@
                 return {queued:true,error};
             }
         }
-        async function syncOfflineQueue(){
+        async function syncOfflineQueue({includeFailed=false}={}){
             if(isSyncingOfflineQueue||!navigator.onLine)return;
-            if(!offlineQueue.length){
+            const syncCandidates=offlineQueue.filter(item=>includeFailed || item.status!=='failed');
+            if(!syncCandidates.length){
                 updateSyncIndicator();
                 return;
             }
             isSyncingOfflineQueue=true;
             syncCardIdMap={offlineToReal:new Map(),realToOffline:new Map()};
             updateSyncIndicator('syncing');
-            const queueSnapshot=[...offlineQueue];
+            if(includeFailed){
+                offlineQueue=offlineQueue.map(item=>item.status==='failed'?{...item,status:'pending'}:item);
+                persistOfflineQueue();
+            }
+            const queueSnapshot=[...offlineQueue.filter(item=>includeFailed || item.status!=='failed')];
             const orderedItems=[
                 ...queueSnapshot.filter(item=>item.entity==='cards'&&(item.action==='add'||item.action==='update')),
                 ...queueSnapshot.filter(item=>item.entity==='transactions'&&(item.action==='add'||item.action==='update')),
@@ -3935,7 +3965,7 @@
                 }catch(error){
                     const idx=offlineQueue.findIndex(q=>q.id===item.id);
                     if(idx>-1){
-                        offlineQueue[idx].error=normalizeSyncError(error);
+                        offlineQueue[idx].error=isPermanentSyncError(error)?getActionableSyncErrorMessage(error):normalizeSyncError(error);
                         offlineQueue[idx].status=isPermanentSyncError(error)?'failed':'pending';
                     }
                     persistOfflineQueue();
