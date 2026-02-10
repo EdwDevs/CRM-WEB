@@ -3661,7 +3661,11 @@
             if(!indicator)return;
             const pendingItems=offlineQueue.filter(item=>item.status!=='synced');
             const failedItems=pendingItems.filter(item=>item.status==='failed');
-            const status=statusOverride || (!navigator.onLine ? 'offline' : (isSyncingOfflineQueue ? 'syncing' : (failedItems.length ? 'failed' : 'online')));
+            const status=statusOverride || (isSyncingOfflineQueue
+                ? 'syncing'
+                : (failedItems.length
+                    ? 'failed'
+                    : (!navigator.onLine ? 'offline' : 'online')));
             indicator.className=`sync-indicator ${status}`;
             if(text){
                 text.textContent=status==='online'
@@ -3681,7 +3685,9 @@
                 retry.disabled=isSyncingOfflineQueue;
             }
             if(notice){
-                if(!navigator.onLine && pendingItems.length){
+                if(failedItems.length){
+                    notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
+                }else if(!navigator.onLine && pendingItems.length){
                     notice.textContent='Guardado local. Se sincronizará al reconectar.';
                 }else if(failedItems.length){
                     notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
