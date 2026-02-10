@@ -3572,7 +3572,6 @@
             } catch (error) {
                 console.error('Firestore health check failed:', error);
                 updateSyncIndicator('offline');
-                showToast('No se pudo acceder a Firestore. Las reglas o permisos podrían estar bloqueando el acceso.', 'error');
                 return false;
             }
         }
@@ -4786,7 +4785,6 @@
                 if(cached.length){
                     cardsList=cached;
                 }
-                showToast('Usando datos locales por fallo en Firestore', 'warning');
                 updateSyncIndicator('offline');
             }
             cardsList=mergeOfflineQueueIntoCards(cardsList);
@@ -4816,7 +4814,6 @@
                 setStoredCachedTransactions(fetchedTransactions);
             }catch(e){
                 console.error('Load transactions error:',e);
-                showToast('Error de conexión con Firestore','error');
                 const cachedTransactions=getStoredCachedTransactions();
                 if(cachedTransactions.length>0){
                     fetchedTransactions=cachedTransactions;
