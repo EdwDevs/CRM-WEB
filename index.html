@@ -3578,6 +3578,7 @@
         }
 
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
+        let syncCardIdMap=null;
         const confirmActionState = { onConfirm: null };
         let isSyncingOfflineQueue = false;
         
@@ -3742,7 +3743,11 @@
                 if(item.action==='add'){
                     const offlineId=`offline-${item.localId}`;
                     if(!result.some(t=>t.id===offlineId)){
-                        result.unshift({id:offlineId,...item.payload.data,pendingSync:true});
+                        const mappedData={...item.payload.data};
+                        if(mappedData.cardId&&syncCardIdMap?.realToOffline?.has(mappedData.cardId)){
+                            mappedData.cardId=syncCardIdMap.realToOffline.get(mappedData.cardId);
+                        }
+                        result.unshift({id:offlineId,...mappedData,pendingSync:true});
                     }
                 }
             });
@@ -3751,7 +3756,11 @@
                     const targetId=item.payload.id;
                     const idx=result.findIndex(t=>t.id===targetId);
                     if(idx>-1){
-                        result[idx]={...result[idx],...item.payload.data,pendingSync:true};
+                        const mappedData={...item.payload.data};
+                        if(mappedData.cardId&&syncCardIdMap?.realToOffline?.has(mappedData.cardId)){
+                            mappedData.cardId=syncCardIdMap.realToOffline.get(mappedData.cardId);
+                        }
+                        result[idx]={...result[idx],...mappedData,pendingSync:true};
                     }
                 }
                 if(item.action==='delete'){
@@ -3790,7 +3799,11 @@
         function updateQueuedAddPayload(entity, localId, data){
             const idx=offlineQueue.findIndex(item=>item.entity===entity&&item.action==='add'&&item.localId===localId);
             if(idx>-1){
-                offlineQueue[idx].payload.data={...offlineQueue[idx].payload.data,...data};
+                const normalizedData={...data};
+                if(entity==='transactions'&&normalizedData.cardId&&syncCardIdMap?.offlineToReal?.has(normalizedData.cardId)){
+                    normalizedData.cardId=syncCardIdMap.offlineToReal.get(normalizedData.cardId);
+                }
+                offlineQueue[idx].payload.data={...offlineQueue[idx].payload.data,...normalizedData};
                 offlineQueue[idx].status='pending';
                 offlineQueue[idx].error='';
                 persistOfflineQueue();
@@ -3873,6 +3886,7 @@
                 return;
             }
             isSyncingOfflineQueue=true;
+            syncCardIdMap={offlineToReal:new Map(),realToOffline:new Map()};
             updateSyncIndicator('syncing');
             const queueSnapshot=[...offlineQueue];
             const orderedItems=[
@@ -3884,8 +3898,36 @@
             let transactionsTouched=false;
             for(const item of orderedItems){
                 try{
-                    const payload=item.payload;
-                    await executeFirestoreAction({entity:item.entity, action:item.action, payload});
+                    let payload=item.payload;
+                    if(item.entity==='transactions'&&(item.action==='add'||item.action==='update')&&payload?.data?.cardId){
+                        const mappedId=syncCardIdMap.offlineToReal.get(payload.data.cardId);
+                        if(mappedId){
+                            payload={...payload,data:{...payload.data,cardId:mappedId}};
+                            const queueIdx=offlineQueue.findIndex(q=>q.id===item.id);
+                            if(queueIdx>-1){
+                                offlineQueue[queueIdx].payload={...offlineQueue[queueIdx].payload,data:{...offlineQueue[queueIdx].payload.data,cardId:mappedId}};
+                                persistOfflineQueue();
+                            }
+                        }
+                    }
+                    const response=await executeFirestoreAction({entity:item.entity, action:item.action, payload});
+                    if(item.entity==='cards'&&item.action==='add'&&response?.id){
+                        const offlineCardId=`offline-${item.localId}`;
+                        syncCardIdMap.offlineToReal.set(offlineCardId,response.id);
+                        syncCardIdMap.realToOffline.set(response.id,offlineCardId);
+                        let queueWasUpdated=false;
+                        offlineQueue=offlineQueue.map(queuedItem=>{
+                            if(queuedItem.entity==='transactions'&&(queuedItem.action==='add'||queuedItem.action==='update')&&queuedItem.payload?.data?.cardId===offlineCardId){
+                                queueWasUpdated=true;
+                                return {
+                                    ...queuedItem,
+                                    payload:{...queuedItem.payload,data:{...queuedItem.payload.data,cardId:response.id}}
+                                };
+                            }
+                            return queuedItem;
+                        });
+                        if(queueWasUpdated)persistOfflineQueue();
+                    }
                     offlineQueue=offlineQueue.filter(q=>q.id!==item.id);
                     persistOfflineQueue();
                     if(item.entity==='cards')cardsTouched=true;
@@ -3904,6 +3946,7 @@
                 }
             }
             isSyncingOfflineQueue=false;
+            syncCardIdMap=null;
             updateSyncIndicator();
             if(cardsTouched)await loadCards();
             if(transactionsTouched)await loadTransactions();
