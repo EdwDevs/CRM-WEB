@@ -3081,7 +3081,7 @@
                 <span id="syncText">Sin conexión</span>
                 <span class="sync-indicator__count" id="syncPendingCount">0 pendientes</span>
             </div>
-            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" onclick="syncOfflineQueue()">Reintentar</button>
+            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" onclick="syncOfflineQueue({ includeFailed: true })">Reintentar</button>
         </div>
         <div class="sync-indicator__message" id="syncNotice"></div>
         <div class="sync-indicator__failures" id="syncFailures"></div>
@@ -3224,7 +3224,7 @@
                         <input type="hidden" id="editingId" value="">
                         <div class="form-grid">
                             <div class="form-group full-width"><label>Tipo</label><select id="tipo" required onchange="handleTipoChange()"><option value="gasto">💸 Gasto</option><option value="ingreso">💰 Ingreso</option><option value="credito">💳 Crédito</option><option value="pago_tarjeta">📉 Abono TC</option><option value="transferencia">🔄 Transferencia</option></select></div>
-                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;"><div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:15px;"><div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div><div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div><div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div></div></div>
+                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;"><div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:15px;"><div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div><div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div><div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div><div class="form-group"><label style="color:var(--danger);">Fecha próxima de pago</label><input type="date" id="creditoFechaPago"></div></div></div>
                             <div id="divPagoTarjeta" class="form-group full-width hidden" style="background:#ecfdf5; padding:15px; border-radius:12px; border:1px solid #6ee7b7;"><div class="form-group"><label style="color:var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div></div>
                             <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
                             <div class="form-group hidden" id="metodoDestinoDiv"><label>Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
@@ -3554,13 +3554,13 @@
         }
 
         async function getUserCardsCollection() {
-            const uid = await getCurrentUserUid();
-            return db.collection('users').doc(uid).collection('cards');
+            await getCurrentUserUid();
+            return db.collection('cards');
         }
 
         async function getUserTransactionsCollection() {
-            const uid = await getCurrentUserUid();
-            return db.collection('users').doc(uid).collection('transactions');
+            await getCurrentUserUid();
+            return db.collection('transactions');
         }
 
         async function runFirestoreHealthCheck() {
@@ -3618,9 +3618,28 @@
             if(!error)return 'Error desconocido';
             return error.message || error.code || 'Error desconocido';
         }
+        function getPermanentSyncErrorCode(error){
+            const code=(error?.code||'').toString().toLowerCase();
+            const msg=(error?.message||'').toString().toLowerCase();
+            if(code.includes('permission-denied')||msg.includes('permission-denied'))return 'permission-denied';
+            if(code.includes('unauthenticated')||msg.includes('unauthenticated'))return 'unauthenticated';
+            if(code.includes('failed-precondition')||msg.includes('failed-precondition'))return 'failed-precondition';
+            if(code.includes('not-found')||msg.includes('not-found')||msg.includes('not found'))return 'not-found';
+            if(code.includes('conflict')||msg.includes('conflict'))return 'conflict';
+            if(code.includes('already-exists')||msg.includes('already-exists')||msg.includes('already exists'))return 'already-exists';
+            return null;
+        }
+        function getActionableSyncErrorMessage(error){
+            const errorCode=getPermanentSyncErrorCode(error);
+            if(errorCode==='permission-denied')return 'Sin permisos para sincronizar. Revisa reglas/permisos de Firestore y vuelve a intentar.';
+            if(errorCode==='unauthenticated')return 'Tu sesión expiró. Inicia sesión de nuevo y luego pulsa "Reintentar".';
+            if(errorCode==='failed-precondition')return 'No se cumple una precondición de Firestore. Revisa reglas, índices o estado del dato antes de reintentar.';
+            if(errorCode==='not-found')return 'El recurso ya no existe en la nube. Actualiza tus datos antes de reintentar.';
+            if(errorCode==='conflict'||errorCode==='already-exists')return 'Hay un conflicto con un cambio remoto. Revisa el dato y vuelve a intentarlo.';
+            return normalizeSyncError(error);
+        }
         function isPermanentSyncError(error){
-            const msg=(error?.code||error?.message||'').toString().toLowerCase();
-            return msg.includes('not-found')||msg.includes('not found')||msg.includes('conflict')||msg.includes('already-exists')||msg.includes('already exists');
+            return Boolean(getPermanentSyncErrorCode(error));
         }
         function persistOfflineQueue(){
             setStoredOfflineQueue(offlineQueue);
@@ -3643,7 +3662,11 @@
             if(!indicator)return;
             const pendingItems=offlineQueue.filter(item=>item.status!=='synced');
             const failedItems=pendingItems.filter(item=>item.status==='failed');
-            const status=statusOverride || (!navigator.onLine ? 'offline' : (isSyncingOfflineQueue ? 'syncing' : (failedItems.length ? 'failed' : 'online')));
+            const status=statusOverride || (isSyncingOfflineQueue
+                ? 'syncing'
+                : (failedItems.length
+                    ? 'failed'
+                    : (!navigator.onLine ? 'offline' : 'online')));
             indicator.className=`sync-indicator ${status}`;
             if(text){
                 text.textContent=status==='online'
@@ -3663,7 +3686,9 @@
                 retry.disabled=isSyncingOfflineQueue;
             }
             if(notice){
-                if(!navigator.onLine && pendingItems.length){
+                if(failedItems.length){
+                    notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
+                }else if(!navigator.onLine && pendingItems.length){
                     notice.textContent='Guardado local. Se sincronizará al reconectar.';
                 }else if(isSyncingOfflineQueue){
                     notice.textContent='Aplicando cambios en la nube...';
@@ -3879,16 +3904,21 @@
                 return {queued:true,error};
             }
         }
-        async function syncOfflineQueue(){
+        async function syncOfflineQueue({includeFailed=false}={}){
             if(isSyncingOfflineQueue||!navigator.onLine)return;
-            if(!offlineQueue.length){
+            const syncCandidates=offlineQueue.filter(item=>includeFailed || item.status!=='failed');
+            if(!syncCandidates.length){
                 updateSyncIndicator();
                 return;
             }
             isSyncingOfflineQueue=true;
             syncCardIdMap={offlineToReal:new Map(),realToOffline:new Map()};
             updateSyncIndicator('syncing');
-            const queueSnapshot=[...offlineQueue];
+            if(includeFailed){
+                offlineQueue=offlineQueue.map(item=>item.status==='failed'?{...item,status:'pending'}:item);
+                persistOfflineQueue();
+            }
+            const queueSnapshot=[...offlineQueue.filter(item=>includeFailed || item.status!=='failed')];
             const orderedItems=[
                 ...queueSnapshot.filter(item=>item.entity==='cards'&&(item.action==='add'||item.action==='update')),
                 ...queueSnapshot.filter(item=>item.entity==='transactions'&&(item.action==='add'||item.action==='update')),
@@ -3935,7 +3965,7 @@
                 }catch(error){
                     const idx=offlineQueue.findIndex(q=>q.id===item.id);
                     if(idx>-1){
-                        offlineQueue[idx].error=normalizeSyncError(error);
+                        offlineQueue[idx].error=isPermanentSyncError(error)?getActionableSyncErrorMessage(error):normalizeSyncError(error);
                         offlineQueue[idx].status=isPermanentSyncError(error)?'failed':'pending';
                     }
                     persistOfflineQueue();
@@ -4816,9 +4846,61 @@
                 openQuotaModal();
             }
         }
-        
-        function handleTipoChange(){const t=document.getElementById('tipo').value; const cc=document.getElementById('creditConfig'); const pc=document.getElementById('divPagoTarjeta'); const mp=document.getElementById('metodoPagoDiv'); const md=document.getElementById('metodoDestinoDiv'); const cat=document.getElementById('categoria'); cc.classList.add('hidden'); pc.classList.add('hidden'); mp.classList.remove('hidden'); md.classList.add('hidden'); if(t==='credito'){cc.classList.remove('hidden');mp.classList.add('hidden');}else if(t==='pago_tarjeta'){pc.classList.remove('hidden');}else if(t==='transferencia'){md.classList.remove('hidden');} cat.innerHTML='<option value="">Seleccione...</option>'; document.getElementById('subcategoriaDiv').classList.add('hidden'); if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc')); else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia')); else{const g=t==='credito'?'gasto':t;if(categorias[g]){Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});}}}
+        function getDefaultCreditPaymentDate(cardId, baseDateValue=''){
+            const cardData=findCardById(cardId);
+            const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago,10):15;
+            const baseDate=baseDateValue?parseIsoDate(baseDateValue):new Date();
+            const baseLocal=new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate());
+            let paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth(), paymentDay);
+            if(paymentDate<baseLocal){
+                paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth()+1, paymentDay);
+            }
+            return formatLocalDate(paymentDate);
+        }
+
+        function syncCreditPaymentDateField(force=false){
+            const dateInput=document.getElementById('creditoFechaPago');
+            if(!dateInput)return;
+            if(dateInput.value && !force)return;
+            const cardId=document.getElementById('tarjetaCredito').value;
+            const txDate=document.getElementById('fecha').value;
+            dateInput.value=getDefaultCreditPaymentDate(cardId, txDate);
+        }
+
+        function handleTipoChange(){
+            const t=document.getElementById('tipo').value;
+            const cc=document.getElementById('creditConfig');
+            const pc=document.getElementById('divPagoTarjeta');
+            const mp=document.getElementById('metodoPagoDiv');
+            const md=document.getElementById('metodoDestinoDiv');
+            const cat=document.getElementById('categoria');
+            cc.classList.add('hidden');
+            pc.classList.add('hidden');
+            mp.classList.remove('hidden');
+            md.classList.add('hidden');
+            if(t==='credito'){
+                cc.classList.remove('hidden');
+                mp.classList.add('hidden');
+                syncCreditPaymentDateField(true);
+            }else if(t==='pago_tarjeta'){
+                pc.classList.remove('hidden');
+            }else if(t==='transferencia'){
+                md.classList.remove('hidden');
+            }
+            cat.innerHTML='<option value="">Seleccione...</option>';
+            document.getElementById('subcategoriaDiv').classList.add('hidden');
+            if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc'));
+            else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia'));
+            else{
+                const g=t==='credito'?'gasto':t;
+                if(categorias[g]){
+                    Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});
+                }
+            }
+        }
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
+        document.getElementById('tarjetaCredito').addEventListener('change',()=>syncCreditPaymentDateField(true));
+        document.getElementById('fecha').addEventListener('change',()=>syncCreditPaymentDateField(true));
         function preSubmit(){
             const t=document.getElementById('tipo').value;
             const m=parseCurrencyInput(document.getElementById('monto').value);
@@ -4830,22 +4912,20 @@
                 const pagadasRaw=parseInt(document.getElementById('cuotasPagadas').value);
                 const cardData=findCardById(tc);
                 const cardName=cardData?.name||'';
-                const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
                 if(!c||c<=0){showToast('Completa cuotas válidas','error');alert('Completa cuotas válidas');return;}
-                const today=new Date();
-                const todayLocal=new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                const fechaPrimerPago=formatLocalDate(todayLocal);
-                let proximaPago=buildPaymentDate(todayLocal.getFullYear(), todayLocal.getMonth(), paymentDay);
-                if(proximaPago < todayLocal){
-                    proximaPago=buildPaymentDate(todayLocal.getFullYear(), todayLocal.getMonth()+1, paymentDay);
+                const manualPaymentDate=document.getElementById('creditoFechaPago').value;
+                const resolvedPaymentDate=manualPaymentDate||getDefaultCreditPaymentDate(tc, d.fecha);
+                if(!resolvedPaymentDate){
+                    showToast('Define una fecha de pago válida','error');
+                    return;
                 }
                 d.cardId=tc;
                 d.cardName=cardName;
                 d.esCredito=true;
                 d.cuotas=c;
                 d.totalDeuda=m;
-                d.fechaPrimerPago=fechaPrimerPago;
-                d.proximaFechaPago=formatLocalDate(proximaPago);
+                d.fechaPrimerPago=resolvedPaymentDate;
+                d.proximaFechaPago=resolvedPaymentDate;
                 const pagadas=Number.isNaN(pagadasRaw)?0:Math.min(Math.max(pagadasRaw,0),c);
                 d.cuotasPagadas=pagadas;
                 tempTransactionData=d;
@@ -4907,7 +4987,7 @@
             }
         }
         function cancelEdit(){editingTransactionId=null; returnToQuotaModal=false; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
-        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
+        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;document.getElementById('creditoFechaPago').value=t.proximaFechaPago||getDefaultCreditPaymentDate(resolveCreditCardId(t), t.fecha);}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         async function performDeleteTransaction(id,{skipConfirm=false}={}){
             if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
             try{
