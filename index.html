@@ -471,28 +471,172 @@
             z-index: 1;
         }
 
+        /* --- Bento Box Dashboard Layout --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .bento-hero {
+            grid-column: span 12;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            margin-bottom: 8px;
+        }
+
+        @media (min-width: 1024px) {
+            .bento-hero {
+                grid-template-columns: repeat(12, 1fr);
+            }
+            .bento-hero .hero-balance {
+                grid-column: span 8;
+                margin-bottom: 0;
+            }
+            .bento-hero .accounts-col {
+                grid-column: span 4;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .bento-hero .hero-balance {
+                grid-column: span 12;
+            }
+            .bento-hero .accounts-col {
+                grid-column: span 12;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 16px;
+            }
+        }
+
+        .bento-stats {
+            grid-column: span 12;
+        }
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 32px;
-            margin-bottom: 32px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        /* Modificadores de la tarjeta Hero para que coincida con Bento */
+        .hero-balance {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); /* Degradado fresco */
+            color: white;
+            padding: 40px 32px;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.25), 0 8px 10px -6px rgba(59, 130, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-balance::before {
+            content: '';
+            position: absolute;
+            right: -10%;
+            top: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+        }
+
+        .hero-balance::after {
+            content: '';
+            position: absolute;
+            left: -5%;
+            bottom: -30%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+        }
+
+        /* Tarjetas de cuentas (Nequi, Débito, Efectivo) */
+        .account-card {
+            background: var(--bg-surface);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            transition: all var(--transition-base);
+        }
+
+        .account-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: rgba(148, 163, 184, 0.2);
+            transform: translateY(-2px);
+        }
+
+        [data-theme="dark"] .account-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border-color: rgba(148, 163, 184, 0.1);
+        }
+
+        .account-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .account-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .account-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .account-amount {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
         }
 
         .mini-stat {
             background: var(--bg-surface);
-            padding: var(--surface-padding);
+            padding: 24px;
             border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm); /* Sombra consistente */
-            border: 1px solid rgba(148, 163, 184, 0.1); /* Borde sutil */
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(148, 163, 184, 0.1);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            justify-content: space-between;
         }
 
         .mini-stat:hover {
             box-shadow: var(--shadow-md);
-            border-color: rgba(148, 163, 184, 0.2); /* Resalta sutilmente el borde */
+            border-color: rgba(148, 163, 184, 0.2);
+            transform: translateY(-2px);
         }
 
         [data-theme="dark"] .mini-stat {
@@ -501,35 +645,60 @@
             border-color: rgba(148, 163, 184, 0.1);
         }
 
-        .mini-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
+        .mini-header {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
         }
 
-        .mini-label i {
-            font-size: 0.9rem;
+        .mini-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .mini-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
         .mini-value {
-            font-size: clamp(1.1rem, 1.6vw, 1.4rem);
-            font-weight: 700;
+            font-size: clamp(1.4rem, 2vw, 1.8rem);
+            font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.02em;
         }
 
-        .mini-delta {
-            margin-top: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
+        .mini-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
+        .mini-delta {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+        }
+
+        .delta-positive { background: var(--success-light); color: #047857; }
+        .delta-negative { background: var(--danger-light); color: #b91c1c; }
+        .delta-neutral { background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); }
+
+        [data-theme="dark"] .delta-positive { color: #34d399; }
+        [data-theme="dark"] .delta-negative { color: #f87171; }
 
         .kpi-grid {
             display: grid;
@@ -544,10 +713,20 @@
             margin-top: 6px;
         }
 
-        .kpi-delta {
-            margin-top: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
+        /* Progreso visual en tarjetas */
+        .stat-progress-bg {
+            height: 6px;
+            background: rgba(148, 163, 184, 0.15);
+            border-radius: var(--radius-full);
+            margin-top: 12px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .stat-progress-fill {
+            height: 100%;
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease-out;
         }
 
         .top-category-grid {
@@ -590,13 +769,6 @@
             }
         }
 
-        .mini-stat.debt .mini-value {
-            color: var(--danger);
-        }
-
-        .mini-stat.income .mini-value {
-            color: var(--success);
-        }
 
         .advanced-filters {
             background: var(--bg-body);
@@ -3106,9 +3278,113 @@
             <div id="remindersContainer"></div>
 
             <div id="view-dashboard" class="tab-content active">
-                <div class="hero-balance">
-                    <div class="hero-title">Patrimonio Líquido Total</div><div class="hero-amount" id="saldoTotal">$ 0</div>
-                    <div style="font-size:0.85rem; margin-top:10px; opacity:0.8;"><i class="fas fa-info-circle"></i> Suma de Nequi, Bancos y Efectivo</div>
+                <!-- Bento Grid Layout -->
+                <div class="dashboard-grid">
+
+                    <div class="bento-hero">
+                        <div class="hero-balance">
+                            <div class="hero-title">Patrimonio Líquido Total</div>
+                            <div class="hero-amount" id="saldoTotal">$ 0</div>
+                            <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px;">
+                                <i class="fas fa-shield-alt"></i> Saldo neto consolidado
+                            </div>
+                        </div>
+                        <div class="accounts-col">
+                            <div class="account-card">
+                                <div class="account-icon" style="background: var(--info-light); color: var(--info);"><i class="fas fa-university"></i></div>
+                                <div class="account-info">
+                                    <span class="account-label">Débito / Bancos</span>
+                                    <span class="account-amount" id="saldoDebito">$0</span>
+                                </div>
+                            </div>
+                            <div class="account-card">
+                                <div class="account-icon" style="background: var(--success-light); color: var(--success);"><i class="fas fa-money-bill-wave"></i></div>
+                                <div class="account-info">
+                                    <span class="account-label">Efectivo Físico</span>
+                                    <span class="account-amount" id="saldoEfectivo">$0</span>
+                                </div>
+                            </div>
+                            <div class="account-card">
+                                <div class="account-icon" style="background: var(--credit-light); color: var(--credit);"><i class="fas fa-mobile-alt"></i></div>
+                                <div class="account-info">
+                                    <span class="account-label">Billetera Digital</span>
+                                    <span class="account-amount" id="saldoNequi">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-stats">
+                        <h3 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700;">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
+                        <div class="stats-grid">
+                            <!-- Ingresos -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Ingresos</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--success-light); color: var(--success);"><i class="fas fa-arrow-down"></i></div>
+                                </div>
+                                <div class="mini-value" id="totalIngresosMes">$0</div>
+                                <div class="mini-footer">
+                                    <div class="mini-delta" id="deltaIncomeMoM">--</div>
+                                </div>
+                            </div>
+                            <!-- Gastos -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Gastos + TC</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--danger-light); color: var(--danger);"><i class="fas fa-arrow-up"></i></div>
+                                </div>
+                                <div class="mini-value" id="totalGastosMes">$0</div>
+                                <div class="mini-footer">
+                                    <div class="mini-delta" id="deltaExpenseMoM">--</div>
+                                </div>
+                            </div>
+                            <!-- Balance Neto -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Balance Neto</span>
+                                    <div class="mini-icon-wrapper" style="background: rgba(148, 163, 184, 0.15); color: var(--text-secondary);"><i class="fas fa-scale-balanced"></i></div>
+                                </div>
+                                <div class="mini-value" id="balanceMes">$0</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill" style="width: 50%; background: var(--text-secondary);"></div></div>
+                                </div>
+                            </div>
+                            <!-- Tasa de Ahorro -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Tasa de Ahorro</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--info-light); color: var(--info);"><i class="fas fa-piggy-bank"></i></div>
+                                </div>
+                                <div class="mini-value" id="savingsRate">0%</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill" style="width: 0%; background: var(--info);"></div></div>
+                                </div>
+                            </div>
+                            <!-- Flujo Neto Real -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Flujo Neto Real</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--success-light); color: var(--success);"><i class="fas fa-money-bill-trend-up"></i></div>
+                                </div>
+                                <div class="mini-value" id="netCashFlow">$0</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Ingresos menos todos los gastos</span>
+                                </div>
+                            </div>
+                            <!-- Uso de cupos de TC -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Uso de TC</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--warning-light); color: var(--warning);"><i class="fas fa-credit-card"></i></div>
+                                </div>
+                                <div class="mini-value" id="creditUtilization">0%</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill" style="width: 0%; background: var(--warning);"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="family-summary" id="familySummary">
@@ -3118,64 +3394,35 @@
                     <div class="member-card skeleton" style="height: 120px;"></div>
                 </div>
 
-                <div class="stats-grid">
-                    <div class="mini-stat"><div class="mini-label"><i class="fas fa-university" style="color: #6366f1;"></i> Débito</div><div class="mini-value" id="saldoDebito">$0</div></div>
-                    <div class="mini-stat"><div class="mini-label"><i class="fas fa-money-bill-wave" style="color: #10b981;"></i> Efectivo</div><div class="mini-value" id="saldoEfectivo">$0</div></div>
-                    <div class="mini-stat"><div class="mini-label"><i class="fas fa-mobile-alt" style="color: #ec4899;"></i> Nequi</div><div class="mini-value" id="saldoNequi">$0</div></div>
-                </div>
-                <h3 style="margin-bottom: 15px; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Flujo del Mes (<span id="lblPeriodoResumen">Actual</span>)</h3>
-                <div class="stats-grid">
-                    <div class="mini-stat income">
-                        <div class="mini-label">Ingresos</div>
-                        <div class="mini-value" id="totalIngresosMes">$0</div>
-                        <div class="mini-delta" id="deltaIncomeMoM">--</div>
-                    </div>
-                    <div class="mini-stat debt">
-                        <div class="mini-label">Gastos + Compras TC</div>
-                        <div class="mini-value" id="totalGastosMes">$0</div>
-                        <div class="mini-delta" id="deltaExpenseMoM">--</div>
-                    </div>
-                    <div class="mini-stat"><div class="mini-label">Balance Neto</div><div class="mini-value" id="balanceMes">$0</div></div>
-                </div>
-                <div class="stats-grid">
-                    <div class="mini-stat">
-                        <div class="mini-label">Gasto diario promedio del mes</div>
-                        <div class="mini-value" id="avgDailySpend">$0</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-label">Tasa de ahorro</div>
-                        <div class="mini-value" id="savingsRate">0%</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-label">Uso de cupos de TC</div>
-                        <div class="mini-value" id="creditUtilization">0%</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-label">Flujo neto real del mes</div>
-                        <div class="mini-value" id="netCashFlow">$0</div>
-                    </div>
-                </div>
-                <div class="card" id="dailyCapCard">
-                    <h3 style="margin-bottom:15px;"><i class="fas fa-calendar-day"></i> Tope del día</h3>
-                    <div class="stats-grid">
-                        <div class="mini-stat">
-                            <div class="mini-label">Tope del día</div>
-                            <div class="mini-value" id="dailyCapValue">$0</div>
+                <div class="dashboard-grid">
+                    <!-- Tope Diario -->
+                    <div class="card" id="dailyCapCard" style="grid-column: span 12;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h3 style="margin:0;"><i class="fas fa-calendar-day" style="color:var(--primary); margin-right:8px;"></i> Tope de Gasto Diario</h3>
+                            <span id="dailyCapStatus" style="font-size:0.85rem; font-weight:700; padding:4px 12px; border-radius:var(--radius-full); background:var(--success-light); color:#047857;">Estado: OK</span>
                         </div>
-                        <div class="mini-stat debt">
-                            <div class="mini-label">Gasto acumulado de hoy</div>
-                            <div class="mini-value" id="dailySpendValue">$0</div>
+
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px;">
+                            <div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Límite hoy</div>
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="dailyCapValue">$0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Gastado hoy</div>
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--danger);" id="dailySpendValue">$0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Promedio Mes</div>
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="avgDailySpend">$0</div>
+                            </div>
                         </div>
-                        <div class="mini-stat">
-                            <div class="mini-label">Estado</div>
-                            <div class="mini-value" id="dailyCapStatus">OK</div>
+                        <div class="stat-progress-bg" style="height:8px; margin-top:20px;"><div id="dailySpendProgressBar" class="stat-progress-fill" style="width: 0%; background: var(--success);"></div></div>
+                        <div style="margin-top:16px; font-size:0.8rem; color:var(--text-muted);">
+                            * El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.
                         </div>
                     </div>
-                    <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
-                        Tope del día (no incluye Vivienda ni Servicios Públicos).
-                        <span>Tope diario = Patrimonio Líquido Total / días pendientes del mes.</span>
-                    </div>
                 </div>
+
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
@@ -4301,16 +4548,34 @@
             dailySpendValue.textContent=formatMoney(gastoDia);
             dailyCapStatus.textContent=excedido?'Excedido':'OK';
             dailyCapStatus.style.color=excedido?'var(--danger)':'var(--success)';
+
+            const dailySpendProgressBar = document.getElementById('dailySpendProgressBar');
+            if(dailySpendProgressBar) {
+                const percent = topeDia > 0 ? (gastoDia / topeDia) * 100 : 0;
+                dailySpendProgressBar.style.width = Math.min(100, Math.max(0, percent)) + '%';
+                dailySpendProgressBar.style.background = excedido ? 'var(--danger)' : (percent > 80 ? 'var(--warning)' : 'var(--success)');
+            }
         }
 
         function calculateMonthlyTotals(targetDate){let income=0, expenses=0; const month=targetDate.getMonth(); const year=targetDate.getFullYear();
         transactions.forEach(t=>{const amount=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); if((tm-1)!==month||ty!==year)return;
         if(t.tipo==='ingreso'&&!t.esCredito){income+=amount;} else if(t.esCredito){expenses+=amount;} else if(t.tipo==='gasto'){expenses+=amount;}}); return {income,expenses};}
 
-        function formatMoMDelta(current, previous, positiveIsGood){const diff=current-previous; const isImprovement=positiveIsGood?diff>=0:diff<=0; const arrow=diff===0?'→':(diff>0?'▲':'▼');
-        const sign=diff===0?'':(diff>0?'+':'-'); const absValue=formatMoney(Math.abs(diff));
-        let percentText=''; if(previous===0){percentText=current===0?'0%':'N/A';}else{percentText=`${Math.abs((diff/previous)*100).toFixed(1)}%`;}
-        return {text:`${arrow} ${sign}${absValue} (${percentText}) vs mes anterior`, isImprovement, diff};}
+        function formatMoMDelta(current, previous, positiveIsGood){
+            const diff=current-previous;
+            const isImprovement=positiveIsGood?diff>=0:diff<=0;
+            const arrow=diff===0?'':(diff>0?'<i class="fas fa-arrow-trend-up"></i>':'<i class="fas fa-arrow-trend-down"></i>');
+            const sign=diff===0?'':(diff>0?'+':'-');
+            const absValue=formatMoney(Math.abs(diff));
+            let percentText='';
+            if(previous===0){percentText=current===0?'0%':'N/A';}else{percentText=`${Math.abs((diff/previous)*100).toFixed(1)}%`;}
+            return {
+                html:`${arrow} ${sign}${absValue} (${percentText})`,
+                isImprovement,
+                diff,
+                isNeutral: diff===0
+            };
+        }
 
         function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
@@ -4332,11 +4597,38 @@
         const expenseDelta=formatMoMDelta(g, prevTotals.expenses, false);
         const incomeDeltaEl=document.getElementById('deltaIncomeMoM');
         const expenseDeltaEl=document.getElementById('deltaExpenseMoM');
-        incomeDeltaEl.textContent=incomeDelta.text;
-        expenseDeltaEl.textContent=expenseDelta.text;
-        incomeDeltaEl.style.color=incomeDelta.diff===0?'var(--text-muted)':(incomeDelta.isImprovement?'var(--success)':'var(--danger)');
-        expenseDeltaEl.style.color=expenseDelta.diff===0?'var(--text-muted)':(expenseDelta.isImprovement?'var(--success)':'var(--danger)');
+        incomeDeltaEl.innerHTML=incomeDelta.html;
+        expenseDeltaEl.innerHTML=expenseDelta.html;
+
+        incomeDeltaEl.className = 'mini-delta ' + (incomeDelta.isNeutral ? 'delta-neutral' : (incomeDelta.isImprovement ? 'delta-positive' : 'delta-negative'));
+        expenseDeltaEl.className = 'mini-delta ' + (expenseDelta.isNeutral ? 'delta-neutral' : (expenseDelta.isImprovement ? 'delta-positive' : 'delta-negative'));
+
+        // Actualizar barras de progreso (Nuevas KPIs visuales)
+        const savingsBar = document.getElementById('savingsProgressBar');
+        if (savingsBar) {
+            savingsBar.style.width = Math.min(100, Math.max(0, savingsRatePercent)) + '%';
+        }
+
+        const balanceBar = document.getElementById('balanceProgressBar');
+        if (balanceBar) {
+            // Un aproximado visual del balance respecto al ingreso
+            const balanceRatio = i > 0 ? ((i - g) / i) * 100 : 0;
+            const balanceWidth = Math.min(100, Math.max(0, balanceRatio));
+            balanceBar.style.width = balanceWidth + '%';
+            balanceBar.style.background = balanceRatio > 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        const creditUtilizationBar = document.getElementById('creditUtilizationBar');
+        if (creditUtilizationBar) {
+            creditUtilizationBar.style.width = Math.min(100, Math.max(0, creditUtilizationPercent)) + '%';
+            creditUtilizationBar.style.background = creditUtilizationPercent > 80 ? 'var(--danger)' : (creditUtilizationPercent > 50 ? 'var(--warning)' : 'var(--success)');
+        }
+
         globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
+
+        const netCashFlowEl=document.getElementById('netCashFlow');
+        if(netCashFlowEl) netCashFlowEl.textContent=formatMoney(i-g);
+
         const avgDailySpendEl=document.getElementById('avgDailySpend');
         if(avgDailySpendEl) avgDailySpendEl.textContent=formatMoney(avgDailySpend);
         const savingsRateEl=document.getElementById('savingsRate');
