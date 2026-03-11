@@ -4690,19 +4690,19 @@
         const cuotaSiguientePorTarjeta={};
         const fechaSiguientePorTarjeta={};
         const today=new Date();
-        window.parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
-        window.buildPaymentDate=(year,monthIndex,day)=>{
+        const parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
+        const buildPaymentDate=(year,monthIndex,day)=>{
             const lastDay=new Date(year, monthIndex+1, 0).getDate();
             return new Date(year, monthIndex, Math.min(day, lastDay));
         };
         const resolveNextPaymentDate=(cred,paymentDay,baseDate)=>{
             if(cred.proximaFechaPago){
-                return window.parseIsoDate(cred.proximaFechaPago);
+                return parseIsoDate(cred.proximaFechaPago);
             }
             const base=baseDate||today;
-            let next=window.buildPaymentDate(base.getFullYear(), base.getMonth(), paymentDay);
+            let next=buildPaymentDate(base.getFullYear(), base.getMonth(), paymentDay);
             if(next < today){
-                next=window.buildPaymentDate(base.getFullYear(), base.getMonth()+1, paymentDay);
+                next=buildPaymentDate(base.getFullYear(), base.getMonth()+1, paymentDay);
             }
             return next;
         };
@@ -4927,7 +4927,7 @@
         }
         
         let tempPagoCuotaData=null;
-        function window.buildPaymentDate(year,monthIndex,day){
+        function buildPaymentDate(year,monthIndex,day){
             const lastDay=new Date(year, monthIndex+1, 0).getDate();
             return new Date(year, monthIndex, Math.min(day, lastDay));
         }
@@ -4937,16 +4937,16 @@
                 return new Date(parts[0], parts[1]-1, parts[2]);
             }
             const today=new Date();
-            let next=window.buildPaymentDate(today.getFullYear(), today.getMonth(), paymentDay);
+            let next=buildPaymentDate(today.getFullYear(), today.getMonth(), paymentDay);
             if(next < today){
-                next=window.buildPaymentDate(today.getFullYear(), today.getMonth()+1, paymentDay);
+                next=buildPaymentDate(today.getFullYear(), today.getMonth()+1, paymentDay);
             }
             return next;
         }
         function addNextPaymentMonth(baseDate,paymentDay){
             const year=baseDate.getFullYear();
             const month=baseDate.getMonth()+1;
-            return window.buildPaymentDate(year, month, paymentDay);
+            return buildPaymentDate(year, month, paymentDay);
         }
         
         // Función unificada para pagar cuota
@@ -5170,11 +5170,11 @@
         function getDefaultCreditPaymentDate(cardId, baseDateValue=''){
             const cardData=findCardById(cardId);
             const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago,10):15;
-            const baseDate=baseDateValue?window.parseIsoDate(baseDateValue):new Date();
+            const baseDate=baseDateValue?parseIsoDate(baseDateValue):new Date();
             const baseLocal=new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate());
-            let paymentDate=window.buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth(), paymentDay);
+            let paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth(), paymentDay);
             if(paymentDate<baseLocal){
-                paymentDate=window.buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth()+1, paymentDay);
+                paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth()+1, paymentDay);
             }
             return formatLocalDate(paymentDate);
         }
@@ -5222,7 +5222,7 @@
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
         document.getElementById('tarjetaCredito').addEventListener('change',()=>syncCreditPaymentDateField(true));
         document.getElementById('fecha').addEventListener('change',()=>syncCreditPaymentDateField(true));
-        window.preSubmit=function(){
+        function preSubmit(){
             const t=document.getElementById('tipo').value;
             const m=parseCurrencyInput(document.getElementById('monto').value);
             if(!Number.isFinite(m)||m<=0){alert('Monto inválido');return;}
