@@ -3489,7 +3489,15 @@
                         <input type="hidden" id="editingId" value="">
                         <div class="form-grid">
                             <div class="form-group full-width"><label>Tipo</label><select id="tipo" required onchange="handleTipoChange()"><option value="gasto">💸 Gasto</option><option value="ingreso">💰 Ingreso</option><option value="credito">💳 Crédito</option><option value="pago_tarjeta">📉 Abono TC</option><option value="transferencia">🔄 Transferencia</option></select></div>
-                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;"><div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:15px;"><div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div><div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div><div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div><div class="form-group"><label style="color:var(--danger);">Fecha próxima de pago</label><input type="date" id="creditoFechaPago"></div></div></div>
+                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;">
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:15px;">
+                                    <div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div>
+                                    <div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div>
+                                    <div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div>
+                                    <div class="form-group"><label style="color:var(--danger);" title="Valor exacto de la cuota mensual si difiere de Monto/Cuotas. Opcional.">Valor Cuota (Opc.)</label><input type="text" id="valorCuotaManual" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0"></div>
+                                    <div class="form-group" style="grid-column: 1 / -1;"><label style="color:var(--danger);">Fecha próxima de pago</label><input type="date" id="creditoFechaPago"></div>
+                                </div>
+                            </div>
                             <div id="divPagoTarjeta" class="form-group full-width hidden" style="background:#ecfdf5; padding:15px; border-radius:12px; border:1px solid #6ee7b7;"><div class="form-group"><label style="color:var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div></div>
                             <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
                             <div class="form-group hidden" id="metodoDestinoDiv"><label>Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
@@ -3633,7 +3641,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
+    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row"><span>Valor de Cuota:</span><strong id="modalValorCuota"></strong></div><div class="modal-row"><span>Valor de Cuota:</span><strong id="modalValorCuota"></strong></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
 
     <div class="modal-overlay" id="confirmActionModal">
         <div class="modal-content">
@@ -4411,7 +4419,11 @@
                     const cuotas=t.cuotas||1;
                     const pagadas=t.cuotasPagadas||0;
                     const porPagar=Math.max(0,cuotas-pagadas);
-                    dm[c]+=(totalDeuda/cuotas)*porPagar;
+                    if (t.valorCuotaManual && t.valorCuotaManual > 0) {
+                        dm[c]+= t.valorCuotaManual * porPagar;
+                    } else {
+                        dm[c]+=(totalDeuda/cuotas)*porPagar;
+                    }
                 }
             });
             return dm;
@@ -4678,19 +4690,19 @@
         const cuotaSiguientePorTarjeta={};
         const fechaSiguientePorTarjeta={};
         const today=new Date();
-        const parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
-        const buildPaymentDate=(year,monthIndex,day)=>{
+        window.parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
+        window.buildPaymentDate=(year,monthIndex,day)=>{
             const lastDay=new Date(year, monthIndex+1, 0).getDate();
             return new Date(year, monthIndex, Math.min(day, lastDay));
         };
         const resolveNextPaymentDate=(cred,paymentDay,baseDate)=>{
             if(cred.proximaFechaPago){
-                return parseIsoDate(cred.proximaFechaPago);
+                return window.parseIsoDate(cred.proximaFechaPago);
             }
             const base=baseDate||today;
-            let next=buildPaymentDate(base.getFullYear(), base.getMonth(), paymentDay);
+            let next=window.buildPaymentDate(base.getFullYear(), base.getMonth(), paymentDay);
             if(next < today){
-                next=buildPaymentDate(base.getFullYear(), base.getMonth()+1, paymentDay);
+                next=window.buildPaymentDate(base.getFullYear(), base.getMonth()+1, paymentDay);
             }
             return next;
         };
@@ -4915,7 +4927,7 @@
         }
         
         let tempPagoCuotaData=null;
-        function buildPaymentDate(year,monthIndex,day){
+        function window.buildPaymentDate(year,monthIndex,day){
             const lastDay=new Date(year, monthIndex+1, 0).getDate();
             return new Date(year, monthIndex, Math.min(day, lastDay));
         }
@@ -4925,16 +4937,16 @@
                 return new Date(parts[0], parts[1]-1, parts[2]);
             }
             const today=new Date();
-            let next=buildPaymentDate(today.getFullYear(), today.getMonth(), paymentDay);
+            let next=window.buildPaymentDate(today.getFullYear(), today.getMonth(), paymentDay);
             if(next < today){
-                next=buildPaymentDate(today.getFullYear(), today.getMonth()+1, paymentDay);
+                next=window.buildPaymentDate(today.getFullYear(), today.getMonth()+1, paymentDay);
             }
             return next;
         }
         function addNextPaymentMonth(baseDate,paymentDay){
             const year=baseDate.getFullYear();
             const month=baseDate.getMonth()+1;
-            return buildPaymentDate(year, month, paymentDay);
+            return window.buildPaymentDate(year, month, paymentDay);
         }
         
         // Función unificada para pagar cuota
@@ -5158,11 +5170,11 @@
         function getDefaultCreditPaymentDate(cardId, baseDateValue=''){
             const cardData=findCardById(cardId);
             const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago,10):15;
-            const baseDate=baseDateValue?parseIsoDate(baseDateValue):new Date();
+            const baseDate=baseDateValue?window.parseIsoDate(baseDateValue):new Date();
             const baseLocal=new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate());
-            let paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth(), paymentDay);
+            let paymentDate=window.buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth(), paymentDay);
             if(paymentDate<baseLocal){
-                paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth()+1, paymentDay);
+                paymentDate=window.buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth()+1, paymentDay);
             }
             return formatLocalDate(paymentDate);
         }
@@ -5210,7 +5222,7 @@
         document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
         document.getElementById('tarjetaCredito').addEventListener('change',()=>syncCreditPaymentDateField(true));
         document.getElementById('fecha').addEventListener('change',()=>syncCreditPaymentDateField(true));
-        function preSubmit(){
+        window.preSubmit=function(){
             const t=document.getElementById('tipo').value;
             const m=parseCurrencyInput(document.getElementById('monto').value);
             if(!Number.isFinite(m)||m<=0){alert('Monto inválido');return;}
@@ -5219,6 +5231,8 @@
                 const tc=document.getElementById('tarjetaCredito').value;
                 const c=parseInt(document.getElementById('cuotas').value);
                 const pagadasRaw=parseInt(document.getElementById('cuotasPagadas').value);
+                const valorCuotaManualStr=document.getElementById('valorCuotaManual').value;
+                const valorCuotaManual=parseCurrencyInput(valorCuotaManualStr);
                 const cardData=findCardById(tc);
                 const cardName=cardData?.name||'';
                 if(!c||c<=0){showToast('Completa cuotas válidas','error');alert('Completa cuotas válidas');return;}
@@ -5233,6 +5247,9 @@
                 d.esCredito=true;
                 d.cuotas=c;
                 d.totalDeuda=m;
+                if(!Number.isNaN(valorCuotaManual) && valorCuotaManual > 0){
+                    d.valorCuotaManual=valorCuotaManual;
+                }
                 d.fechaPrimerPago=resolvedPaymentDate;
                 d.proximaFechaPago=resolvedPaymentDate;
                 const pagadas=Number.isNaN(pagadasRaw)?0:Math.min(Math.max(pagadasRaw,0),c);
@@ -5241,6 +5258,8 @@
                 document.getElementById('modalTarjeta').textContent=cardName;
                 document.getElementById('modalCuotas').textContent=c;
                 document.getElementById('modalTotalDeuda').textContent=formatMoney(m);
+                const cuotaCalculada = (d.valorCuotaManual !== undefined) ? d.valorCuotaManual : (m/c);
+                document.getElementById('modalValorCuota').textContent=formatMoney(cuotaCalculada) + (d.valorCuotaManual !== undefined ? ' (Manual)' : ' (Automática)');
                 document.getElementById('creditModal').style.display='flex';
             }else{
                 if(t==='pago_tarjeta'){
