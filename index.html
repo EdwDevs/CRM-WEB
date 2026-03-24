@@ -11,65 +11,83 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
-        :root, [data-theme="dark"], [data-theme="light"] {
-            /* Forzamos el tema oscuro "Banca Privada Suiza" en toda la app para asegurar la experiencia élite */
+
+        :root, [data-theme="light"] {
+            /* Tema claro "Banca Privada Suiza" */
+            --primary: #B8860B; /* Dorado mate más oscuro para legibilidad sobre blanco */
+            --primary-dark: #8B6508;
+            --primary-light: #DAA520;
+            --secondary: #2C3E50; /* Gris azulado oscuro */
+            --accent: #B8860B;
+            --bg-body: #F8F9FA; /* Blanco tiza/perla */
+            --bg-surface: #FFFFFF; /* Blanco puro para tarjetas */
+            --bg-elevated: #F1F3F5;
+            --text-primary: #1A1A1A; /* Gris muy oscuro, casi negro */
+            --text-secondary: #4A5568;
+            --border-light: rgba(184, 134, 11, 0.2); /* Bordes sutilmente dorados */
+            --success: #059669; /* Verde esmeralda */
+            --success-light: rgba(5, 150, 105, 0.1);
+            --danger: #DC2626; /* Rojo oscuro */
+            --danger-light: rgba(220, 38, 38, 0.1);
+            --warning: #D97706;
+            --warning-light: rgba(217, 119, 6, 0.1);
+            --info: #2563EB;
+            --info-light: rgba(37, 99, 235, 0.1);
+            --credit: #7C3AED;
+            --credit-light: rgba(124, 58, 237, 0.1);
+
+            --font-main: 'Outfit', sans-serif;
+            --font-heading: 'Syne', sans-serif;
+
+            /* Neoclasicismo Digital: Bordes moderados, sombras suaves */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
+
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
+            --shadow-lg: 0 12px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        [data-theme="dark"] {
+            /* Tema oscuro "Banca Privada Suiza" */
             --primary: #D4AF37; /* Dorado mate */
             --primary-dark: #AA8C2C;
             --primary-light: #E5C768;
             --secondary: #14151B; /* Gris antracita */
-            --accent: #E5E7EB; /* Platino / Gris claro */
-            --accent-light: #FFFFFF;
+            --accent: #E5C768;
+            --bg-body: #0A0B10; /* Midnight blue / casi negro */
+            --bg-surface: #14151B; /* Gris oscuro para tarjetas */
+            --bg-elevated: #1F212A;
+            --text-primary: #F3F4F6;
+            --text-secondary: #9CA3AF;
+            --border-light: rgba(212, 175, 55, 0.15); /* Bordes sutilmente dorados */
+            --success: #10B981;
+            --success-light: rgba(16, 185, 129, 0.1);
+            --danger: #EF4444;
+            --danger-light: rgba(239, 68, 68, 0.1);
+            --warning: #F59E0B;
+            --warning-light: rgba(245, 158, 11, 0.1);
+            --info: #3B82F6;
+            --info-light: rgba(59, 130, 246, 0.1);
+            --credit: #8B5CF6;
+            --credit-light: rgba(139, 92, 246, 0.1);
             
-            --bg-body: #090A0F; /* Medianoche casi negro */
-            --bg-surface: #14151B;
-            --bg-elevated: #1F2029;
+            --font-main: 'Outfit', sans-serif;
+            --font-heading: 'Syne', sans-serif;
             
-            --text-primary: #F8FAFC; /* Slate 50 para alto contraste */
-            --text-secondary: #94A3B8; /* Slate 400 */
-            --text-muted: #64748B; /* Slate 500 */
-            --text-inverse: #090A0F; /* Para el texto sobre fondos dorados */
-            
-            --success: #10B981; /* Verde elegante */
-            --success-light: rgba(16, 185, 129, 0.15);
-            --danger: #EF4444; /* Rojo vibrante */
-            --danger-light: rgba(239, 68, 68, 0.15);
-            --warning: #F59E0B; /* Ámbar */
-            --warning-light: rgba(245, 158, 11, 0.15);
-            --info: #3B82F6; /* Azul limpio */
-            --info-light: rgba(59, 130, 246, 0.15);
-            --credit: #EC4899;
-            --credit-light: rgba(236, 72, 153, 0.15);
-            
-            --ai-gradient: linear-gradient(135deg, #D4AF37 0%, #E5C768 100%);
-            --hero-gradient: linear-gradient(135deg, #2A2B33 0%, #14151B 100%); /* Gradiente metalizado oscuro */
-            --success-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            --danger-gradient: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-            
-            /* Option B: Soft Inner Glow & Depth (Sombras sutiles) */
-            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            --shadow-glow: 0 0 20px -5px rgba(212, 175, 55, 0.15);
-            
-            /* Neoclasicismo Digital: Bordes controlados */
+            /* Neoclasicismo Digital: Bordes moderados, sombras con brillo interno */
             --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
             --radius-xl: 24px;
-            --radius-full: 9999px;
-            
-            --nav-width: 280px;
-            --header-height: 80px;
-            
-            --transition-fast: 200ms ease;
-            --transition-base: 300ms ease;
-            --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 
-            --surface-padding: 32px;
-            --card-padding: 40px; /* Más aire en las tarjetas */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            --shadow-lg: 0 12px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
         }
+
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -243,7 +261,6 @@
         }
 
         .theme-toggle {
-            display: none; /* Hide the theme toggle button since the app is permanently in dark/premium mode */
             margin: 12px 16px;
             padding: 12px 16px;
             border-radius: var(--radius-md);
@@ -3122,9 +3139,14 @@
                 <i class="fas fa-bars"></i>
             </button>
             <div class="page-title" id="pageTitle">Resumen Financiero</div>
-            <div class="date-filter-pill" id="headerDateFilter">
-                <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
-                <input type="month" id="dashboardMonth" onchange="updateDashboardView()">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button onclick="toggleTheme()" class="btn btn--icon btn--ghost" aria-label="Cambiar tema" style="width: 38px; height: 38px;">
+                    <i class="fas fa-moon" id="mobileThemeIcon"></i>
+                </button>
+                <div class="date-filter-pill" id="headerDateFilter">
+                    <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
+                    <input type="month" id="dashboardMonth" onchange="updateDashboardView()">
+                </div>
             </div>
         </header>
 
@@ -3151,7 +3173,7 @@
                             <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px;">
                                 <i class="fas fa-shield-alt"></i> Saldo neto consolidado
                             </div>
-                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--gold); border-color: var(--gold);" onclick="openArqueoModal()">
+                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--primary); border-color: var(--primary);" onclick="openArqueoModal()">
                                 <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
                             </button>
                         </div>
@@ -3591,7 +3613,7 @@
     <div class="modal-overlay" id="arqueoModal">
         <div class="modal-content" style="max-width: 500px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 class="modal-title"><i class="fas fa-balance-scale" style="color:var(--gold);"></i> Arqueo de Cuentas</h3>
+                <h3 class="modal-title"><i class="fas fa-balance-scale" style="color:var(--primary);"></i> Arqueo de Cuentas</h3>
                 <button onclick="closeModal('arqueoModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
             <p style="color:var(--text-secondary); margin-bottom: 20px; font-size:0.9rem;">
@@ -3728,7 +3750,17 @@
         const categorias=categories;
 
         function toggleTheme(){const d=document.body;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();}
-        function updateThemeIcon(){const isDark=document.body.getAttribute('data-theme')==='dark';document.getElementById('themeIcon').className=isDark?'fas fa-sun':'fas fa-moon';document.getElementById('themeText').textContent=isDark?'Modo Claro':'Modo Oscuro';}
+        function updateThemeIcon(){
+            const isDark=document.body.getAttribute('data-theme')==='dark';
+            const iconClass = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            if(document.getElementById('themeIcon')) {
+                document.getElementById('themeIcon').className=iconClass;
+                document.getElementById('themeText').textContent=isDark?'Modo Claro':'Modo Oscuro';
+            }
+            if(document.getElementById('mobileThemeIcon')) {
+                document.getElementById('mobileThemeIcon').className=iconClass;
+            }
+        }
         
         function initTheme(){const t=localStorage.getItem('theme')||'light';document.body.setAttribute('data-theme',t);updateThemeIcon();}
         function formatLocalDate(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
