@@ -76,7 +76,7 @@
             
             --font-main: 'Outfit', sans-serif;
             --font-heading: 'Syne', sans-serif;
-            
+
             /* Neoclasicismo Digital: Bordes moderados, sombras con brillo interno */
             --radius-sm: 6px;
             --radius-md: 12px;
@@ -3628,15 +3628,15 @@
             <form id="arqueoForm" onsubmit="event.preventDefault(); submitArqueo();">
                 <div class="form-group">
                     <label>Débito / Bancos (Saldo actual: <span id="arqueoCurrentDebito"></span>)</label>
-                    <input type="text" id="arqueoRealDebito" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
+                    <input type="text" id="arqueoRealDebito" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div class="form-group">
                     <label>Efectivo Físico (Saldo actual: <span id="arqueoCurrentEfectivo"></span>)</label>
-                    <input type="text" id="arqueoRealEfectivo" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
+                    <input type="text" id="arqueoRealEfectivo" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div class="form-group">
                     <label>Billetera Digital / Nequi (Saldo actual: <span id="arqueoCurrentNequi"></span>)</label>
-                    <input type="text" id="arqueoRealNequi" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
+                    <input type="text" id="arqueoRealNequi" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div style="display:flex; gap:10px; margin-top: 20px;">
                     <button type="button" class="btn btn--ghost" style="flex:1;" onclick="closeModal('arqueoModal')">Cancelar</button>
@@ -5001,11 +5001,16 @@
         }
 
         async function submitArqueo() {
-            const realDebito = parseCurrencyInput(document.getElementById('arqueoRealDebito').value);
-            const realEfectivo = parseCurrencyInput(document.getElementById('arqueoRealEfectivo').value);
-            const realNequi = parseCurrencyInput(document.getElementById('arqueoRealNequi').value);
+            const valDebito = document.getElementById('arqueoRealDebito').value.trim();
+            const valEfectivo = document.getElementById('arqueoRealEfectivo').value.trim();
+            const valNequi = document.getElementById('arqueoRealNequi').value.trim();
 
             const curr = window.currentArqueoBalances;
+
+            const realDebito = valDebito === '' ? curr.debito : parseCurrencyInput(valDebito);
+            const realEfectivo = valEfectivo === '' ? curr.efectivo : parseCurrencyInput(valEfectivo);
+            const realNequi = valNequi === '' ? curr.nequi : parseCurrencyInput(valNequi);
+
             const diffDebito = realDebito - curr.debito;
             const diffEfectivo = realEfectivo - curr.efectivo;
             const diffNequi = realNequi - curr.nequi;
