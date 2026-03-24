@@ -449,6 +449,8 @@
             height: 500px;
             background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
             border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .hero-balance::after {
@@ -460,6 +462,8 @@
             height: 300px;
             background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 60%);
             border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .hero-title {
@@ -469,6 +473,8 @@
             letter-spacing: 0.1em;
             margin-bottom: 12px;
             font-weight: 600;
+            position: relative;
+            z-index: 1;
         }
 
         .hero-amount {
@@ -3170,10 +3176,10 @@
                         <div class="hero-balance">
                             <div class="hero-title">Patrimonio Líquido Total</div>
                             <div class="hero-amount" id="saldoTotal">$ 0</div>
-                            <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px;">
+                            <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px; position:relative; z-index:1;">
                                 <i class="fas fa-shield-alt"></i> Saldo neto consolidado
                             </div>
-                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--primary); border-color: var(--primary);" onclick="openArqueoModal()">
+                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--primary); border-color: var(--primary); position: relative; z-index: 2;" onclick="openArqueoModal()">
                                 <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
                             </button>
                         </div>
