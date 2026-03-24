@@ -3151,6 +3151,9 @@
                             <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px;">
                                 <i class="fas fa-shield-alt"></i> Saldo neto consolidado
                             </div>
+                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--gold); border-color: var(--gold);" onclick="openArqueoModal()">
+                                <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
+                            </button>
                         </div>
                         <div class="accounts-col">
                             <div class="account-card">
@@ -3585,6 +3588,36 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="arqueoModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 class="modal-title"><i class="fas fa-balance-scale" style="color:var(--gold);"></i> Arqueo de Cuentas</h3>
+                <button onclick="closeModal('arqueoModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+            </div>
+            <p style="color:var(--text-secondary); margin-bottom: 20px; font-size:0.9rem;">
+                Ingresa el saldo real de cada cuenta. El sistema calculará la diferencia y registrará un ajuste si es necesario.
+            </p>
+            <form id="arqueoForm" onsubmit="event.preventDefault(); submitArqueo();">
+                <div class="form-group">
+                    <label>Débito / Bancos (Saldo actual: <span id="arqueoCurrentDebito"></span>)</label>
+                    <input type="text" id="arqueoRealDebito" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
+                </div>
+                <div class="form-group">
+                    <label>Efectivo Físico (Saldo actual: <span id="arqueoCurrentEfectivo"></span>)</label>
+                    <input type="text" id="arqueoRealEfectivo" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
+                </div>
+                <div class="form-group">
+                    <label>Billetera Digital / Nequi (Saldo actual: <span id="arqueoCurrentNequi"></span>)</label>
+                    <input type="text" id="arqueoRealNequi" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
+                </div>
+                <div style="display:flex; gap:10px; margin-top: 20px;">
+                    <button type="button" class="btn btn--ghost" style="flex:1;" onclick="closeModal('arqueoModal')">Cancelar</button>
+                    <button type="submit" class="btn btn--primary" style="flex:1; background-color: var(--primary); color: #000;">Guardar Arqueo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="goalModal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
@@ -3691,7 +3724,7 @@
         const confirmActionState = { onConfirm: null };
         let isSyncingOfflineQueue = false;
         
-        const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']}}};
+        const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste negativo por arqueo']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste positivo por arqueo']}}};
         const categorias=categories;
 
         function toggleTheme(){const d=document.body;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();}
@@ -4886,6 +4919,103 @@
         const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;const recognition=new SpeechRecognition();recognition.lang='es-CO';recognition.interimResults=false;
         if(btn.classList.contains('recording')){recognition.stop();btn.classList.remove('recording');return;}
         recognition.start();btn.classList.add('recording');recognition.onresult=(event=>{const text=event.results[0][0].transcript;document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
+
+        function openArqueoModal() {
+            let d = 0, e = 0, n = 0;
+            transactions.forEach(t => {
+                const m = parseFloat(t.monto);
+                if (t.tipo === 'pago_tarjeta') {
+                    if (t.metodoPago === 'debito') d -= m;
+                    if (t.metodoPago === 'efectivo') e -= m;
+                    if (t.metodoPago === 'nequi') n -= m;
+                } else if (!t.esCredito) {
+                    if (t.tipo === 'ingreso') {
+                        if (t.metodoPago === 'debito') d += m;
+                        if (t.metodoPago === 'efectivo') e += m;
+                        if (t.metodoPago === 'nequi') n += m;
+                    } else if (t.tipo === 'gasto') {
+                        if (t.metodoPago === 'debito') d -= m;
+                        if (t.metodoPago === 'efectivo') e -= m;
+                        if (t.metodoPago === 'nequi') n -= m;
+                    } else if (t.tipo === 'transferencia') {
+                        if (t.metodoPago === 'debito') d -= m;
+                        if (t.metodoPago === 'efectivo') e -= m;
+                        if (t.metodoPago === 'nequi') n -= m;
+                        if (t.metodoDestino === 'debito') d += m;
+                        if (t.metodoDestino === 'efectivo') e += m;
+                        if (t.metodoDestino === 'nequi') n += m;
+                    }
+                }
+            });
+
+            document.getElementById('arqueoCurrentDebito').textContent = formatMoney(d);
+            document.getElementById('arqueoCurrentEfectivo').textContent = formatMoney(e);
+            document.getElementById('arqueoCurrentNequi').textContent = formatMoney(n);
+
+            // Store original values globally to compare later
+            window.currentArqueoBalances = { debito: d, efectivo: e, nequi: n };
+
+            document.getElementById('arqueoRealDebito').value = '';
+            document.getElementById('arqueoRealEfectivo').value = '';
+            document.getElementById('arqueoRealNequi').value = '';
+
+            document.getElementById('arqueoModal').style.display='flex';
+        }
+
+        async function submitArqueo() {
+            const realDebito = parseCurrencyInput(document.getElementById('arqueoRealDebito').value);
+            const realEfectivo = parseCurrencyInput(document.getElementById('arqueoRealEfectivo').value);
+            const realNequi = parseCurrencyInput(document.getElementById('arqueoRealNequi').value);
+
+            const curr = window.currentArqueoBalances;
+            const diffDebito = realDebito - curr.debito;
+            const diffEfectivo = realEfectivo - curr.efectivo;
+            const diffNequi = realNequi - curr.nequi;
+
+            const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0'); const dd=String(t.getDate()).padStart(2,'0');
+            const fechaArqueo = `${yyyy}-${mm}-${dd}`;
+
+            try {
+                if (Math.abs(diffDebito) > 0.01) {
+                    await saveTransaction({
+                        tipo: diffDebito > 0 ? 'ingreso' : 'gasto',
+                        monto: Math.abs(diffDebito),
+                        categoria: 'ajuste_de_arqueo',
+                        metodoPago: 'debito',
+                        descripcion: diffDebito > 0 ? 'Ajuste positivo por arqueo' : 'Ajuste negativo por arqueo',
+                        fecha: fechaArqueo,
+                        miembro: 'compartido'
+                    });
+                }
+                if (Math.abs(diffEfectivo) > 0.01) {
+                    await saveTransaction({
+                        tipo: diffEfectivo > 0 ? 'ingreso' : 'gasto',
+                        monto: Math.abs(diffEfectivo),
+                        categoria: 'ajuste_de_arqueo',
+                        metodoPago: 'efectivo',
+                        descripcion: diffEfectivo > 0 ? 'Ajuste positivo por arqueo' : 'Ajuste negativo por arqueo',
+                        fecha: fechaArqueo,
+                        miembro: 'compartido'
+                    });
+                }
+                if (Math.abs(diffNequi) > 0.01) {
+                    await saveTransaction({
+                        tipo: diffNequi > 0 ? 'ingreso' : 'gasto',
+                        monto: Math.abs(diffNequi),
+                        categoria: 'ajuste_de_arqueo',
+                        metodoPago: 'nequi',
+                        descripcion: diffNequi > 0 ? 'Ajuste positivo por arqueo' : 'Ajuste negativo por arqueo',
+                        fecha: fechaArqueo,
+                        miembro: 'compartido'
+                    });
+                }
+                closeModal('arqueoModal');
+                showToast('Arqueo completado exitosamente', 'success');
+            } catch (error) {
+                console.error("Error en arqueo:", error);
+                showToast('Error al procesar el arqueo', 'error');
+            }
+        }
 
         function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); currentViewDate=new Date(parseInt(y),parseInt(m)-1,1); updateDashboard(); updateDailyCapIndicator(); renderCharts();}}
         function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas)return; const l=[],i=[],g=[],t=new Date(),b={}; for(let x=5;x>=0;x--){const d=new Date(t.getFullYear(),t.getMonth()-x,1);const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;b[k]={i:0,g:0};l.push(d.toLocaleString('es-CO',{month:'short'}));} transactions.forEach(tx=>{const k=tx.fecha.substring(0,7);if(b[k]){if(tx.tipo==='ingreso')b[k].i+=parseFloat(tx.monto);else if(tx.tipo==='gasto'||tx.tipo==='credito')b[k].g+=parseFloat(tx.monto);}}); Object.keys(b).sort().forEach(k=>{i.push(b[k].i);g.push(b[k].g);}); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
