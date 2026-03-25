@@ -3362,14 +3362,14 @@
                                     <div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div>
                                     <div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div>
                                     <div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div>
-                                    <div class="form-group"><label style="color:var(--danger);" title="Valor exacto de la cuota mensual si difiere de Monto/Cuotas. Opcional.">Valor Cuota (Opc.)</label><input type="text" id="valorCuotaManual" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0"></div>
+                                    <div class="form-group"><label style="color:var(--danger);" title="Valor exacto de la cuota mensual si difiere de Monto/Cuotas. Opcional.">Valor Cuota (Opc.)</label><input type="text" id="valorCuotaManual" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0"></div>
                                     <div class="form-group" style="grid-column: 1 / -1;"><label style="color:var(--danger);">Fecha próxima de pago</label><input type="date" id="creditoFechaPago"></div>
                                 </div>
                             </div>
                             <div id="divPagoTarjeta" class="form-group full-width hidden" style="background:#ecfdf5; padding:15px; border-radius:12px; border:1px solid #6ee7b7;"><div class="form-group"><label style="color:var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div></div>
                             <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
                             <div class="form-group hidden" id="metodoDestinoDiv"><label>Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
-                            <div class="form-group"><label>Monto</label><input type="text" id="monto" required inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" style="font-size:1.2rem; font-weight:bold; color:var(--primary);"></div>
+                            <div class="form-group"><label>Monto</label><input type="text" id="monto" required inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" style="font-size:1.2rem; font-weight:bold; color:var(--primary);"></div>
                             <div class="form-group"><label>Categoría</label><select id="categoria" required></select></div>
                             <div class="form-group hidden" id="subcategoriaDiv"><label>Subcategoría</label><select id="subcategoria"></select></div>
                             <div class="form-group"><label>Responsable</label><select id="miembro"><option value="papa">Papá</option><option value="mama">Mamá</option><option value="hijo1">Hijo/a 1</option><option value="compartido">Compartido</option></select></div>
@@ -3542,7 +3542,7 @@
             <div id="quotaTabCards" class="quota-tab-section active" role="tabpanel">
                 <div class="add-card-form">
                     <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
-                    <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+                    <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
                     <div class="form-group"><label for="cardPaymentDayInput">Día de pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" step="1" placeholder="1-31"></div>
                     <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
                     <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
@@ -3628,15 +3628,15 @@
             <form id="arqueoForm" onsubmit="event.preventDefault(); submitArqueo();">
                 <div class="form-group">
                     <label>Débito / Bancos (Saldo actual: <span id="arqueoCurrentDebito"></span>)</label>
-                    <input type="text" id="arqueoRealDebito" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
+                    <input type="text" id="arqueoRealDebito" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div class="form-group">
                     <label>Efectivo Físico (Saldo actual: <span id="arqueoCurrentEfectivo"></span>)</label>
-                    <input type="text" id="arqueoRealEfectivo" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
+                    <input type="text" id="arqueoRealEfectivo" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div class="form-group">
                     <label>Billetera Digital / Nequi (Saldo actual: <span id="arqueoCurrentNequi"></span>)</label>
-                    <input type="text" id="arqueoRealNequi" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
+                    <input type="text" id="arqueoRealNequi" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div style="display:flex; gap:10px; margin-top: 20px;">
                     <button type="button" class="btn btn--ghost" style="flex:1;" onclick="closeModal('arqueoModal')">Cancelar</button>
@@ -3650,8 +3650,8 @@
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="form-group"><label>Nombre del Objetivo</label><input type="text" id="goalName" placeholder="Ej: Vacaciones"></div>
-            <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
-            <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" inputmode="decimal" pattern="[0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+            <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+            <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Fecha Límite</label><input type="date" id="goalDeadline"></div>
             <button class="btn btn--primary btn--lg btn--block" onclick="saveGoal()">Guardar Objetivo</button>
         </div>
