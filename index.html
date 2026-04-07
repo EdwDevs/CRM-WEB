@@ -14,19 +14,17 @@
 
         :root, [data-theme="light"] {
             /* IMPORTANTE: Base visual híbrida (modo claro premium enfocado en legibilidad móvil) */
-            /* IMPORTANTE: Azul Apple frío como identidad visual principal */
-            --primary: #0A84FF;
-            --primary-dark: #0066CC;
-            --primary-light: #5AC8FA;
+            --primary: #2563FF;
+            --primary-dark: #1D4ED8;
+            --primary-light: #60A5FA;
             --secondary: #0F172A;
-            --accent: #0A84FF;
+            --accent: #2563FF;
             --bg-body: #F6F8FC;
             --bg-surface: #FFFFFF;
-            --bg-elevated: #EEF4FF;
+            --bg-elevated: #EEF2FF;
             --text-primary: #0F172A;
             --text-secondary: #475569;
-            --text-muted: #64748B;
-            --border-light: rgba(10, 132, 255, 0.18);
+            --border-light: rgba(37, 99, 255, 0.18);
             --success: #059669; /* Verde esmeralda */
             --success-light: rgba(5, 150, 105, 0.1);
             --danger: #DC2626; /* Rojo oscuro */
@@ -44,40 +42,35 @@
             /* IMPORTANTE: Bordes y sombras ejecutivas (sin estética gaming) */
             --radius-sm: 6px;
             --radius-md: 12px;
-            --radius-lg: 16px; /* IMPORTANTE: decisión de diseño seleccionada (Apple balanceado) */
-            --radius-xl: 20px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
             --radius-full: 999px;
 
             --shadow-xs: 0 1px 4px rgba(15, 23, 42, 0.06);
-            --shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.06);
-            --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.10);
-            --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.14);
-            --shadow-xl: 0 26px 56px rgba(15, 23, 42, 0.18);
-            --card-bg: var(--bg-surface);
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.10);
+            --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.14);
 
             /* IMPORTANTE: Transiciones moderadas y medidas globales de layout */
             --transition-fast: 180ms ease;
             --transition-base: 260ms ease;
-            --transition-slow: 340ms ease;
             --header-height: 64px;
             --nav-width: 278px;
-            --card-padding: 24px;
         }
 
         [data-theme="dark"] {
             /* IMPORTANTE: Modo oscuro tecnológico premium con acento azul eléctrico */
-            --primary: #0A84FF;
-            --primary-dark: #0066CC;
-            --primary-light: #5AC8FA;
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --primary-light: #93C5FD;
             --secondary: #121A2B;
-            --accent: #0A84FF;
-            --bg-body: #0A0E17;
-            --bg-surface: #121826;
-            --bg-elevated: #1B2436;
-            --text-primary: #EAF1FF;
-            --text-secondary: #A5B4D1;
-            --text-muted: #8394B3;
-            --border-light: rgba(90, 200, 250, 0.24);
+            --accent: #3B82F6;
+            --bg-body: #0B1220;
+            --bg-surface: #121A2B;
+            --bg-elevated: #1A2440;
+            --text-primary: #E5ECF7;
+            --text-secondary: #9FB0CC;
+            --border-light: rgba(59, 130, 246, 0.24);
             --success: #10B981;
             --success-light: rgba(16, 185, 129, 0.1);
             --danger: #EF4444;
@@ -93,11 +86,9 @@
             --font-heading: 'Syne', sans-serif;
 
             --shadow-xs: 0 1px 4px rgba(0, 0, 0, 0.22);
-            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.30);
-            --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.36);
-            --shadow-lg: 0 20px 46px rgba(0, 0, 0, 0.42);
-            --shadow-xl: 0 32px 64px rgba(0, 0, 0, 0.50);
-            --card-bg: color-mix(in srgb, var(--bg-surface) 92%, var(--bg-elevated));
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+            --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.35);
+            --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.40);
         }
 
 
@@ -428,8 +419,7 @@
 
         .card {
             /* IMPORTANTE: Todas las tarjetas se mantienen; solo elevamos su lenguaje visual premium */
-            background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 86%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 52%, transparent) 100%);
-            backdrop-filter: blur(10px); /* IMPORTANTE: glass moderado estilo Apple Finance */
+            background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 92%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 40%, transparent) 100%);
             border-radius: var(--radius-lg);
             padding: var(--card-padding);
             margin-bottom: 32px;
@@ -440,20 +430,20 @@
 
         .card:hover {
             /* IMPORTANTE: Interacción moderada, no agresiva, para móvil y desktop */
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), var(--shadow-lg);
-            border-color: color-mix(in srgb, var(--primary) 45%, transparent);
-            transform: translateY(-3px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-md);
+            border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+            transform: translateY(-2px);
         }
         
         /* Modificadores de la tarjeta Hero para que coincida con Bento */
         .hero-balance {
-            /* IMPORTANTE: Hero inmersivo tipo Apple (más profundidad, sin perder limpieza corporativa) */
-            background: linear-gradient(140deg, color-mix(in srgb, var(--bg-surface) 76%, #05070D) 0%, color-mix(in srgb, var(--bg-elevated) 82%, #0C1422) 100%);
-            border: 1px solid color-mix(in srgb, var(--primary) 46%, transparent);
+            /* IMPORTANTE: Hero elegante-tech con acento azul eléctrico sutil */
+            background: linear-gradient(135deg, color-mix(in srgb, var(--bg-surface) 85%, #0B1220) 0%, color-mix(in srgb, var(--bg-elevated) 80%, #111827) 100%);
+            border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
             color: var(--text-primary);
             padding: 48px 40px;
             border-radius: var(--radius-xl);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), var(--shadow-xl), 0 0 72px -18px rgba(10, 132, 255, 0.55);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 40px -18px rgba(59, 130, 246, 0.45);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -468,7 +458,7 @@
             top: -40%;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(90, 200, 250, 0.24) 0%, transparent 62%);
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -481,7 +471,7 @@
             bottom: -50%;
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(10, 132, 255, 0.18) 0%, transparent 64%);
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -502,7 +492,7 @@
             font-size: clamp(2.5rem, 4vw, 3.5rem);
             font-weight: 700;
             letter-spacing: -0.04em;
-            background: linear-gradient(to right, #FFFFFF, #8FD9FF);
+            background: linear-gradient(to right, #FFFFFF, #93C5FD);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;
@@ -596,8 +586,7 @@
         /* Tarjetas de cuentas (Nequi, Débito, Efectivo) */
         .account-card {
             /* IMPORTANTE: Tarjetas secundarias con borde híbrido ejecutivo + tech */
-            background: color-mix(in srgb, var(--bg-surface) 84%, var(--bg-elevated));
-            backdrop-filter: blur(8px); /* IMPORTANTE: glass moderado en tarjetas secundarias */
+            background: color-mix(in srgb, var(--bg-surface) 90%, var(--bg-elevated));
             padding: 20px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
@@ -610,9 +599,9 @@
         }
 
         .account-card:hover {
-            box-shadow: var(--shadow-lg);
-            border-color: color-mix(in srgb, var(--primary) 44%, transparent);
-            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+            transform: translateY(-2px);
         }
 
         [data-theme="dark"] .account-card {
@@ -653,8 +642,7 @@
         }
 
         .mini-stat {
-            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 86%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 55%, transparent) 100%);
-            backdrop-filter: blur(8px);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 92%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 44%, transparent) 100%);
             padding: 32px 24px;
             border-radius: var(--radius-lg);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm);
@@ -668,9 +656,9 @@
         }
 
         .mini-stat:hover {
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), var(--shadow-lg);
-            border-color: color-mix(in srgb, var(--primary) 44%, transparent);
-            transform: translateY(-3px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-md);
+            border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+            transform: translateY(-2px);
         }
 
         .mini-header {
@@ -1203,8 +1191,7 @@
         }
 
         .insight-item {
-            background: color-mix(in srgb, var(--bg-surface) 84%, var(--bg-elevated));
-            backdrop-filter: blur(8px);
+            background: color-mix(in srgb, var(--bg-surface) 88%, var(--bg-elevated));
             padding: 20px;
             border-radius: var(--radius-sm);
             border: 1px solid color-mix(in srgb, var(--border-light) 65%, transparent);
@@ -1213,9 +1200,8 @@
         }
 
         .insight-item:hover {
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 0 1px color-mix(in srgb, var(--primary) 34%, transparent);
-            border-color: color-mix(in srgb, var(--primary) 48%, transparent);
-            transform: translateY(-2px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 0 1px color-mix(in srgb, var(--primary) 26%, transparent);
+            border-color: color-mix(in srgb, var(--primary) 40%, transparent);
         }
 
         .insight-label {
@@ -2382,8 +2368,7 @@
         }
 
         .member-card {
-            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 84%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 58%, transparent) 100%);
-            backdrop-filter: blur(8px);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 90%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 50%, transparent) 100%);
             padding: 32px 24px;
             border-radius: var(--radius-lg);
             border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
@@ -2393,8 +2378,8 @@
         }
 
         .member-card:hover {
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), var(--shadow-lg);
-            border-color: color-mix(in srgb, var(--primary) 46%, transparent);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-md);
+            border-color: color-mix(in srgb, var(--primary) 35%, transparent);
             transform: translateY(-3px);
         }
 
