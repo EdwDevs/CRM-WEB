@@ -1514,72 +1514,26 @@
 
         @media (max-width: 768px) {
             .table-container {
-                border: none;
-                overflow: visible;
+                /* IMPORTANTE: Conservamos tablas e información completa en móvil */
+                border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border-radius: var(--radius-md);
             }
 
             .table-container table {
-                font-size: 0.9rem;
+                min-width: 760px; /* IMPORTANTE: evita recorte de columnas en pantallas pequeñas */
+                font-size: 0.88rem;
             }
 
             .table-container thead {
-                display: none;
+                display: table-header-group;
             }
 
-            .table-container table,
-            .table-container tbody,
-            .table-container tr,
+            .table-container th,
             .table-container td {
-                display: block;
-                width: 100%;
-            }
-
-            .table-container tr {
-                background: var(--bg-surface);
-                border: 1px solid rgba(148, 163, 184, 0.18);
-                border-radius: var(--radius-md);
-                box-shadow: var(--shadow-xs);
-                margin-bottom: 14px;
-                overflow: hidden;
-            }
-
-            .table-container td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 12px;
-                padding: 12px 16px;
-                border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-            }
-
-            .table-container td::before {
-                content: "";
-                font-weight: 600;
-                text-transform: uppercase;
-                font-size: 0.72rem;
-                letter-spacing: 0.05em;
-                color: var(--text-muted);
-            }
-
-            .table-container td:nth-child(1)::before { content: "Fecha"; }
-            .table-container td:nth-child(2)::before { content: "Tipo"; }
-            .table-container td:nth-child(3)::before { content: "Método"; }
-            .table-container td:nth-child(4)::before { content: "Categoría"; }
-            .table-container td:nth-child(5)::before { content: "Descripción"; }
-            .table-container td:nth-child(6)::before { content: "Monto"; }
-            .table-container td:nth-child(7)::before { content: "Acciones"; }
-
-            .table-container td:last-child {
-                border-bottom: none;
-                justify-content: flex-start;
-            }
-
-            .table-container td:last-child::before {
-                flex: 0 0 auto;
-            }
-
-            .table-container td:last-child .btn-icon-action {
-                margin-right: 8px;
+                white-space: nowrap;
+                padding: 12px 14px;
             }
         }
 
@@ -2138,7 +2092,7 @@
 
             .content-container {
                 --section-gap: 24px;
-                padding: 24px;
+                padding: 18px;
                 margin-bottom: 24px;
             }
 
@@ -2151,7 +2105,7 @@
             }
 
             .hero-balance {
-                padding: 28px 24px;
+                padding: 26px 20px;
             }
 
             .hero-amount {
@@ -2159,7 +2113,7 @@
             }
 
             .card {
-                padding: var(--surface-padding);
+                padding: 18px; /* IMPORTANTE: densidad móvil sin perder información */
             }
 
             .hero-title {
@@ -2172,6 +2126,7 @@
 
             .date-filter-pill {
                 font-size: 0.8rem;
+                padding: 8px 10px;
             }
 
             .filter-row {
@@ -2200,6 +2155,10 @@
             .content-container {
                 --section-gap: 16px;
                 padding: 16px;
+            }
+
+            .table-container table {
+                min-width: 680px; /* IMPORTANTE: mantenemos todas las columnas visibles por scroll horizontal */
             }
 
             .stats-grid {
