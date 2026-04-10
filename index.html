@@ -13,18 +13,20 @@
     <style>
 
         :root, [data-theme="light"] {
-            /* Tema claro "Banca Privada Suiza" */
-            --primary: #B8860B; /* Dorado mate más oscuro para legibilidad sobre blanco */
-            --primary-dark: #8B6508;
-            --primary-light: #DAA520;
-            --secondary: #2C3E50; /* Gris azulado oscuro */
-            --accent: #B8860B;
-            --bg-body: #F8F9FA; /* Blanco tiza/perla */
-            --bg-surface: #FFFFFF; /* Blanco puro para tarjetas */
-            --bg-elevated: #F1F3F5;
-            --text-primary: #1A1A1A; /* Gris muy oscuro, casi negro */
-            --text-secondary: #4A5568;
-            --border-light: rgba(184, 134, 11, 0.2); /* Bordes sutilmente dorados */
+            /* IMPORTANTE: Base visual híbrida (modo claro premium enfocado en legibilidad móvil) */
+            /* IMPORTANTE: Azul Apple frío como identidad visual principal */
+            --primary: #0A84FF;
+            --primary-dark: #0066CC;
+            --primary-light: #5AC8FA;
+            --secondary: #0F172A;
+            --accent: #0A84FF;
+            --bg-body: #F6F8FC;
+            --bg-surface: #FFFFFF;
+            --bg-elevated: #EEF4FF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border-light: rgba(10, 132, 255, 0.18);
             --success: #059669; /* Verde esmeralda */
             --success-light: rgba(5, 150, 105, 0.1);
             --danger: #DC2626; /* Rojo oscuro */
@@ -39,30 +41,43 @@
             --font-main: 'Outfit', sans-serif;
             --font-heading: 'Syne', sans-serif;
 
-            /* Neoclasicismo Digital: Bordes moderados, sombras suaves */
+            /* IMPORTANTE: Bordes y sombras ejecutivas (sin estética gaming) */
             --radius-sm: 6px;
             --radius-md: 12px;
-            --radius-lg: 18px;
-            --radius-xl: 24px;
+            --radius-lg: 16px; /* IMPORTANTE: decisión de diseño seleccionada (Apple balanceado) */
+            --radius-xl: 20px;
+            --radius-full: 999px;
 
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
-            --shadow-lg: 0 12px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+            --shadow-xs: 0 1px 4px rgba(15, 23, 42, 0.06);
+            --shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.10);
+            --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.14);
+            --shadow-xl: 0 26px 56px rgba(15, 23, 42, 0.18);
+            --card-bg: var(--bg-surface);
+
+            /* IMPORTANTE: Transiciones moderadas y medidas globales de layout */
+            --transition-fast: 180ms ease;
+            --transition-base: 260ms ease;
+            --transition-slow: 340ms ease;
+            --header-height: 64px;
+            --nav-width: 278px;
+            --card-padding: 24px;
         }
 
         [data-theme="dark"] {
-            /* Tema oscuro "Banca Privada Suiza" */
-            --primary: #D4AF37; /* Dorado mate */
-            --primary-dark: #AA8C2C;
-            --primary-light: #E5C768;
-            --secondary: #14151B; /* Gris antracita */
-            --accent: #E5C768;
-            --bg-body: #0A0B10; /* Midnight blue / casi negro */
-            --bg-surface: #14151B; /* Gris oscuro para tarjetas */
-            --bg-elevated: #1F212A;
-            --text-primary: #F3F4F6;
-            --text-secondary: #9CA3AF;
-            --border-light: rgba(212, 175, 55, 0.15); /* Bordes sutilmente dorados */
+            /* IMPORTANTE: Modo oscuro tecnológico premium con acento azul eléctrico */
+            --primary: #0A84FF;
+            --primary-dark: #0066CC;
+            --primary-light: #5AC8FA;
+            --secondary: #121A2B;
+            --accent: #0A84FF;
+            --bg-body: #0A0E17;
+            --bg-surface: #121826;
+            --bg-elevated: #1B2436;
+            --text-primary: #EAF1FF;
+            --text-secondary: #A5B4D1;
+            --text-muted: #8394B3;
+            --border-light: rgba(90, 200, 250, 0.24);
             --success: #10B981;
             --success-light: rgba(16, 185, 129, 0.1);
             --danger: #EF4444;
@@ -77,15 +92,12 @@
             --font-main: 'Outfit', sans-serif;
             --font-heading: 'Syne', sans-serif;
 
-            /* Neoclasicismo Digital: Bordes moderados, sombras con brillo interno */
-            --radius-sm: 6px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --radius-xl: 24px;
-
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-            --shadow-lg: 0 12px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            --shadow-xs: 0 1px 4px rgba(0, 0, 0, 0.22);
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.30);
+            --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.36);
+            --shadow-lg: 0 20px 46px rgba(0, 0, 0, 0.42);
+            --shadow-xl: 0 32px 64px rgba(0, 0, 0, 0.50);
+            --card-bg: color-mix(in srgb, var(--bg-surface) 92%, var(--bg-elevated));
         }
 
 
@@ -118,16 +130,19 @@
 
         .sidebar {
             width: var(--nav-width);
-            background: var(--bg-surface);
+            /* IMPORTANTE: Fondo con profundidad premium moderna */
+            background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
             height: 100vh;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(148, 163, 184, 0.1);
+            border-right: 1px solid var(--border-light);
             position: fixed;
             left: 0;
             top: 0;
             z-index: 50;
             transition: transform var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-base);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(8px);
         }
 
         .sidebar::before {
@@ -217,10 +232,11 @@
         }
 
         .nav-item.active {
-            background: rgba(212, 175, 55, 0.1);
+            /* IMPORTANTE: Estado activo legible en ambos temas */
+            background: rgba(59, 130, 246, 0.14);
             color: var(--primary);
             font-weight: 600;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--border-light);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); /* Soft inner glow */
         }
 
@@ -264,9 +280,10 @@
             margin: 12px 16px;
             padding: 12px 16px;
             border-radius: var(--radius-md);
-            background: var(--bg-body);
-            border: 1px solid rgba(148, 163, 184, 0.1);
+            background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+            border: 1px solid var(--border-light);
             cursor: pointer;
+            display: flex;
             align-items: center;
             gap: 12px;
             color: var(--text-secondary);
@@ -276,8 +293,8 @@
         }
 
         .theme-toggle:hover {
-            background: rgba(80, 70, 229, 0.08);
-            border-color: rgba(80, 70, 229, 0.2);
+            background: rgba(59, 130, 246, 0.10);
+            border-color: var(--border-light);
             color: var(--primary);
         }
 
@@ -313,9 +330,10 @@
 
         .top-header {
             height: var(--header-height);
-            background: rgba(9, 10, 15, 0.8);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            /* IMPORTANTE: Header global premium para mantener contexto y foco */
+            background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 40;
@@ -323,7 +341,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--border-light);
             gap: 16px;
         }
 
@@ -409,30 +427,33 @@
         }
 
         .card {
-            background: var(--bg-surface);
+            /* IMPORTANTE: Todas las tarjetas se mantienen; solo elevamos su lenguaje visual premium */
+            background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 86%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 52%, transparent) 100%);
+            backdrop-filter: blur(10px); /* IMPORTANTE: glass moderado estilo Apple Finance */
             border-radius: var(--radius-lg);
             padding: var(--card-padding);
             margin-bottom: 32px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid rgba(255, 255, 255, 0.03); /* Soft border for dark theme */
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm); /* Inner glow */
+            border: 1px solid color-mix(in srgb, var(--border-light) 75%, transparent);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm);
             transition: box-shadow var(--transition-slow), transform var(--transition-slow), border-color var(--transition-fast);
         }
 
         .card:hover {
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-lg);
-            border-color: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
+            /* IMPORTANTE: Interacción moderada, no agresiva, para móvil y desktop */
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), var(--shadow-lg);
+            border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+            transform: translateY(-3px);
         }
         
         /* Modificadores de la tarjeta Hero para que coincida con Bento */
         .hero-balance {
-            background: linear-gradient(135deg, #1A1B23 0%, #0F1015 100%);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            /* IMPORTANTE: Hero inmersivo tipo Apple (más profundidad, sin perder limpieza corporativa) */
+            background: linear-gradient(140deg, color-mix(in srgb, var(--bg-surface) 76%, #05070D) 0%, color-mix(in srgb, var(--bg-elevated) 82%, #0C1422) 100%);
+            border: 1px solid color-mix(in srgb, var(--primary) 46%, transparent);
             color: var(--text-primary);
             padding: 48px 40px;
             border-radius: var(--radius-xl);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 40px -10px rgba(212, 175, 55, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), var(--shadow-xl), 0 0 72px -18px rgba(10, 132, 255, 0.55);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -447,7 +468,7 @@
             top: -40%;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(90, 200, 250, 0.24) 0%, transparent 62%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -460,7 +481,7 @@
             bottom: -50%;
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.18) 0%, transparent 64%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -481,12 +502,13 @@
             font-size: clamp(2.5rem, 4vw, 3.5rem);
             font-weight: 700;
             letter-spacing: -0.04em;
-            background: linear-gradient(to right, #FFFFFF, #E5C768);
+            background: linear-gradient(to right, #FFFFFF, #8FD9FF);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;
             z-index: 1;
             margin-bottom: 8px;
+            text-shadow: 0 0 24px rgba(10, 132, 255, 0.28); /* IMPORTANTE: inmersión visual controlada del valor principal */
         }
 
         /* --- Bento Box Dashboard Layout --- */
@@ -573,11 +595,13 @@
 
         /* Tarjetas de cuentas (Nequi, Débito, Efectivo) */
         .account-card {
-            background: var(--bg-surface);
+            /* IMPORTANTE: Tarjetas secundarias con borde híbrido ejecutivo + tech */
+            background: color-mix(in srgb, var(--bg-surface) 84%, var(--bg-elevated));
+            backdrop-filter: blur(8px); /* IMPORTANTE: glass moderado en tarjetas secundarias */
             padding: 20px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
-            border: 1px solid rgba(148, 163, 184, 0.1);
+            border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
             display: flex;
             align-items: center;
             gap: 16px;
@@ -586,9 +610,9 @@
         }
 
         .account-card:hover {
-            box-shadow: var(--shadow-md);
-            border-color: rgba(148, 163, 184, 0.2);
-            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: color-mix(in srgb, var(--primary) 44%, transparent);
+            transform: translateY(-3px);
         }
 
         [data-theme="dark"] .account-card {
@@ -629,11 +653,12 @@
         }
 
         .mini-stat {
-            background: var(--bg-surface);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 86%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 55%, transparent) 100%);
+            backdrop-filter: blur(8px);
             padding: 32px 24px;
             border-radius: var(--radius-lg);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-md);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm);
+            border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
             display: flex;
             flex-direction: column;
             transition: all var(--transition-base);
@@ -643,9 +668,9 @@
         }
 
         .mini-stat:hover {
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-lg);
-            border-color: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), var(--shadow-lg);
+            border-color: color-mix(in srgb, var(--primary) 44%, transparent);
+            transform: translateY(-3px);
         }
 
         .mini-header {
@@ -663,9 +688,9 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-            background: rgba(212, 175, 55, 0.1) !important;
+            background: rgba(10, 132, 255, 0.14) !important;
             color: var(--primary) !important;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(90, 200, 250, 0.30);
         }
 
         .mini-label {
@@ -722,6 +747,68 @@
             margin-top: 6px;
         }
 
+        #view-estadisticas {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        #view-estadisticas .card {
+            margin-bottom: 0;
+        }
+
+        .stats-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 2px 2px 4px;
+        }
+
+        .stats-section-title h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.02rem;
+            letter-spacing: 0.01em;
+        }
+
+        .stats-section-title span {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stats-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .stats-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stats-card-head h3 {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.01em;
+        }
+
+        .stats-chart-wrap {
+            border: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            background: color-mix(in srgb, var(--bg-surface) 90%, var(--bg-elevated));
+        }
+
         /* Progreso visual en tarjetas */
         .stat-progress-bg {
             height: 6px;
@@ -774,6 +861,10 @@
 
         @media (max-width: 960px) {
             .top-category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-chart-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -1178,17 +1269,19 @@
         }
 
         .insight-item {
-            background: rgba(0,0,0,0.2);
+            background: color-mix(in srgb, var(--bg-surface) 84%, var(--bg-elevated));
+            backdrop-filter: blur(8px);
             padding: 20px;
             border-radius: var(--radius-sm);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid color-mix(in srgb, var(--border-light) 65%, transparent);
             transition: all var(--transition-fast);
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .insight-item:hover {
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 0 1px rgba(212, 175, 55, 0.2);
-            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 0 1px color-mix(in srgb, var(--primary) 34%, transparent);
+            border-color: color-mix(in srgb, var(--primary) 48%, transparent);
+            transform: translateY(-2px);
         }
 
         .insight-label {
@@ -1501,72 +1594,26 @@
 
         @media (max-width: 768px) {
             .table-container {
-                border: none;
-                overflow: visible;
+                /* IMPORTANTE: Conservamos tablas e información completa en móvil */
+                border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border-radius: var(--radius-md);
             }
 
             .table-container table {
-                font-size: 0.9rem;
+                min-width: 760px; /* IMPORTANTE: evita recorte de columnas en pantallas pequeñas */
+                font-size: 0.88rem;
             }
 
             .table-container thead {
-                display: none;
+                display: table-header-group;
             }
 
-            .table-container table,
-            .table-container tbody,
-            .table-container tr,
+            .table-container th,
             .table-container td {
-                display: block;
-                width: 100%;
-            }
-
-            .table-container tr {
-                background: var(--bg-surface);
-                border: 1px solid rgba(148, 163, 184, 0.18);
-                border-radius: var(--radius-md);
-                box-shadow: var(--shadow-xs);
-                margin-bottom: 14px;
-                overflow: hidden;
-            }
-
-            .table-container td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 12px;
-                padding: 12px 16px;
-                border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-            }
-
-            .table-container td::before {
-                content: "";
-                font-weight: 600;
-                text-transform: uppercase;
-                font-size: 0.72rem;
-                letter-spacing: 0.05em;
-                color: var(--text-muted);
-            }
-
-            .table-container td:nth-child(1)::before { content: "Fecha"; }
-            .table-container td:nth-child(2)::before { content: "Tipo"; }
-            .table-container td:nth-child(3)::before { content: "Método"; }
-            .table-container td:nth-child(4)::before { content: "Categoría"; }
-            .table-container td:nth-child(5)::before { content: "Descripción"; }
-            .table-container td:nth-child(6)::before { content: "Monto"; }
-            .table-container td:nth-child(7)::before { content: "Acciones"; }
-
-            .table-container td:last-child {
-                border-bottom: none;
-                justify-content: flex-start;
-            }
-
-            .table-container td:last-child::before {
-                flex: 0 0 auto;
-            }
-
-            .table-container td:last-child .btn-icon-action {
-                margin-right: 8px;
+                white-space: nowrap;
+                padding: 12px 14px;
             }
         }
 
@@ -2125,7 +2172,7 @@
 
             .content-container {
                 --section-gap: 24px;
-                padding: 24px;
+                padding: 18px;
                 margin-bottom: 24px;
             }
 
@@ -2133,12 +2180,25 @@
                 gap: 24px;
             }
 
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .stats-chart-grid {
+                gap: 14px;
+            }
+
+            .stats-chart-wrap {
+                padding: 8px; /* IMPORTANTE: mayor área útil para gráficas en móvil */
+            }
+
             .add-card-form {
                 grid-template-columns: 1fr;
             }
 
             .hero-balance {
-                padding: 28px 24px;
+                padding: 26px 20px;
             }
 
             .hero-amount {
@@ -2146,7 +2206,7 @@
             }
 
             .card {
-                padding: var(--surface-padding);
+                padding: 18px; /* IMPORTANTE: densidad móvil sin perder información */
             }
 
             .hero-title {
@@ -2159,6 +2219,7 @@
 
             .date-filter-pill {
                 font-size: 0.8rem;
+                padding: 8px 10px;
             }
 
             .filter-row {
@@ -2187,6 +2248,10 @@
             .content-container {
                 --section-gap: 16px;
                 padding: 16px;
+            }
+
+            .table-container table {
+                min-width: 680px; /* IMPORTANTE: mantenemos todas las columnas visibles por scroll horizontal */
             }
 
             .stats-grid {
@@ -2355,18 +2420,19 @@
         }
 
         .member-card {
-            background: rgba(255,255,255,0.02);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 84%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 58%, transparent) 100%);
+            backdrop-filter: blur(8px);
             padding: 32px 24px;
             border-radius: var(--radius-lg);
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
             text-align: center;
             transition: all var(--transition-fast);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
         }
 
         .member-card:hover {
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-lg);
-            border-color: rgba(212, 175, 55, 0.2);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), var(--shadow-lg);
+            border-color: color-mix(in srgb, var(--primary) 46%, transparent);
             transform: translateY(-3px);
         }
 
@@ -3098,7 +3164,7 @@
 <body>
 
     <nav class="sidebar">
-        <div class="brand"><i class="fas fa-wallet"></i> CRM <span>Expert</span></div>
+        <div class="brand"><i class="fas fa-wallet"></i> CRM <span>Prime</span></div>
         <button class="theme-toggle" onclick="toggleTheme()">
             <i class="fas fa-moon" id="themeIcon"></i>
             <span id="themeText">Modo Oscuro</span>
@@ -3111,7 +3177,7 @@
             <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Objetivos</span></div>
             <div class="nav-item" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor Experto</span></div>
         </div>
-        <div style="padding: 24px; font-size: 0.75rem; color: #9ca3af; text-align: center;">Familia & Finanzas © 2025</div>
+        <div style="padding: 24px; font-size: 0.75rem; color: #9ca3af; text-align: center;">Hogar & Finanzas © 2026</div>
     </nav>
 
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -3386,7 +3452,10 @@
 
             <div id="view-estadisticas" class="tab-content">
                 <div class="card">
-                    <h3>KPIs rápidos</h3>
+                    <div class="stats-section-title">
+                        <h3><i class="fas fa-gauge-high" style="color:var(--primary);"></i> KPIs rápidos</h3>
+                        <span>Resumen ejecutivo mensual</span>
+                    </div>
                     <div class="kpi-grid">
                         <div class="mini-stat">
                             <div class="mini-label"><i class="fas fa-calendar-day"></i> Promedio diario</div>
@@ -3405,14 +3474,37 @@
                         </div>
                     </div>
                 </div>
-                <div class="card"><h3>Tendencia (6 Meses)</h3><div style="height:300px;"><canvas id="chartTendencias"></canvas></div></div>
-                <div class="card"><h3>Ingresos vs Gastos (6 Meses)</h3><div style="height:320px;"><canvas id="chartIngresosGastos"></canvas></div></div>
-                <div class="card"><h3>Distribución de Gastos</h3><div style="height:350px;"><canvas id="chartCategorias"></canvas></div></div>
+
+                <div class="stats-chart-grid">
+                    <div class="card">
+                        <div class="stats-card-head">
+                            <h3><i class="fas fa-wave-square" style="color:var(--primary); margin-right:8px;"></i>Tendencia (6 Meses)</h3>
+                        </div>
+                        <div class="stats-chart-wrap" style="height:300px;"><canvas id="chartTendencias"></canvas></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="stats-card-head">
+                            <h3><i class="fas fa-chart-column" style="color:var(--primary); margin-right:8px;"></i>Ingresos vs Gastos (6 Meses)</h3>
+                        </div>
+                        <div class="stats-chart-wrap" style="height:320px;"><canvas id="chartIngresosGastos"></canvas></div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <h3>Top categorías del mes</h3>
+                    <div class="stats-card-head">
+                        <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
+                    </div>
+                    <div class="stats-chart-wrap" style="height:350px;"><canvas id="chartCategorias"></canvas></div>
+                </div>
+
+                <div class="card">
+                    <div class="stats-card-head">
+                        <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
+                    </div>
                     <div class="top-category-grid">
                         <div class="top-category-list" id="topCategoriasList"></div>
-                        <div style="height:280px;"><canvas id="chartTopCategorias"></canvas></div>
+                        <div class="stats-chart-wrap" style="height:280px;"><canvas id="chartTopCategorias"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -3755,9 +3847,9 @@
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste negativo por arqueo']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste positivo por arqueo']}}};
         const categorias=categories;
 
-        function toggleTheme(){const d=document.body;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();}
+        function toggleTheme(){const d=document.documentElement;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();} // IMPORTANTE: persistencia manual del tema híbrido
         function updateThemeIcon(){
-            const isDark=document.body.getAttribute('data-theme')==='dark';
+            const isDark=document.documentElement.getAttribute('data-theme')==='dark'; // IMPORTANTE: una sola fuente de verdad para el estado visual
             const iconClass = isDark ? 'fas fa-sun' : 'fas fa-moon';
             if(document.getElementById('themeIcon')) {
                 document.getElementById('themeIcon').className=iconClass;
@@ -3768,7 +3860,7 @@
             }
         }
         
-        function initTheme(){const t=localStorage.getItem('theme')||'light';document.body.setAttribute('data-theme',t);updateThemeIcon();}
+        function initTheme(){const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);updateThemeIcon();} // IMPORTANTE: priorizamos dark premium en primera carga
         function formatLocalDate(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
 
         function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
