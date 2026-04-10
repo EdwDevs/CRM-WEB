@@ -735,6 +735,68 @@
             margin-top: 6px;
         }
 
+        #view-estadisticas {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        #view-estadisticas .card {
+            margin-bottom: 0;
+        }
+
+        .stats-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 2px 2px 4px;
+        }
+
+        .stats-section-title h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.02rem;
+            letter-spacing: 0.01em;
+        }
+
+        .stats-section-title span {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stats-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .stats-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stats-card-head h3 {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.01em;
+        }
+
+        .stats-chart-wrap {
+            border: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            background: color-mix(in srgb, var(--bg-surface) 90%, var(--bg-elevated));
+        }
+
         /* Progreso visual en tarjetas */
         .stat-progress-bg {
             height: 6px;
@@ -787,6 +849,10 @@
 
         @media (max-width: 960px) {
             .top-category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-chart-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -2100,6 +2166,19 @@
                 gap: 24px;
             }
 
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .stats-chart-grid {
+                gap: 14px;
+            }
+
+            .stats-chart-wrap {
+                padding: 8px; /* IMPORTANTE: mayor área útil para gráficas en móvil */
+            }
+
             .add-card-form {
                 grid-template-columns: 1fr;
             }
@@ -3358,7 +3437,10 @@
 
             <div id="view-estadisticas" class="tab-content">
                 <div class="card">
-                    <h3>KPIs rápidos</h3>
+                    <div class="stats-section-title">
+                        <h3><i class="fas fa-gauge-high" style="color:var(--primary);"></i> KPIs rápidos</h3>
+                        <span>Resumen ejecutivo mensual</span>
+                    </div>
                     <div class="kpi-grid">
                         <div class="mini-stat">
                             <div class="mini-label"><i class="fas fa-calendar-day"></i> Promedio diario</div>
@@ -3377,14 +3459,37 @@
                         </div>
                     </div>
                 </div>
-                <div class="card"><h3>Tendencia (6 Meses)</h3><div style="height:300px;"><canvas id="chartTendencias"></canvas></div></div>
-                <div class="card"><h3>Ingresos vs Gastos (6 Meses)</h3><div style="height:320px;"><canvas id="chartIngresosGastos"></canvas></div></div>
-                <div class="card"><h3>Distribución de Gastos</h3><div style="height:350px;"><canvas id="chartCategorias"></canvas></div></div>
+
+                <div class="stats-chart-grid">
+                    <div class="card">
+                        <div class="stats-card-head">
+                            <h3><i class="fas fa-wave-square" style="color:var(--primary); margin-right:8px;"></i>Tendencia (6 Meses)</h3>
+                        </div>
+                        <div class="stats-chart-wrap" style="height:300px;"><canvas id="chartTendencias"></canvas></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="stats-card-head">
+                            <h3><i class="fas fa-chart-column" style="color:var(--primary); margin-right:8px;"></i>Ingresos vs Gastos (6 Meses)</h3>
+                        </div>
+                        <div class="stats-chart-wrap" style="height:320px;"><canvas id="chartIngresosGastos"></canvas></div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <h3>Top categorías del mes</h3>
+                    <div class="stats-card-head">
+                        <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
+                    </div>
+                    <div class="stats-chart-wrap" style="height:350px;"><canvas id="chartCategorias"></canvas></div>
+                </div>
+
+                <div class="card">
+                    <div class="stats-card-head">
+                        <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
+                    </div>
                     <div class="top-category-grid">
                         <div class="top-category-list" id="topCategoriasList"></div>
-                        <div style="height:280px;"><canvas id="chartTopCategorias"></canvas></div>
+                        <div class="stats-chart-wrap" style="height:280px;"><canvas id="chartTopCategorias"></canvas></div>
                     </div>
                 </div>
             </div>
