@@ -56,6 +56,13 @@
             --transition-base: 260ms ease;
             --header-height: 64px;
             --nav-width: 278px;
+
+            /* ── Responsive fluid spacing ── */
+            --content-padding: clamp(16px, 3vw, 32px);
+            --header-padding-x: clamp(16px, 3vw, 40px);
+            --gap-sm: clamp(10px, 1.5vw, 16px);
+            --gap-md: clamp(14px, 2vw, 24px);
+            --gap-lg: clamp(18px, 2.5vw, 32px);
         }
 
         [data-theme="dark"] {
@@ -331,7 +338,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 40px;
+            padding: 0 var(--header-padding-x);
             border-bottom: 1px solid var(--border-light);
             gap: 16px;
         }
@@ -405,9 +412,9 @@
         }
 
         .content-container {
-            --section-gap: 28px;
-            padding: 32px;
-            max-width: 1280px;
+            --section-gap: clamp(20px, 2.5vw, 28px);
+            padding: var(--content-padding);
+            max-width: 1400px;
             margin: 0 auto;
             margin-bottom: 32px;
             display: flex;
@@ -441,7 +448,7 @@
             background: linear-gradient(135deg, color-mix(in srgb, var(--bg-surface) 85%, #0B1220) 0%, color-mix(in srgb, var(--bg-elevated) 80%, #111827) 100%);
             border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
             color: var(--text-primary);
-            padding: 48px 40px;
+            padding: clamp(28px, 4vw, 48px) clamp(20px, 3.5vw, 40px);
             border-radius: var(--radius-xl);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 40px -18px rgba(59, 130, 246, 0.45);
             position: relative;
@@ -505,15 +512,15 @@
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            gap: 32px;
-            margin-bottom: 40px;
+            gap: var(--gap-lg);
+            margin-bottom: var(--gap-lg);
         }
 
         .bento-hero {
             grid-column: span 12;
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            gap: 24px;
+            gap: var(--gap-md);
             margin-bottom: 8px;
         }
 
@@ -578,8 +585,8 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+            gap: var(--gap-md);
         }
 
 
@@ -724,8 +731,8 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+            gap: var(--gap-md);
             margin-top: 16px;
         }
 
@@ -771,8 +778,9 @@
         .stats-chart-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
+            gap: var(--gap-md);
         }
+        .stats-chart-grid > * { min-width: 0; }
 
         .stats-card-head {
             display: flex;
@@ -963,8 +971,8 @@
 
         .filter-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+            gap: var(--gap-md);
             margin-bottom: 20px;
         }
 
@@ -1316,8 +1324,8 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+            gap: var(--gap-md);
         }
 
         .form-group {
@@ -1544,7 +1552,14 @@
             border-radius: var(--radius-md);
             border: 1px solid rgba(255, 255, 255, 0.05);
             background: rgba(255, 255, 255, 0.02);
+            /* hint de scroll horizontal en móvil */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148,163,184,0.2) transparent;
         }
+        .table-container::-webkit-scrollbar { height: 4px; }
+        .table-container::-webkit-scrollbar-track { background: transparent; }
+        .table-container::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.25); border-radius: 4px; }
 
         table {
             width: 100%;
@@ -1700,27 +1715,32 @@
             height: 80px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             z-index: 90;
-            justify-content: space-around;
             align-items: center;
-            padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+            /* scroll horizontal para acomodar todos los ítems */
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 8px 4px calc(env(safe-area-inset-bottom) + 8px);
             box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.5);
-            gap: 6px;
+            gap: 2px;
         }
+        .mobile-nav::-webkit-scrollbar { display: none; }
 
         .mob-link {
-            flex: 1;
+            flex: 1 0 54px;   /* crece pero no se comprime por debajo de 54px */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            min-width: 44px;
+            min-width: 54px;
             min-height: 44px;
             color: var(--text-muted);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            gap: 6px;
+            letter-spacing: 0.04em;
+            gap: 4px;
             background: none;
             border: none;
             font-weight: 500;
@@ -1904,7 +1924,7 @@
 
         .modal-content {
             background: #14151B;
-            padding: 40px;
+            padding: clamp(20px, 4vw, 40px);
             border-radius: var(--radius-lg);
             width: 90%;
             max-width: 600px;
@@ -2135,6 +2155,27 @@
             }
         }
 
+        /* ── 640px: teléfonos medianos ────────────────────────── */
+        @media (max-width: 640px) {
+            .bento-hero .accounts-col {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .family-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-section-title {
+                flex-wrap: wrap;
+            }
+
+            .stats-section-title > span {
+                width: 100%;
+            }
+        }
+
+        /* ── 768px: móvil ─────────────────────────────────── */
         @media (max-width: 768px) {
             .mobile-nav {
                 display: flex;
@@ -2157,22 +2198,11 @@
             }
 
             .content-container {
-                --section-gap: 24px;
-                padding: 18px;
                 margin-bottom: 24px;
-            }
-
-            .stats-grid {
-                gap: 24px;
             }
 
             .kpi-grid {
                 grid-template-columns: 1fr;
-                gap: 14px;
-            }
-
-            .stats-chart-grid {
-                gap: 14px;
             }
 
             .stats-chart-wrap {
@@ -2181,10 +2211,6 @@
 
             .add-card-form {
                 grid-template-columns: 1fr;
-            }
-
-            .hero-balance {
-                padding: 26px 20px;
             }
 
             .hero-amount {
@@ -2208,11 +2234,6 @@
                 padding: 8px 10px;
             }
 
-            .filter-row {
-                grid-template-columns: repeat(2, minmax(140px, 1fr));
-                gap: 12px;
-            }
-
             .btn--lg,
             .btn-ai-action,
             .btn-icon-action {
@@ -2230,23 +2251,27 @@
             }
         }
 
+        /* ── 480px: teléfonos pequeños ───────────────────────── */
         @media (max-width: 480px) {
             .content-container {
                 --section-gap: 16px;
-                padding: 16px;
             }
 
             .table-container table {
                 min-width: 680px; /* IMPORTANTE: mantenemos todas las columnas visibles por scroll horizontal */
             }
 
-            .stats-grid {
-                gap: 16px;
+            .family-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .bento-hero .accounts-col {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
 
             .filter-row {
                 grid-template-columns: 1fr;
-                gap: 10px;
             }
         }
 
@@ -2400,8 +2425,8 @@
 
         .family-summary {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+            gap: var(--gap-md);
             margin-bottom: 28px;
         }
 
@@ -3173,6 +3198,8 @@
         <button class="mob-link mob-fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
         <button class="mob-link" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Hist.</span></button>
         <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Expert</span></button>
+        <button class="mob-link" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Stats.</span></button>
+        <button class="mob-link" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Obj.</span></button>
     </nav>
 
     <div class="sync-indicator offline" id="syncIndicator">
@@ -6069,7 +6096,7 @@
             });
         }
         function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
-        function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='objetivos'){s[4].classList.add('active');renderGoals();}if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}closeSidebar();}
+        function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');m[5].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='objetivos'){s[4].classList.add('active');m[6].classList.add('active');renderGoals();}if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}closeSidebar();}
         function goToAddTransaction(){switchView('transacciones');}
 
         handleTipoChange();
