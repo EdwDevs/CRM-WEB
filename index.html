@@ -6069,7 +6069,30 @@
             });
         }
         function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
-        function switchView(id){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+id).classList.add('active');const f=document.getElementById('headerDateFilter');if(f)f.style.display=id==='dashboard'?'flex':'none';document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));const s=document.querySelectorAll('.sidebar .nav-item');const m=document.querySelectorAll('.mobile-nav .mob-link');if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}if(id==='estadisticas'){s[2].classList.add('active');}if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}if(id==='objetivos'){s[4].classList.add('active');renderGoals();}if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}closeSidebar();}
+        function switchView(id){
+            document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+            document.getElementById('view-'+id).classList.add('active');
+            const f=document.getElementById('headerDateFilter');
+            if(f)f.style.display=id==='dashboard'?'flex':'none';
+            document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
+            const s=document.querySelectorAll('.sidebar .nav-item');
+            const m=document.querySelectorAll('.mobile-nav .mob-link');
+
+            if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
+            if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
+            if(id==='estadisticas'){
+                s[2].classList.add('active');
+                // IMPORTANTE: re-render de KPIs y charts al activar la pestaña para evitar canvas vacíos o desfasados
+                requestAnimationFrame(()=>{
+                    renderCharts();
+                    renderTrendChart();
+                });
+            }
+            if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}
+            if(id==='objetivos'){s[4].classList.add('active');renderGoals();}
+            if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
+            closeSidebar();
+        }
         function goToAddTransaction(){switchView('transacciones');}
 
         handleTipoChange();
