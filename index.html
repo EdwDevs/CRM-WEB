@@ -3630,10 +3630,10 @@
                     <div class="audit-header">
                         <div>
                             <div class="audit-title">Alertas de consistencia</div>
-                            <div class="audit-subtitle">Comparación de deuda, cupo disponible y cuotas restantes.</div>
+                            <div class="audit-subtitle">Lectura contable y financiera en vivo: consistencia, flujo, riesgo y proyecciones.</div>
                         </div>
                         <div class="audit-actions">
-                            <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar</button>
+                            <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar auditoría</button>
                             <button class="btn btn--primary btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
                         </div>
                     </div>
@@ -5455,6 +5455,75 @@
             }
         }
 
+        function buildFinancialAuditInsights() {
+            const insights = [];
+            const vm = currentViewDate.getMonth();
+            const vy = currentViewDate.getFullYear();
+            const monthTx = transactions.filter(t => {
+                if (!t?.fecha || t.pendingDelete) return false;
+                const [y, m] = t.fecha.split('-').map(Number);
+                return y === vy && (m - 1) === vm;
+            });
+
+            const income = monthTx
+                .filter(t => t.tipo === 'ingreso' && !t.esCredito)
+                .reduce((sum, t) => sum + Number(t.monto || 0), 0);
+            const expenses = monthTx
+                .filter(t => t.tipo === 'gasto' || t.tipo === 'credito')
+                .reduce((sum, t) => sum + Number(t.monto || 0), 0);
+            const cashFlow = income - expenses;
+            const savingsRate = income > 0 ? (cashFlow / income) * 100 : 0;
+
+            const last6 = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(vy, vm - i, 1);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const txMonth = transactions.filter(t => t?.fecha?.startsWith(key) && !t.pendingDelete);
+                const inc = txMonth.filter(t => t.tipo === 'ingreso' && !t.esCredito).reduce((s, t) => s + Number(t.monto || 0), 0);
+                const exp = txMonth.filter(t => t.tipo === 'gasto' || t.tipo === 'credito').reduce((s, t) => s + Number(t.monto || 0), 0);
+                last6.push({ key, income: inc, expense: exp, flow: inc - exp });
+            }
+
+            const avgExpense = last6.reduce((s, m) => s + m.expense, 0) / Math.max(last6.length, 1);
+            const avgIncome = last6.reduce((s, m) => s + m.income, 0) / Math.max(last6.length, 1);
+            const debt = Object.values(calculateDebtByCard()).reduce((s, v) => s + Number(v || 0), 0);
+            const coverageMonths = avgExpense > 0 ? income / avgExpense : 0;
+
+            // IMPORTANTE: Lectura financiera integral para que "Ejecutar auditoría" entregue análisis contable útil
+            insights.push({
+                title: 'Lectura financiera del mes',
+                badge: 'Análisis',
+                badgeClass: '',
+                body: `Ingresos: ${formatMoney(income)} · Gastos + crédito: ${formatMoney(expenses)} · Flujo neto: ${formatMoney(cashFlow)} · Ahorro: ${savingsRate.toFixed(1)}%.`,
+                meta: cashFlow >= 0
+                    ? 'Positivo: mantén disciplina de gasto y fortalece fondo de reserva.'
+                    : 'Negativo: revisar gastos variables y priorizar reducción de salidas no esenciales.'
+            });
+
+            const trend = last6[last6.length - 1].flow - last6[0].flow;
+            insights.push({
+                title: 'Tendencia y proyección (6 meses)',
+                badge: 'Proyección',
+                badgeClass: '',
+                body: `Ingreso promedio 6M: ${formatMoney(avgIncome)} · Gasto promedio 6M: ${formatMoney(avgExpense)} · Deuda actual: ${formatMoney(debt)}.`,
+                meta: trend >= 0
+                    ? `Mejora de flujo acumulada: ${formatMoney(trend)}. Proyección favorable si mantienes el ritmo actual.`
+                    : `Deterioro de flujo acumulado: ${formatMoney(trend)}. Se recomienda plan de ajuste para próximos 60-90 días.`
+            });
+
+            insights.push({
+                title: 'Cobertura operativa estimada',
+                badge: 'Riesgo',
+                badgeClass: coverageMonths < 1 ? 'audit-badge--danger' : '',
+                body: `Cobertura con ingresos del mes sobre gasto promedio: ${coverageMonths.toFixed(2)} meses.`,
+                meta: coverageMonths >= 1
+                    ? 'Cobertura aceptable. Objetivo sugerido: 2-3 meses.'
+                    : 'Cobertura baja. Prioriza colchón de liquidez y reducción de deuda rotativa.'
+            });
+
+            return insights;
+        }
+
         function runConsistencyAudit() {
             const issues = [];
             const correctionMap = new Map();
@@ -5583,6 +5652,9 @@
                     });
                 }
             });
+
+            const financialInsights = buildFinancialAuditInsights();
+            issues.push(...financialInsights);
 
             consistencyAudit = { issues, corrections: Array.from(correctionMap.values()) };
             renderConsistencyAlerts();
