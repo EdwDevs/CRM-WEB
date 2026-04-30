@@ -1959,6 +1959,7 @@
             d.monto=monto;
             const btn=document.getElementById('btnSubmitText');
             const shouldReturnToQuota = returnToQuotaModal;
+            const wasEditing = Boolean(editingTransactionId);
             if(btn)btn.classList.add('is-loading');
             try{
                 let result=null;
@@ -1976,12 +1977,20 @@
                     });
                 }
                 cancelEdit();
-                await loadTransactions();
+                // IMPORTANTE: si la persistencia ya fue aceptada (online u offline), un fallo de refresco no debe marcar "Error al guardar".
+                try{
+                    await loadTransactions();
+                }catch(refreshError){
+                    console.error('Refresh post-save failed:', refreshError);
+                    registerDebugError('saveTransaction:refresh', refreshError);
+                    showToast('Guardado, pero no se pudo refrescar la vista de inmediato.', 'warning');
+                }
                 if(!result?.queued){
-                    showToast(editingTransactionId?'Actualizado':'Guardado','success');
+                    showToast(wasEditing?'Actualizado':'Guardado','success');
                 }
             }catch(e){
                 console.error(e);
+                registerDebugError('saveTransaction:enqueueOrExecute', e);
                 showToast('Error al guardar. Verifica tu conexión.', 'error');
             }finally{
                 if(btn)btn.classList.remove('is-loading');
