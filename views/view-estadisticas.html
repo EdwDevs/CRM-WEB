@@ -1,6 +1,6 @@
-<div id="view-estadisticas" class="tab-content">
-                <details class="card collapsible-card" open>
-                    <summary class="collapsible-card__summary stats-section-title">
+<div id="view-estadisticas" class="tab-content view-stack">
+                <div class="card">
+                    <div class="stats-section-title">
                         <h3><i class="fas fa-gauge-high" style="color:var(--primary);"></i> KPIs rápidos</h3>
                         <span>Resumen ejecutivo mensual</span>
                     </summary>
@@ -32,7 +32,8 @@
                             <canvas id="chartTendencias"></canvas>
                             <div id="fallbackTrendChart" class="chart-fallback hidden">Sin datos suficientes para proyección de tendencia.</div>
                         </div>
-                    </details>
+                        <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTendencias"></canvas></div>
+                    </div>
 
                     <details class="card collapsible-card" open>
                         <summary class="collapsible-card__summary stats-card-head">
@@ -42,7 +43,8 @@
                             <canvas id="chartIngresosGastos"></canvas>
                             <div id="fallbackIncomeExpenseChart" class="chart-fallback hidden">Sin datos suficientes para comparar ingresos y gastos.</div>
                         </div>
-                    </details>
+                        <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartIngresosGastos"></canvas></div>
+                    </div>
                 </div>
 
                 <details class="card collapsible-card" open>
@@ -53,7 +55,8 @@
                         <canvas id="chartCategorias"></canvas>
                         <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
                     </div>
-                </details>
+                    <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartCategorias"></canvas></div>
+                </div>
 
                 <details class="card collapsible-card" open>
                     <summary class="collapsible-card__summary stats-card-head">
@@ -61,10 +64,8 @@
                     </summary>
                     <div class="top-category-grid collapsible-card__content">
                         <div class="top-category-list" id="topCategoriasList"></div>
-                        <div class="stats-chart-wrap" style="height:280px;">
-                            <canvas id="chartTopCategorias"></canvas>
-                            <div id="fallbackTopChart" class="chart-fallback hidden">Sin datos suficientes para top categorías.</div>
-                        </div>
+                        <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTopCategorias"></canvas></div>
                     </div>
-                </details>
+                    <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
+                </div>
             </div>

@@ -1,12 +1,13 @@
-<div id="view-objetivos" class="tab-content">
+<div id="view-objetivos" class="tab-content view-stack">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos de Ahorro</h3>
+                        <h3 class="card-title" style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos de Ahorro</h3>
                         <button onclick="openGoalModal()" class="btn btn--primary btn--sm"><i class="fas fa-plus"></i> Nuevo</button>
                     </div>
                     <div id="goalsContainer">
                         <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
                         <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
                     </div>
+                    <div id="goalsEmptyState" class="section-empty-state hidden"><strong>Aún no tienes objetivos creados.</strong> Presiona “Nuevo” para definir una meta con monto y fecha.</div>
                 </div>
             </div>
