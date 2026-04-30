@@ -2090,6 +2090,26 @@
             color: #fcd34d;
         }
 
+        /* IMPORTANTE: modo compacto de recordatorios; solo campana para pagos con menos de 2 días. */
+        .reminder-bell-chip {
+            border: 1px solid var(--warning);
+            background: var(--warning-light);
+            color: #b45309;
+            border-radius: 999px;
+            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            cursor: default;
+        }
+
+        [data-theme="dark"] .reminder-bell-chip {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.45);
+        }
+
         .prediction-card {
             background: rgba(255, 255, 255, 0.02);
             padding: 32px;
@@ -2723,3 +2743,45 @@
             text-align: center;
             padding: 12px 0;
         }
+
+/* IMPORTANTE: fallback visual para charts cuando no hay datos suficientes para una proyección fiable. */
+.chart-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    padding: 10px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.08);
+}
+
+.debug-panel {
+    position: fixed;
+    right: 12px;
+    bottom: 84px;
+    z-index: 1200;
+    width: min(360px, calc(100vw - 24px));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #0f172a;
+    color: #e2e8f0;
+    box-shadow: 0 10px 30px rgba(2, 6, 23, 0.45);
+    font-size: 0.8rem;
+}
+
+.debug-panel__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.debug-panel__body { padding: 8px 10px; max-height: 220px; overflow: auto; }
+.debug-panel__list { margin: 6px 0 0; padding-left: 14px; }
+.debug-panel__list li { margin-bottom: 4px; }
