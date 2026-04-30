@@ -1,0 +1,109 @@
+/* IMPORTANTE: tokens de color y espaciado */
+
+        :root, [data-theme="light"] {
+            /* IMPORTANTE: Base visual híbrida (modo claro premium enfocado en legibilidad móvil) */
+            --primary: #2563FF;
+            --primary-dark: #1D4ED8;
+            --primary-light: #60A5FA;
+            --secondary: #0F172A;
+            --accent: #2563FF;
+            --bg-body: #F6F8FC;
+            --bg-surface: #FFFFFF;
+            --bg-elevated: #EEF2FF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --border-light: rgba(37, 99, 255, 0.18);
+            --success: #059669; /* Verde esmeralda */
+            --success-light: rgba(5, 150, 105, 0.1);
+            --danger: #DC2626; /* Rojo oscuro */
+            --danger-light: rgba(220, 38, 38, 0.1);
+            --warning: #D97706;
+            --warning-light: rgba(217, 119, 6, 0.1);
+            --info: #2563EB;
+            --info-light: rgba(37, 99, 235, 0.1);
+            --credit: #7C3AED;
+            --credit-light: rgba(124, 58, 237, 0.1);
+
+            --font-main: 'Outfit', sans-serif;
+            --font-heading: 'Syne', sans-serif;
+
+            /* IMPORTANTE: Bordes y sombras ejecutivas (sin estética gaming) */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
+            --radius-full: 999px;
+
+            --shadow-xs: 0 1px 4px rgba(15, 23, 42, 0.06);
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.10);
+            --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.14);
+
+            /* IMPORTANTE: Transiciones moderadas y medidas globales de layout */
+            --transition-fast: 180ms ease;
+            --transition-base: 260ms ease;
+            --header-height: 64px;
+            --nav-width: 278px;
+        }
+
+        [data-theme="dark"] {
+            /* IMPORTANTE: Modo oscuro tecnológico premium con acento azul eléctrico */
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --primary-light: #93C5FD;
+            --secondary: #121A2B;
+            --accent: #3B82F6;
+            --bg-body: #0B1220;
+            --bg-surface: #121A2B;
+            --bg-elevated: #1A2440;
+            --text-primary: #E5ECF7;
+            --text-secondary: #9FB0CC;
+            --border-light: rgba(59, 130, 246, 0.24);
+            --success: #10B981;
+            --success-light: rgba(16, 185, 129, 0.1);
+            --danger: #EF4444;
+            --danger-light: rgba(239, 68, 68, 0.1);
+            --warning: #F59E0B;
+            --warning-light: rgba(245, 158, 11, 0.1);
+            --info: #3B82F6;
+            --info-light: rgba(59, 130, 246, 0.1);
+            --credit: #8B5CF6;
+            --credit-light: rgba(139, 92, 246, 0.1);
+            
+            --font-main: 'Outfit', sans-serif;
+            --font-heading: 'Syne', sans-serif;
+
+            --shadow-xs: 0 1px 4px rgba(0, 0, 0, 0.22);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+            --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.35);
+            --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.40);
+        }
+
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            /* Option 2: Tipografía "Outfit" y "Syne" */
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            transition: background-color var(--transition-base), color var(--transition-base);
+            line-height: 1.6;
+            letter-spacing: 0.01em; /* Ligeramente más espaciado para elegancia */
+        }
+
+        h1, h2, h3, h4, h5, .hero-amount, .page-title {
+            font-family: 'Syne', sans-serif; /* Syne para títulos da un toque vanguardista y elegante */
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
