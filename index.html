@@ -369,7 +369,7 @@
         // IMPORTANTE: Mapa centralizado entre vista y archivo fragmento + hooks de render al activar la vista.
         const VIEW_CONFIG={
             dashboard:{fragment:'views/view-dashboard.html', onActivate:[()=>{updateDashboard(); updateDailyCapIndicator();}]},
-            transacciones:{fragment:'views/view-transacciones.html', onActivate:[]},
+            transacciones:{fragment:'views/view-transacciones.html', onActivate:[initTransactionFormBindings]},
             estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[renderCharts, renderTrendChart]},
             historial:{fragment:'views/view-historial.html', onActivate:[renderHistory]},
             objetivos:{fragment:'views/view-objetivos.html', onActivate:[renderGoals]},
@@ -1854,6 +1854,8 @@
         }
 
         function handleTipoChange(){
+            // IMPORTANTE: la vista de transacciones es lazy-load; validar nodos evita romper scripts globales.
+            if(!document.getElementById('tipo')||!document.getElementById('categoria'))return;
             const t=document.getElementById('tipo').value;
             const cc=document.getElementById('creditConfig');
             const pc=document.getElementById('divPagoTarjeta');
@@ -1884,9 +1886,19 @@
                 }
             }
         }
-        document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
-        document.getElementById('tarjetaCredito').addEventListener('change',()=>syncCreditPaymentDateField(true));
-        document.getElementById('fecha').addEventListener('change',()=>syncCreditPaymentDateField(true));
+        function initTransactionFormBindings(){
+            const category=document.getElementById('categoria');
+            const creditCard=document.getElementById('tarjetaCredito');
+            const dateInput=document.getElementById('fecha');
+            if(!category||!creditCard||!dateInput)return;
+            if(category.dataset.bound==='1')return;
+            category.dataset.bound='1';
+            category.addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
+            creditCard.addEventListener('change',()=>syncCreditPaymentDateField(true));
+            dateInput.addEventListener('change',()=>syncCreditPaymentDateField(true));
+            handleTipoChange();
+            logEvent('switchView',{view:'transacciones-bindings-ready'});
+        }
         function preSubmit(){
             const t=document.getElementById('tipo').value;
             const m=parseCurrencyInput(document.getElementById('monto').value);
