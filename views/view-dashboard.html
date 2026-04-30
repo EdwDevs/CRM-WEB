@@ -1,4 +1,4 @@
-<div id="view-dashboard" class="tab-content active">
+<div id="view-dashboard" class="tab-content active view-stack">
                 <!-- Bento Grid Layout -->
                 <div class="dashboard-grid">
 
@@ -39,7 +39,7 @@
                     </div>
 
                     <div class="bento-stats">
-                        <h3 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700;">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
+                        <h3 class="card-title" style="color: var(--text-secondary);">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
                         <div class="stats-grid">
                             <!-- Ingresos -->
                             <div class="mini-stat">
@@ -154,5 +154,6 @@
                     </div>
                     <div class="hero-amount" id="deudaTotalTC" style="color:var(--danger); font-size:1.8rem; margin-bottom:15px;">$0</div>
                     <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
+                    <div id="cardsEmptyState" class="section-empty-state hidden"><strong>Sin deudas de tarjetas activas.</strong> Registra una compra a crédito o configura una tarjeta para ver su detalle.</div>
                 </div>
             </div>
