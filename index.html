@@ -826,6 +826,7 @@
 
         function renderHistory() {
             const tbody = document.getElementById('transactionList'); tbody.innerHTML = '';
+            const historyEmptyState = document.getElementById('historyEmptyState');
             const txt = document.getElementById('filterText').value.toLowerCase();
             const type = document.getElementById('filterType').value;
             const method = document.getElementById('filterMethod').value;
@@ -852,7 +853,12 @@
             });
             document.getElementById('valFilteredInc').textContent = formatMoney(inc);
             document.getElementById('valFilteredExp').textContent = formatMoney(exp);
-            if(filtered.length===0){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:#999;">No hay resultados con estos filtros</td></tr>'; return; }
+            if(filtered.length===0){
+                // IMPORTANTE: estado vacío unificado con mensaje accionable para el usuario.
+                if (historyEmptyState) historyEmptyState.classList.remove('hidden');
+                return;
+            }
+            if (historyEmptyState) historyEmptyState.classList.add('hidden');
             filtered.forEach(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
@@ -1329,6 +1335,8 @@
             }
         }); 
         document.getElementById('deudaTotalTC').textContent=formatMoney(td);
+        const cardsEmptyState=document.getElementById('cardsEmptyState');
+        if(cardsEmptyState) cardsEmptyState.classList.toggle('hidden', td>0);
         
         // Simple payment option - one per credit
         Object.keys(creditosPorTarjeta).forEach(cardName=>{
@@ -1579,7 +1587,7 @@
             }
         }
         
-        function renderGoals(){const cont=document.getElementById('goalsContainer');if(goals.length===0){cont.innerHTML='<p style="text-align:center;color:var(--text-light);">No tienes objetivos definidos</p>';return;}
+        function renderGoals(){const cont=document.getElementById('goalsContainer');const goalsEmptyState=document.getElementById('goalsEmptyState');if(goals.length===0){cont.innerHTML='';if(goalsEmptyState)goalsEmptyState.classList.remove('hidden');return;}if(goalsEmptyState)goalsEmptyState.classList.add('hidden');
         let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div style="font-weight:700;color:var(--primary);">${pct}%</div></div><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats" style="margin-top:5px;"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn btn--primary btn--sm" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn btn--danger btn--sm" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
         
         function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);AppStore.setGoals(goals);}else{AppStore.setGoals([]);}}
@@ -1700,8 +1708,10 @@
         }
 
         function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); AppStore.updateViewDate(new Date(parseInt(y),parseInt(m)-1,1));}}
-        function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos');const trendFallback=document.getElementById('fallbackTrendChart');const barFallback=document.getElementById('fallbackIncomeExpenseChart'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas){registerDebugError('renderTrendChart',new Error('Canvas chartTendencias no disponible'));return;} const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate); const l=trend.map(t=>t.label); const i=trend.map(t=>t.income); const g=trend.map(t=>t.expense); const hasData=trend.some(t=>(Number(t.income)||0)>0||(Number(t.expense)||0)>0); if(!hasData){ trendCanvas.classList.add('hidden'); if(barCanvas)barCanvas.classList.add('hidden'); if(trendFallback)trendFallback.classList.remove('hidden'); if(barFallback)barFallback.classList.remove('hidden'); logEvent('renderCharts',{target:'trend',status:'fallback'}); return; } trendCanvas.classList.remove('hidden'); if(barCanvas)barCanvas.classList.remove('hidden'); if(trendFallback)trendFallback.classList.add('hidden'); if(barFallback)barFallback.classList.add('hidden'); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
-        function renderCharts(){const c=document.getElementById('chartCategorias');const categoryFallback=document.getElementById('fallbackCategoryChart'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}}); const categoryValues=Object.values(ct); const hasCategoryData=Boolean(c&&categoryValues.length&&categoryValues.some(v=>v>0)); if(!hasCategoryData){ if(c)c.classList.add('hidden'); if(categoryFallback)categoryFallback.classList.remove('hidden'); logEvent('renderCharts',{target:'categorias',status:'fallback'}); }else{ c.classList.remove('hidden'); if(categoryFallback)categoryFallback.classList.add('hidden'); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:categoryValues,backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});}
+        function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas)return; const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate); const l=trend.map(t=>t.label); const i=trend.map(t=>t.income); const g=trend.map(t=>t.expense); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
+        function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+            const statsEmptyState=document.getElementById('statsEmptyState');
+            if(statsEmptyState) statsEmptyState.classList.toggle('hidden', monthly.monthTransactions.length>0);
             const avgDaily=daysInMonth>0?monthlyExpenses/daysInMonth:0;
             const savingsRate=monthlyIncome===0?0:((monthlyIncome-monthlyExpenses)/monthlyIncome)*100;
             const balance=monthlyIncome-monthlyExpenses;
