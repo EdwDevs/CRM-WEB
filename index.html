@@ -335,6 +335,7 @@
         }
 
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
+        const debugState={enabled:isLocalDebugEnvironment(),lastEvents:[],lastErrors:[]};
         // IMPORTANTE: aliases locales para compatibilidad con funciones existentes, sincronizados por suscripción del store.
         function syncLocalStateFromStore(){
             const state=AppStore.getState();
@@ -349,8 +350,14 @@
             if(nextState.cards!==prevState.cards){ populateCardSelects(); populateMethodFilter(); }
             if(nextState.transactions!==prevState.transactions){ updateDashboard(); updateDailyCapIndicator(); renderHistory(); renderCharts(); renderTrendChart(); }
             if(nextState.goals!==prevState.goals){ renderGoals(); }
+            renderDebugPanel();
         });
         syncLocalStateFromStore();
+        function isLocalDebugEnvironment(){ return ['localhost','127.0.0.1'].includes(window.location.hostname); }
+        // IMPORTANTE: registrar acciones críticas en un único formato simplifica depuración y seguimiento.
+        function logEvent(type,payload={}){ const entry={type,payload,at:new Date().toISOString()}; console.info('[crm-web:event]',entry); debugState.lastEvents=[entry,...debugState.lastEvents].slice(0,12); renderDebugPanel(); return entry; }
+        function registerDebugError(scope,error){ const entry={scope,message:error?.message||String(error),at:new Date().toISOString()}; debugState.lastErrors=[entry,...debugState.lastErrors].slice(0,8); renderDebugPanel(); }
+        function renderDebugPanel(){ if(!debugState.enabled)return; let panel=document.getElementById('debugPanel'); if(!panel){ panel=document.createElement('section'); panel.id='debugPanel'; panel.className='debug-panel'; document.body.appendChild(panel);} panel.innerHTML=`<div class="debug-panel__head"><strong>Debug local</strong><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div style="margin-top:8px;"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div style="margin-top:8px;"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`; }
         let syncCardIdMap=null;
         const confirmActionState = { onConfirm: null };
         let isSyncingOfflineQueue = false;
@@ -362,8 +369,8 @@
         // IMPORTANTE: Mapa centralizado entre vista y archivo fragmento + hooks de render al activar la vista.
         const VIEW_CONFIG={
             dashboard:{fragment:'views/view-dashboard.html', onActivate:[()=>{updateDashboard(); updateDailyCapIndicator();}]},
-            transacciones:{fragment:'views/view-transacciones.html', onActivate:[]},
-            estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[renderCharts, renderTrendChart]},
+            transacciones:{fragment:'views/view-transacciones.html', onActivate:[initTransactionFormBindings]},
+            estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
             historial:{fragment:'views/view-historial.html', onActivate:[renderHistory]},
             objetivos:{fragment:'views/view-objetivos.html', onActivate:[renderGoals]},
             asistente:{fragment:'views/view-asistente.html', onActivate:[]}
@@ -384,6 +391,23 @@
         async function preloadViews(){
             // IMPORTANTE: cargamos todas las vistas al inicio para preservar IDs y compatibilidad con lógica existente.
             await Promise.all(Object.keys(VIEW_CONFIG).map(loadView));
+        }
+        function initCollapsibleCards(){
+            const cards=document.querySelectorAll('.collapsible-card');
+            cards.forEach(card=>{
+                if(card.dataset.bound==='1')return;
+                card.dataset.bound='1';
+                // IMPORTANTE: al expandir, forzar resize evita charts cortados tras abrir panel plegado.
+                card.addEventListener('toggle',()=>{
+                    if(!card.open)return;
+                    setTimeout(()=>{
+                        if(chartInstance)chartInstance.resize();
+                        if(trendChartInstance)trendChartInstance.resize();
+                        if(trendBarChartInstance)trendBarChartInstance.resize();
+                        if(topCategoriesChartInstance)topCategoriesChartInstance.resize();
+                    },120);
+                });
+            });
         }
 
         function toggleTheme(){const d=document.documentElement;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();} // IMPORTANTE: persistencia manual del tema híbrido
@@ -1370,6 +1394,7 @@
         
         function renderReminders(){
             const cont=document.getElementById('remindersContainer');
+            if(!cont)return;
             const today=new Date();
             today.setHours(0,0,0,0);
             
@@ -1428,44 +1453,17 @@
                 }
             });
 
-            if(reminders.length===0){cont.innerHTML='';return;}
+            // IMPORTANTE: ocultar panel completo y mostrar solo campanita cuando falten menos de 2 días para pago.
+            const urgentReminders=reminders.filter(r=>r.daysUntil<2);
+            if(urgentReminders.length===0){cont.innerHTML='';cont.classList.add('hidden');return;}
+            cont.classList.remove('hidden');
             
             let html='';
-            reminders.forEach(r=>{
-                // Ajustar colores según urgencia
-                const isOverdue = r.daysUntil <= 0;
-                const isUrgent = r.daysUntil <= 3;
-                const isWarning = r.daysUntil <= 7;
-                
-                let urgencyClass = 'var(--text-muted)';
-                let urgencyBg = 'transparent';
-                let iconClass = 'fas fa-calendar-alt'; // Icono normal
-
-                if(isOverdue) {
-                    urgencyClass = 'var(--danger)';
-                    urgencyBg = 'var(--danger-light)';
-                    iconClass = 'fas fa-exclamation-circle';
-                } else if(isUrgent) {
-                    urgencyClass = '#c2410c'; // Naranja oscuro
-                    urgencyBg = '#ffedd5'; // Naranja claro
-                    iconClass = 'fas fa-clock';
-                } else if(isWarning) {
-                    urgencyClass = 'var(--warning)';
-                    urgencyBg = 'var(--warning-light)';
-                }
-
-                html+=`<div class="reminder-card" style="background:${urgencyBg}; border-left: 4px solid ${isOverdue ? 'var(--danger)' : (isUrgent ? '#f97316' : (isWarning ? 'var(--warning)' : 'transparent'))};">
-                    <div class="reminder-icon"><i class="${iconClass}" style="color:${isOverdue ? 'var(--danger)' : (isUrgent ? '#f97316' : 'var(--warning)')}"></i></div>
-                    <div class="reminder-text">
-                        <div class="reminder-title">${r.title}</div>
-                        <div class="reminder-date" style="font-size:0.75rem;color:var(--text-muted);">Próximo pago: ${r.date.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-weight:600;color:${urgencyClass};font-size:0.9rem;">${r.daysUntil < 0 ? 'Vencido (' + Math.abs(r.daysUntil) + 'd)' : (r.daysUntil===0 ? '¡Hoy!' : (r.daysUntil===1 ? 'Mañana' : `${r.daysUntil} días`))}</div>
-                        <div style="font-size:0.85rem;color:var(--text-muted);">${r.desc}</div>
-                    </div>
-                </div>`;
-            });
+            const resumen=urgentReminders.map(r=>`${r.title}: ${r.daysUntil<0?`vencido ${Math.abs(r.daysUntil)}d`:(r.daysUntil===0?'hoy':'mañana')}`).join(' · ');
+            html=`<button class="reminder-bell-chip" title="${resumen}" aria-label="Recordatorios de pago urgentes">
+                    <i class="fas fa-bell"></i>
+                    <span>${urgentReminders.length}</span>
+                 </button>`;
             cont.innerHTML=html;
         }
         
@@ -1693,8 +1691,8 @@
         }
 
         function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); AppStore.updateViewDate(new Date(parseInt(y),parseInt(m)-1,1));}}
-        function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas)return; const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate); const l=trend.map(t=>t.label); const i=trend.map(t=>t.income); const g=trend.map(t=>t.expense); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
-        function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+        function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos');const trendFallback=document.getElementById('fallbackTrendChart');const barFallback=document.getElementById('fallbackIncomeExpenseChart'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas){registerDebugError('renderTrendChart',new Error('Canvas chartTendencias no disponible'));return;} const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate); const l=trend.map(t=>t.label); const i=trend.map(t=>t.income); const g=trend.map(t=>t.expense); const hasData=trend.some(t=>(Number(t.income)||0)>0||(Number(t.expense)||0)>0); if(!hasData){ trendCanvas.classList.add('hidden'); if(barCanvas)barCanvas.classList.add('hidden'); if(trendFallback)trendFallback.classList.remove('hidden'); if(barFallback)barFallback.classList.remove('hidden'); logEvent('renderCharts',{target:'trend',status:'fallback'}); return; } trendCanvas.classList.remove('hidden'); if(barCanvas)barCanvas.classList.remove('hidden'); if(trendFallback)trendFallback.classList.add('hidden'); if(barFallback)barFallback.classList.add('hidden'); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
+        function renderCharts(){const c=document.getElementById('chartCategorias');const categoryFallback=document.getElementById('fallbackCategoryChart'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}}); const categoryValues=Object.values(ct); const hasCategoryData=Boolean(c&&categoryValues.length&&categoryValues.some(v=>v>0)); if(!hasCategoryData){ if(c)c.classList.add('hidden'); if(categoryFallback)categoryFallback.classList.remove('hidden'); logEvent('renderCharts',{target:'categorias',status:'fallback'}); }else{ c.classList.remove('hidden'); if(categoryFallback)categoryFallback.classList.add('hidden'); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:categoryValues,backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});}
             const avgDaily=daysInMonth>0?monthlyExpenses/daysInMonth:0;
             const savingsRate=monthlyIncome===0?0:((monthlyIncome-monthlyExpenses)/monthlyIncome)*100;
             const balance=monthlyIncome-monthlyExpenses;
@@ -1734,11 +1732,18 @@
                 }
             }
             if(topCategoriesChartInstance)topCategoriesChartInstance.destroy();
-            if(topCanvas){
+            const topFallback=document.getElementById('fallbackTopChart');
+            if(topCanvas&&sortedEntries.length){
+                topCanvas.classList.remove('hidden');
+                if(topFallback)topFallback.classList.add('hidden');
                 const topLabels=sortedEntries.slice(0,5).map(([name])=>name);
                 const topValues=sortedEntries.slice(0,5).map(([,value])=>value);
                 topCategoriesChartInstance=new Chart(topCanvas,{type:'bar',data:{labels:topLabels,datasets:[{label:'Gasto',data:topValues,backgroundColor:'rgba(79,70,229,0.6)',borderColor:'#4f46e5',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+            }else if(topCanvas){
+                topCanvas.classList.add('hidden');
+                if(topFallback)topFallback.classList.remove('hidden');
             }
+            logEvent('renderCharts',{target:'estadisticas',categories:sortedEntries.length,hasCategoryData});
         }
         
         async function loadCards(){
@@ -1830,6 +1835,8 @@
         }
 
         function handleTipoChange(){
+            // IMPORTANTE: la vista de transacciones es lazy-load; validar nodos evita romper scripts globales.
+            if(!document.getElementById('tipo')||!document.getElementById('categoria'))return;
             const t=document.getElementById('tipo').value;
             const cc=document.getElementById('creditConfig');
             const pc=document.getElementById('divPagoTarjeta');
@@ -1860,9 +1867,19 @@
                 }
             }
         }
-        document.getElementById('categoria').addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
-        document.getElementById('tarjetaCredito').addEventListener('change',()=>syncCreditPaymentDateField(true));
-        document.getElementById('fecha').addEventListener('change',()=>syncCreditPaymentDateField(true));
+        function initTransactionFormBindings(){
+            const category=document.getElementById('categoria');
+            const creditCard=document.getElementById('tarjetaCredito');
+            const dateInput=document.getElementById('fecha');
+            if(!category||!creditCard||!dateInput)return;
+            if(category.dataset.bound==='1')return;
+            category.dataset.bound='1';
+            category.addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
+            creditCard.addEventListener('change',()=>syncCreditPaymentDateField(true));
+            dateInput.addEventListener('change',()=>syncCreditPaymentDateField(true));
+            handleTipoChange();
+            logEvent('switchView',{view:'transacciones-bindings-ready'});
+        }
         function preSubmit(){
             const t=document.getElementById('tipo').value;
             const m=parseCurrencyInput(document.getElementById('monto').value);
@@ -1923,6 +1940,7 @@
             d.monto=monto;
             const btn=document.getElementById('btnSubmitText');
             const shouldReturnToQuota = returnToQuotaModal;
+            const wasEditing = Boolean(editingTransactionId);
             if(btn)btn.classList.add('is-loading');
             try{
                 let result=null;
@@ -1940,12 +1958,20 @@
                     });
                 }
                 cancelEdit();
-                await loadTransactions();
+                // IMPORTANTE: si la persistencia ya fue aceptada (online u offline), un fallo de refresco no debe marcar "Error al guardar".
+                try{
+                    await loadTransactions();
+                }catch(refreshError){
+                    console.error('Refresh post-save failed:', refreshError);
+                    registerDebugError('saveTransaction:refresh', refreshError);
+                    showToast('Guardado, pero no se pudo refrescar la vista de inmediato.', 'warning');
+                }
                 if(!result?.queued){
-                    showToast(editingTransactionId?'Actualizado':'Guardado','success');
+                    showToast(wasEditing?'Actualizado':'Guardado','success');
                 }
             }catch(e){
                 console.error(e);
+                registerDebugError('saveTransaction:enqueueOrExecute', e);
                 showToast('Error al guardar. Verifica tu conexión.', 'error');
             }finally{
                 if(btn)btn.classList.remove('is-loading');
@@ -2018,6 +2044,7 @@
         }
 
         function runConsistencyAudit() {
+            logEvent('runConsistencyAudit', { txCount: transactions.length, cardCount: cardsList.length });
             const issues = [];
             const correctionMap = new Map();
             const debtMap = calculateDebtByCard();
@@ -2166,6 +2193,7 @@
             consistencyAudit = { issues, corrections: Array.from(correctionMap.values()) };
             AppStore.setAudit(consistencyAudit);
             renderConsistencyAlerts();
+            logEvent('runConsistencyAudit', { issues: issues.length, corrections: consistencyAudit.corrections.length });
         }
 
         function renderConsistencyAlerts() {
@@ -2652,6 +2680,7 @@
         function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
         async function switchView(id){
             if(!VIEW_CONFIG[id])return;
+            logEvent('switchView',{view:id});
             await loadView(id);
             document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
             const targetView=document.getElementById('view-'+id);
