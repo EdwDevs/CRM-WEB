@@ -88,370 +88,9 @@
 
             <div id="remindersContainer"></div>
 
-            <div id="view-dashboard" class="tab-content active">
-                <!-- Bento Grid Layout -->
-                <div class="dashboard-grid">
+            <!-- IMPORTANTE: Contenedor dinámico para vistas cargadas desde /views -->
+            <div id="viewsHost"></div>
 
-                    <div class="bento-hero">
-                        <div class="hero-balance">
-                            <div class="hero-title">Patrimonio Líquido Total</div>
-                            <div class="hero-amount" id="saldoTotal">$ 0</div>
-                            <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px; position:relative; z-index:1;">
-                                <i class="fas fa-shield-alt"></i> Saldo neto consolidado
-                            </div>
-                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--primary); border-color: var(--primary); position: relative; z-index: 2;" onclick="openArqueoModal()">
-                                <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
-                            </button>
-                        </div>
-                        <div class="accounts-col">
-                            <div class="account-card">
-                                <div class="account-icon" style="background: var(--info-light); color: var(--info);"><i class="fas fa-university"></i></div>
-                                <div class="account-info">
-                                    <span class="account-label">Débito / Bancos</span>
-                                    <span class="account-amount" id="saldoDebito">$0</span>
-                                </div>
-                            </div>
-                            <div class="account-card">
-                                <div class="account-icon" style="background: var(--success-light); color: var(--success);"><i class="fas fa-money-bill-wave"></i></div>
-                                <div class="account-info">
-                                    <span class="account-label">Efectivo Físico</span>
-                                    <span class="account-amount" id="saldoEfectivo">$0</span>
-                                </div>
-                            </div>
-                            <div class="account-card">
-                                <div class="account-icon" style="background: var(--credit-light); color: var(--credit);"><i class="fas fa-mobile-alt"></i></div>
-                                <div class="account-info">
-                                    <span class="account-label">Billetera Digital</span>
-                                    <span class="account-amount" id="saldoNequi">$0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bento-stats">
-                        <h3 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700;">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
-                        <div class="stats-grid">
-                            <!-- Ingresos -->
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Ingresos</span>
-                                    <div class="mini-icon-wrapper" style="background: var(--success-light); color: var(--success);"><i class="fas fa-arrow-down"></i></div>
-                                </div>
-                                <div class="mini-value" id="totalIngresosMes">$0</div>
-                                <div class="mini-footer">
-                                    <div class="mini-delta" id="deltaIncomeMoM">--</div>
-                                </div>
-                            </div>
-                            <!-- Gastos -->
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Gastos + TC</span>
-                                    <div class="mini-icon-wrapper" style="background: var(--danger-light); color: var(--danger);"><i class="fas fa-arrow-up"></i></div>
-                                </div>
-                                <div class="mini-value" id="totalGastosMes">$0</div>
-                                <div class="mini-footer">
-                                    <div class="mini-delta" id="deltaExpenseMoM">--</div>
-                                </div>
-                            </div>
-                            <!-- Balance Neto -->
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Balance Neto</span>
-                                    <div class="mini-icon-wrapper" style="background: rgba(148, 163, 184, 0.15); color: var(--text-secondary);"><i class="fas fa-scale-balanced"></i></div>
-                                </div>
-                                <div class="mini-value" id="balanceMes">$0</div>
-                                <div class="mini-footer" style="padding-top: 8px;">
-                                    <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill" style="width: 50%; background: var(--text-secondary);"></div></div>
-                                </div>
-                            </div>
-                            <!-- Tasa de Ahorro -->
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Tasa de Ahorro</span>
-                                    <div class="mini-icon-wrapper" style="background: var(--info-light); color: var(--info);"><i class="fas fa-piggy-bank"></i></div>
-                                </div>
-                                <div class="mini-value" id="savingsRate">0%</div>
-                                <div class="mini-footer" style="padding-top: 8px;">
-                                    <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill" style="width: 0%; background: var(--info);"></div></div>
-                                </div>
-                            </div>
-                            <!-- Flujo Neto Real -->
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Flujo Neto Real</span>
-                                    <div class="mini-icon-wrapper" style="background: var(--success-light); color: var(--success);"><i class="fas fa-money-bill-trend-up"></i></div>
-                                </div>
-                                <div class="mini-value" id="netCashFlow">$0</div>
-                                <div class="mini-footer" style="padding-top: 8px;">
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Ingresos menos todos los gastos</span>
-                                </div>
-                            </div>
-                            <!-- Uso de cupos de TC -->
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Uso de TC</span>
-                                    <div class="mini-icon-wrapper" style="background: var(--warning-light); color: var(--warning);"><i class="fas fa-credit-card"></i></div>
-                                </div>
-                                <div class="mini-value" id="creditUtilization">0%</div>
-                                <div class="mini-footer" style="padding-top: 8px;">
-                                    <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill" style="width: 0%; background: var(--warning);"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="family-summary" id="familySummary">
-                    <div class="member-card skeleton" style="height: 120px;"></div>
-                    <div class="member-card skeleton" style="height: 120px;"></div>
-                    <div class="member-card skeleton" style="height: 120px;"></div>
-                    <div class="member-card skeleton" style="height: 120px;"></div>
-                </div>
-
-                <div class="dashboard-grid">
-                    <!-- Tope Diario -->
-                    <div class="card" id="dailyCapCard" style="grid-column: span 12;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                            <h3 style="margin:0;"><i class="fas fa-calendar-day" style="color:var(--primary); margin-right:8px;"></i> Tope de Gasto Diario</h3>
-                            <span id="dailyCapStatus" style="font-size:0.85rem; font-weight:700; padding:4px 12px; border-radius:var(--radius-full); background:var(--success-light); color:#047857;">Estado: OK</span>
-                        </div>
-
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px;">
-                            <div>
-                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Límite hoy</div>
-                                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="dailyCapValue">$0</div>
-                            </div>
-                            <div>
-                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Gastado hoy</div>
-                                <div style="font-size:1.8rem; font-weight:800; color:var(--danger);" id="dailySpendValue">$0</div>
-                            </div>
-                            <div>
-                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Promedio Mes</div>
-                                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="avgDailySpend">$0</div>
-                            </div>
-                        </div>
-                        <div class="stat-progress-bg" style="height:8px; margin-top:20px;"><div id="dailySpendProgressBar" class="stat-progress-fill" style="width: 0%; background: var(--success);"></div></div>
-                        <div style="margin-top:16px; font-size:0.8rem; color:var(--text-muted);">
-                            * El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
-                        <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
-                    </div>
-                    <div class="hero-amount" id="deudaTotalTC" style="color:var(--danger); font-size:1.8rem; margin-bottom:15px;">$0</div>
-                    <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
-                </div>
-            </div>
-
-            <div id="view-asistente" class="tab-content">
-                <div class="ai-welcome-card">
-                    <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
-                    <p>Análisis detallado de solvencia, liquidez y patrones de consumo. Ejecución 100% local y privada.</p>
-                    <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Ejecutar Auditoría</button>
-                </div>
-                <div id="aiLoading" class="ai-loading"><div class="ai-spinner"></div><div class="ai-loading-text">Calculando ratios...</div></div>
-                <div id="aiResultContainer" class="ai-response-container">
-                    <div class="card">
-                        <div class="ai-report-header">
-                            <div><h3 style="margin:0; color:#0f172a;">Diagnóstico Integral</h3><span style="font-size:0.8rem; color:#64748b;">Basado en historial de 30 días</span></div>
-                            <div id="aiScoreBadge" class="score-badge">SCORE: --</div>
-                        </div>
-                        <div id="aiContentBody"></div>
-                    </div>
-                    <div class="prediction-card" id="predictionCard">
-                        <div class="prediction-title"><i class="fas fa-crystal-ball"></i> Predicción Próximo Mes</div>
-                        <div class="prediction-value" id="predictedExpenses">$0</div>
-                        <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 5px;">Gastos estimados basándose en tu historial</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-transacciones" class="tab-content">
-                <div class="card">
-                    <h2 style="margin-bottom:20px;" id="formTitle">Nueva Transacción</h2>
-                    <form id="transactionForm">
-                        <input type="hidden" id="editingId" value="">
-                        <div class="form-grid">
-                            <div class="form-group full-width"><label>Tipo</label><select id="tipo" required onchange="handleTipoChange()"><option value="gasto">💸 Gasto</option><option value="ingreso">💰 Ingreso</option><option value="credito">💳 Crédito</option><option value="pago_tarjeta">📉 Abono TC</option><option value="transferencia">🔄 Transferencia</option></select></div>
-                            <div id="creditConfig" class="form-group full-width hidden" style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fda4af;">
-                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:15px;">
-                                    <div class="form-group"><label style="color:var(--danger);">Tarjeta</label><select id="tarjetaCredito"></select></div>
-                                    <div class="form-group"><label style="color:var(--danger);">Cuotas</label><input type="number" id="cuotas" value="1"></div>
-                                    <div class="form-group"><label style="color:var(--danger);">Cuotas pagadas</label><input type="number" id="cuotasPagadas" value="0" min="0"></div>
-                                    <div class="form-group"><label style="color:var(--danger);" title="Valor exacto de la cuota mensual si difiere de Monto/Cuotas. Opcional.">Valor Cuota (Opc.)</label><input type="text" id="valorCuotaManual" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0"></div>
-                                    <div class="form-group" style="grid-column: 1 / -1;"><label style="color:var(--danger);">Fecha próxima de pago</label><input type="date" id="creditoFechaPago"></div>
-                                </div>
-                            </div>
-                            <div id="divPagoTarjeta" class="form-group full-width hidden" style="background:#ecfdf5; padding:15px; border-radius:12px; border:1px solid #6ee7b7;"><div class="form-group"><label style="color:var(--success);">Tarjeta a Pagar</label><select id="tarjetaDestinoPago"></select></div></div>
-                            <div class="form-group" id="metodoPagoDiv"><label id="lblMetodoPago">Método</label><select id="metodoPago"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
-                            <div class="form-group hidden" id="metodoDestinoDiv"><label>Destino</label><select id="metodoDestino"><option value="debito">Débito</option><option value="efectivo">Efectivo</option><option value="nequi">Nequi</option></select></div>
-                            <div class="form-group"><label>Monto</label><input type="text" id="monto" required inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" style="font-size:1.2rem; font-weight:bold; color:var(--primary);"></div>
-                            <div class="form-group"><label>Categoría</label><select id="categoria" required></select></div>
-                            <div class="form-group hidden" id="subcategoriaDiv"><label>Subcategoría</label><select id="subcategoria"></select></div>
-                            <div class="form-group"><label>Responsable</label><select id="miembro"><option value="papa">Papá</option><option value="mama">Mamá</option><option value="hijo1">Hijo/a 1</option><option value="compartido">Compartido</option></select></div>
-                            <div class="form-group full-width"><label>Descripción</label><input type="text" id="descripcion" required></div>
-                            <div class="form-group"><label>Fecha</label><input type="date" id="fecha" required></div>
-                        </div>
-                        <div style="margin-top:25px; display:flex; gap:10px;">
-                            <button type="button" onclick="preSubmit()" class="btn btn--primary btn--lg" id="btnSubmitText">Guardar</button>
-                            <button type="button" id="btnCancelar" class="btn btn--ghost btn--lg hidden" onclick="cancelEdit()">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="view-estadisticas" class="tab-content">
-                <div class="card">
-                    <div class="stats-section-title">
-                        <h3><i class="fas fa-gauge-high" style="color:var(--primary);"></i> KPIs rápidos</h3>
-                        <span>Resumen ejecutivo mensual</span>
-                    </div>
-                    <div class="kpi-grid">
-                        <div class="mini-stat">
-                            <div class="mini-label"><i class="fas fa-calendar-day"></i> Promedio diario</div>
-                            <div class="mini-value" id="kpiDailyAverage">$0</div>
-                            <div class="kpi-subtitle">Gasto promedio del mes</div>
-                        </div>
-                        <div class="mini-stat">
-                            <div class="mini-label"><i class="fas fa-piggy-bank"></i> Tasa de ahorro</div>
-                            <div class="mini-value" id="kpiSavingsRate">0%</div>
-                            <div class="kpi-subtitle">Ingresos netos vs ingresos</div>
-                        </div>
-                        <div class="mini-stat">
-                            <div class="mini-label"><i class="fas fa-chart-line"></i> Variación mensual</div>
-                            <div class="mini-value" id="kpiMonthlyVariation">$0</div>
-                            <div class="kpi-delta" id="kpiMonthlyVariationDetail">--</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stats-chart-grid">
-                    <div class="card">
-                        <div class="stats-card-head">
-                            <h3><i class="fas fa-wave-square" style="color:var(--primary); margin-right:8px;"></i>Tendencia (6 Meses)</h3>
-                        </div>
-                        <div class="stats-chart-wrap" style="height:300px;"><canvas id="chartTendencias"></canvas></div>
-                    </div>
-
-                    <div class="card">
-                        <div class="stats-card-head">
-                            <h3><i class="fas fa-chart-column" style="color:var(--primary); margin-right:8px;"></i>Ingresos vs Gastos (6 Meses)</h3>
-                        </div>
-                        <div class="stats-chart-wrap" style="height:320px;"><canvas id="chartIngresosGastos"></canvas></div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="stats-card-head">
-                        <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
-                    </div>
-                    <div class="stats-chart-wrap" style="height:350px;"><canvas id="chartCategorias"></canvas></div>
-                </div>
-
-                <div class="card">
-                    <div class="stats-card-head">
-                        <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
-                    </div>
-                    <div class="top-category-grid">
-                        <div class="top-category-list" id="topCategoriasList"></div>
-                        <div class="stats-chart-wrap" style="height:280px;"><canvas id="chartTopCategorias"></canvas></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-objetivos" class="tab-content">
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos de Ahorro</h3>
-                        <button onclick="openGoalModal()" class="btn btn--primary btn--sm"><i class="fas fa-plus"></i> Nuevo</button>
-                    </div>
-                    <div id="goalsContainer">
-                        <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
-                        <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-historial" class="tab-content">
-                <div class="export-btns">
-                    <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-                    <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                </div>
-                <div class="card">
-                    <h3 style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
-                        <i class="fas fa-filter" style="color:var(--primary);"></i> Historial y Filtros
-                    </h3>
-                    
-                    <div class="advanced-filters">
-                        <div class="filter-row">
-                            <div class="filter-group voice-search">
-                                <label>Buscar (Texto o Voz)</label>
-                                <input type="text" id="filterText" class="filter-control" placeholder="Ej: Cena, Netflix...">
-                                <button class="voice-search-btn" id="voiceSearchBtn" onclick="toggleVoiceSearch()"><i class="fas fa-microphone"></i></button>
-                            </div>
-                            <div class="filter-group">
-                                <label>Tipo</label>
-                                <select id="filterType" class="filter-control">
-                                    <option value="all">Todos</option>
-                                    <option value="gasto">Gasto</option>
-                                    <option value="ingreso">Ingreso</option>
-                                    <option value="credito">Crédito</option>
-                                    <option value="pago_tarjeta">Pago TC</option>
-                                    <option value="transferencia">Transferencia</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Método de Pago/Destino</label>
-                                <select id="filterMethod" class="filter-control">
-                                    <option value="all">Cualquiera</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="filter-row">
-                            <div class="filter-group">
-                                <label>Desde</label>
-                                <input type="date" id="filterStart" class="filter-control">
-                            </div>
-                            <div class="filter-group">
-                                <label>Hasta</label>
-                                <input type="date" id="filterEnd" class="filter-control">
-                            </div>
-                        </div>
-                        <div class="filter-actions">
-                            <button class="btn-clear" onclick="clearFilters()">Limpiar Filtros</button>
-                            <button class="btn btn--primary btn--md" onclick="renderHistory()">
-                                <i class="fas fa-search"></i> Aplicar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="filter-summary">
-                        <div class="summary-pill inc"><i class="fas fa-arrow-down"></i> <span id="valFilteredInc">$0</span></div>
-                        <div class="summary-pill exp"><i class="fas fa-arrow-up"></i> <span id="valFilteredExp">$0</span></div>
-                    </div>
-
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Tipo</th>
-                                    <th>Método</th>
-                                    <th>Cat.</th>
-                                    <th>Desc.</th>
-                                    <th>Monto</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionList"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -701,6 +340,34 @@
         const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste negativo por arqueo']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste positivo por arqueo']}}};
         const categorias=categories;
 
+
+        // IMPORTANTE: Mapa centralizado entre vista y archivo fragmento + hooks de render al activar la vista.
+        const VIEW_CONFIG={
+            dashboard:{fragment:'views/view-dashboard.html', onActivate:[()=>{updateDashboard(); updateDailyCapIndicator();}]},
+            transacciones:{fragment:'views/view-transacciones.html', onActivate:[]},
+            estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[renderCharts, renderTrendChart]},
+            historial:{fragment:'views/view-historial.html', onActivate:[renderHistory]},
+            objetivos:{fragment:'views/view-objetivos.html', onActivate:[renderGoals]},
+            asistente:{fragment:'views/view-asistente.html', onActivate:[]}
+        };
+        const loadedViews=new Set();
+
+        async function loadView(viewId){
+            const config=VIEW_CONFIG[viewId];
+            if(!config)throw new Error(`Vista no registrada: ${viewId}`);
+            if(loadedViews.has(viewId))return;
+            const host=document.getElementById('viewsHost');
+            if(!host)throw new Error('No existe #viewsHost para montar vistas');
+            const html=await fetch(config.fragment).then(r=>{if(!r.ok)throw new Error(`No se pudo cargar ${config.fragment}`); return r.text();});
+            host.insertAdjacentHTML('beforeend',html);
+            loadedViews.add(viewId);
+        }
+
+        async function preloadViews(){
+            // IMPORTANTE: cargamos todas las vistas al inicio para preservar IDs y compatibilidad con lógica existente.
+            await Promise.all(Object.keys(VIEW_CONFIG).map(loadView));
+        }
+
         function toggleTheme(){const d=document.documentElement;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();} // IMPORTANTE: persistencia manual del tema híbrido
         function updateThemeIcon(){
             const isDark=document.documentElement.getAttribute('data-theme')==='dark'; // IMPORTANTE: una sola fuente de verdad para el estado visual
@@ -722,8 +389,9 @@
         
         function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeConfirmActionModal();closeModal('goalModal');closeModal('pagoCuotaModal');}});}
         
-        document.addEventListener('DOMContentLoaded', () => { 
+        document.addEventListener('DOMContentLoaded', async () => { 
             initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
+            await preloadViews();
             const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0');
             const todayLocal=new Date(yyyy, t.getMonth(), t.getDate());
             document.getElementById('dashboardMonth').value=`${yyyy}-${mm}`;document.getElementById('fecha').valueAsDate=todayLocal;
@@ -3010,28 +2678,25 @@
             });
         }
         function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
-        function switchView(id){
+        async function switchView(id){
+            if(!VIEW_CONFIG[id])return;
+            await loadView(id);
             document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active');
+            const targetView=document.getElementById('view-'+id);
+            if(targetView)targetView.classList.add('active');
             const f=document.getElementById('headerDateFilter');
             if(f)f.style.display=id==='dashboard'?'flex':'none';
             document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
             const s=document.querySelectorAll('.sidebar .nav-item');
             const m=document.querySelectorAll('.mobile-nav .mob-link');
-
             if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
             if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
-            if(id==='estadisticas'){
-                s[2].classList.add('active');
-                // IMPORTANTE: re-render de KPIs y charts al activar la pestaña para evitar canvas vacíos o desfasados
-                requestAnimationFrame(()=>{
-                    renderCharts();
-                    renderTrendChart();
-                });
-            }
+            if(id==='estadisticas'){s[2].classList.add('active');}
             if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}
-            if(id==='objetivos'){s[4].classList.add('active');renderGoals();}
+            if(id==='objetivos'){s[4].classList.add('active');}
             if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
+            // IMPORTANTE: ejecutar hooks de render de la vista activa (documentación funcional en VIEW_CONFIG).
+            requestAnimationFrame(()=>{(VIEW_CONFIG[id].onActivate||[]).forEach(fn=>fn());});
             closeSidebar();
         }
         function goToAddTransaction(){switchView('transacciones');}
