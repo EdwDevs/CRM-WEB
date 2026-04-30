@@ -3,8 +3,8 @@
                     <div class="stats-section-title">
                         <h3><i class="fas fa-gauge-high" style="color:var(--primary);"></i> KPIs rápidos</h3>
                         <span>Resumen ejecutivo mensual</span>
-                    </div>
-                    <div class="kpi-grid">
+                    </summary>
+                    <div class="kpi-grid collapsible-card__content">
                         <div class="mini-stat">
                             <div class="mini-label"><i class="fas fa-calendar-day"></i> Promedio diario</div>
                             <div class="mini-value" id="kpiDailyAverage">$0</div>
@@ -21,36 +21,48 @@
                             <div class="kpi-delta" id="kpiMonthlyVariationDetail">--</div>
                         </div>
                     </div>
-                </div>
+                </details>
 
                 <div class="stats-chart-grid">
-                    <div class="card">
-                        <div class="stats-card-head">
+                    <details class="card collapsible-card" open>
+                        <summary class="collapsible-card__summary stats-card-head">
                             <h3><i class="fas fa-wave-square" style="color:var(--primary); margin-right:8px;"></i>Tendencia (6 Meses)</h3>
+                        </summary>
+                        <div class="stats-chart-wrap collapsible-card__content" style="height:300px;">
+                            <canvas id="chartTendencias"></canvas>
+                            <div id="fallbackTrendChart" class="chart-fallback hidden">Sin datos suficientes para proyección de tendencia.</div>
                         </div>
                         <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTendencias"></canvas></div>
                     </div>
 
-                    <div class="card">
-                        <div class="stats-card-head">
+                    <details class="card collapsible-card" open>
+                        <summary class="collapsible-card__summary stats-card-head">
                             <h3><i class="fas fa-chart-column" style="color:var(--primary); margin-right:8px;"></i>Ingresos vs Gastos (6 Meses)</h3>
+                        </summary>
+                        <div class="stats-chart-wrap collapsible-card__content" style="height:320px;">
+                            <canvas id="chartIngresosGastos"></canvas>
+                            <div id="fallbackIncomeExpenseChart" class="chart-fallback hidden">Sin datos suficientes para comparar ingresos y gastos.</div>
                         </div>
                         <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartIngresosGastos"></canvas></div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="stats-card-head">
+                <details class="card collapsible-card" open>
+                    <summary class="collapsible-card__summary stats-card-head">
                         <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
+                    </summary>
+                    <div class="stats-chart-wrap collapsible-card__content" style="height:350px;">
+                        <canvas id="chartCategorias"></canvas>
+                        <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
                     </div>
                     <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartCategorias"></canvas></div>
                 </div>
 
-                <div class="card">
-                    <div class="stats-card-head">
+                <details class="card collapsible-card" open>
+                    <summary class="collapsible-card__summary stats-card-head">
                         <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
-                    </div>
-                    <div class="top-category-grid">
+                    </summary>
+                    <div class="top-category-grid collapsible-card__content">
                         <div class="top-category-list" id="topCategoriasList"></div>
                         <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTopCategorias"></canvas></div>
                     </div>

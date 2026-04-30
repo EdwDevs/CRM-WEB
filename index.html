@@ -392,6 +392,23 @@
             // IMPORTANTE: cargamos todas las vistas al inicio para preservar IDs y compatibilidad con lógica existente.
             await Promise.all(Object.keys(VIEW_CONFIG).map(loadView));
         }
+        function initCollapsibleCards(){
+            const cards=document.querySelectorAll('.collapsible-card');
+            cards.forEach(card=>{
+                if(card.dataset.bound==='1')return;
+                card.dataset.bound='1';
+                // IMPORTANTE: al expandir, forzar resize evita charts cortados tras abrir panel plegado.
+                card.addEventListener('toggle',()=>{
+                    if(!card.open)return;
+                    setTimeout(()=>{
+                        if(chartInstance)chartInstance.resize();
+                        if(trendChartInstance)trendChartInstance.resize();
+                        if(trendBarChartInstance)trendBarChartInstance.resize();
+                        if(topCategoriesChartInstance)topCategoriesChartInstance.resize();
+                    },120);
+                });
+            });
+        }
 
         function toggleTheme(){const d=document.documentElement;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();} // IMPORTANTE: persistencia manual del tema híbrido
         function updateThemeIcon(){
