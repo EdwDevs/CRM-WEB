@@ -1,0 +1,158 @@
+<div id="view-dashboard" class="tab-content active">
+                <!-- Bento Grid Layout -->
+                <div class="dashboard-grid">
+
+                    <div class="bento-hero">
+                        <div class="hero-balance">
+                            <div class="hero-title">Patrimonio Líquido Total</div>
+                            <div class="hero-amount" id="saldoTotal">$ 0</div>
+                            <div style="font-size:0.85rem; margin-top:10px; opacity:0.85; display:flex; align-items:center; gap:6px; position:relative; z-index:1;">
+                                <i class="fas fa-shield-alt"></i> Saldo neto consolidado
+                            </div>
+                            <button class="btn btn--outline" style="margin-top: 20px; color: var(--primary); border-color: var(--primary); position: relative; z-index: 2;" onclick="openArqueoModal()">
+                                <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
+                            </button>
+                        </div>
+                        <div class="accounts-col">
+                            <div class="account-card">
+                                <div class="account-icon" style="background: var(--info-light); color: var(--info);"><i class="fas fa-university"></i></div>
+                                <div class="account-info">
+                                    <span class="account-label">Débito / Bancos</span>
+                                    <span class="account-amount" id="saldoDebito">$0</span>
+                                </div>
+                            </div>
+                            <div class="account-card">
+                                <div class="account-icon" style="background: var(--success-light); color: var(--success);"><i class="fas fa-money-bill-wave"></i></div>
+                                <div class="account-info">
+                                    <span class="account-label">Efectivo Físico</span>
+                                    <span class="account-amount" id="saldoEfectivo">$0</span>
+                                </div>
+                            </div>
+                            <div class="account-card">
+                                <div class="account-icon" style="background: var(--credit-light); color: var(--credit);"><i class="fas fa-mobile-alt"></i></div>
+                                <div class="account-info">
+                                    <span class="account-label">Billetera Digital</span>
+                                    <span class="account-amount" id="saldoNequi">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-stats">
+                        <h3 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700;">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
+                        <div class="stats-grid">
+                            <!-- Ingresos -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Ingresos</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--success-light); color: var(--success);"><i class="fas fa-arrow-down"></i></div>
+                                </div>
+                                <div class="mini-value" id="totalIngresosMes">$0</div>
+                                <div class="mini-footer">
+                                    <div class="mini-delta" id="deltaIncomeMoM">--</div>
+                                </div>
+                            </div>
+                            <!-- Gastos -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Gastos + TC</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--danger-light); color: var(--danger);"><i class="fas fa-arrow-up"></i></div>
+                                </div>
+                                <div class="mini-value" id="totalGastosMes">$0</div>
+                                <div class="mini-footer">
+                                    <div class="mini-delta" id="deltaExpenseMoM">--</div>
+                                </div>
+                            </div>
+                            <!-- Balance Neto -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Balance Neto</span>
+                                    <div class="mini-icon-wrapper" style="background: rgba(148, 163, 184, 0.15); color: var(--text-secondary);"><i class="fas fa-scale-balanced"></i></div>
+                                </div>
+                                <div class="mini-value" id="balanceMes">$0</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill" style="width: 50%; background: var(--text-secondary);"></div></div>
+                                </div>
+                            </div>
+                            <!-- Tasa de Ahorro -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Tasa de Ahorro</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--info-light); color: var(--info);"><i class="fas fa-piggy-bank"></i></div>
+                                </div>
+                                <div class="mini-value" id="savingsRate">0%</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill" style="width: 0%; background: var(--info);"></div></div>
+                                </div>
+                            </div>
+                            <!-- Flujo Neto Real -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Flujo Neto Real</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--success-light); color: var(--success);"><i class="fas fa-money-bill-trend-up"></i></div>
+                                </div>
+                                <div class="mini-value" id="netCashFlow">$0</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Ingresos menos todos los gastos</span>
+                                </div>
+                            </div>
+                            <!-- Uso de cupos de TC -->
+                            <div class="mini-stat">
+                                <div class="mini-header">
+                                    <span class="mini-label">Uso de TC</span>
+                                    <div class="mini-icon-wrapper" style="background: var(--warning-light); color: var(--warning);"><i class="fas fa-credit-card"></i></div>
+                                </div>
+                                <div class="mini-value" id="creditUtilization">0%</div>
+                                <div class="mini-footer" style="padding-top: 8px;">
+                                    <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill" style="width: 0%; background: var(--warning);"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="family-summary" id="familySummary">
+                    <div class="member-card skeleton" style="height: 120px;"></div>
+                    <div class="member-card skeleton" style="height: 120px;"></div>
+                    <div class="member-card skeleton" style="height: 120px;"></div>
+                    <div class="member-card skeleton" style="height: 120px;"></div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Tope Diario -->
+                    <div class="card" id="dailyCapCard" style="grid-column: span 12;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h3 style="margin:0;"><i class="fas fa-calendar-day" style="color:var(--primary); margin-right:8px;"></i> Tope de Gasto Diario</h3>
+                            <span id="dailyCapStatus" style="font-size:0.85rem; font-weight:700; padding:4px 12px; border-radius:var(--radius-full); background:var(--success-light); color:#047857;">Estado: OK</span>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px;">
+                            <div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Límite hoy</div>
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="dailyCapValue">$0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Gastado hoy</div>
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--danger);" id="dailySpendValue">$0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Promedio Mes</div>
+                                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="avgDailySpend">$0</div>
+                            </div>
+                        </div>
+                        <div class="stat-progress-bg" style="height:8px; margin-top:20px;"><div id="dailySpendProgressBar" class="stat-progress-fill" style="width: 0%; background: var(--success);"></div></div>
+                        <div style="margin-top:16px; font-size:0.8rem; color:var(--text-muted);">
+                            * El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
+                        <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
+                    </div>
+                    <div class="hero-amount" id="deudaTotalTC" style="color:var(--danger); font-size:1.8rem; margin-bottom:15px;">$0</div>
+                    <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+            </div>

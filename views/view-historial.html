@@ -1,0 +1,76 @@
+<div id="view-historial" class="tab-content">
+                <div class="export-btns">
+                    <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+                    <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-filter" style="color:var(--primary);"></i> Historial y Filtros
+                    </h3>
+                    
+                    <div class="advanced-filters">
+                        <div class="filter-row">
+                            <div class="filter-group voice-search">
+                                <label>Buscar (Texto o Voz)</label>
+                                <input type="text" id="filterText" class="filter-control" placeholder="Ej: Cena, Netflix...">
+                                <button class="voice-search-btn" id="voiceSearchBtn" onclick="toggleVoiceSearch()"><i class="fas fa-microphone"></i></button>
+                            </div>
+                            <div class="filter-group">
+                                <label>Tipo</label>
+                                <select id="filterType" class="filter-control">
+                                    <option value="all">Todos</option>
+                                    <option value="gasto">Gasto</option>
+                                    <option value="ingreso">Ingreso</option>
+                                    <option value="credito">Crédito</option>
+                                    <option value="pago_tarjeta">Pago TC</option>
+                                    <option value="transferencia">Transferencia</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Método de Pago/Destino</label>
+                                <select id="filterMethod" class="filter-control">
+                                    <option value="all">Cualquiera</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>Desde</label>
+                                <input type="date" id="filterStart" class="filter-control">
+                            </div>
+                            <div class="filter-group">
+                                <label>Hasta</label>
+                                <input type="date" id="filterEnd" class="filter-control">
+                            </div>
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn-clear" onclick="clearFilters()">Limpiar Filtros</button>
+                            <button class="btn btn--primary btn--md" onclick="renderHistory()">
+                                <i class="fas fa-search"></i> Aplicar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-summary">
+                        <div class="summary-pill inc"><i class="fas fa-arrow-down"></i> <span id="valFilteredInc">$0</span></div>
+                        <div class="summary-pill exp"><i class="fas fa-arrow-up"></i> <span id="valFilteredExp">$0</span></div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Método</th>
+                                    <th>Cat.</th>
+                                    <th>Desc.</th>
+                                    <th>Monto</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>

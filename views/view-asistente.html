@@ -1,0 +1,22 @@
+<div id="view-asistente" class="tab-content">
+                <div class="ai-welcome-card">
+                    <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
+                    <p>Análisis detallado de solvencia, liquidez y patrones de consumo. Ejecución 100% local y privada.</p>
+                    <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Ejecutar Auditoría</button>
+                </div>
+                <div id="aiLoading" class="ai-loading"><div class="ai-spinner"></div><div class="ai-loading-text">Calculando ratios...</div></div>
+                <div id="aiResultContainer" class="ai-response-container">
+                    <div class="card">
+                        <div class="ai-report-header">
+                            <div><h3 style="margin:0; color:#0f172a;">Diagnóstico Integral</h3><span style="font-size:0.8rem; color:#64748b;">Basado en historial de 30 días</span></div>
+                            <div id="aiScoreBadge" class="score-badge">SCORE: --</div>
+                        </div>
+                        <div id="aiContentBody"></div>
+                    </div>
+                    <div class="prediction-card" id="predictionCard">
+                        <div class="prediction-title"><i class="fas fa-crystal-ball"></i> Predicción Próximo Mes</div>
+                        <div class="prediction-value" id="predictedExpenses">$0</div>
+                        <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 5px;">Gastos estimados basándose en tu historial</div>
+                    </div>
+                </div>
+            </div>
