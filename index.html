@@ -1385,6 +1385,7 @@
         
         function renderReminders(){
             const cont=document.getElementById('remindersContainer');
+            if(!cont)return;
             const today=new Date();
             today.setHours(0,0,0,0);
             
@@ -1443,44 +1444,17 @@
                 }
             });
 
-            if(reminders.length===0){cont.innerHTML='';return;}
+            // IMPORTANTE: ocultar panel completo y mostrar solo campanita cuando falten menos de 2 días para pago.
+            const urgentReminders=reminders.filter(r=>r.daysUntil<2);
+            if(urgentReminders.length===0){cont.innerHTML='';cont.classList.add('hidden');return;}
+            cont.classList.remove('hidden');
             
             let html='';
-            reminders.forEach(r=>{
-                // Ajustar colores según urgencia
-                const isOverdue = r.daysUntil <= 0;
-                const isUrgent = r.daysUntil <= 3;
-                const isWarning = r.daysUntil <= 7;
-                
-                let urgencyClass = 'var(--text-muted)';
-                let urgencyBg = 'transparent';
-                let iconClass = 'fas fa-calendar-alt'; // Icono normal
-
-                if(isOverdue) {
-                    urgencyClass = 'var(--danger)';
-                    urgencyBg = 'var(--danger-light)';
-                    iconClass = 'fas fa-exclamation-circle';
-                } else if(isUrgent) {
-                    urgencyClass = '#c2410c'; // Naranja oscuro
-                    urgencyBg = '#ffedd5'; // Naranja claro
-                    iconClass = 'fas fa-clock';
-                } else if(isWarning) {
-                    urgencyClass = 'var(--warning)';
-                    urgencyBg = 'var(--warning-light)';
-                }
-
-                html+=`<div class="reminder-card" style="background:${urgencyBg}; border-left: 4px solid ${isOverdue ? 'var(--danger)' : (isUrgent ? '#f97316' : (isWarning ? 'var(--warning)' : 'transparent'))};">
-                    <div class="reminder-icon"><i class="${iconClass}" style="color:${isOverdue ? 'var(--danger)' : (isUrgent ? '#f97316' : 'var(--warning)')}"></i></div>
-                    <div class="reminder-text">
-                        <div class="reminder-title">${r.title}</div>
-                        <div class="reminder-date" style="font-size:0.75rem;color:var(--text-muted);">Próximo pago: ${r.date.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-weight:600;color:${urgencyClass};font-size:0.9rem;">${r.daysUntil < 0 ? 'Vencido (' + Math.abs(r.daysUntil) + 'd)' : (r.daysUntil===0 ? '¡Hoy!' : (r.daysUntil===1 ? 'Mañana' : `${r.daysUntil} días`))}</div>
-                        <div style="font-size:0.85rem;color:var(--text-muted);">${r.desc}</div>
-                    </div>
-                </div>`;
-            });
+            const resumen=urgentReminders.map(r=>`${r.title}: ${r.daysUntil<0?`vencido ${Math.abs(r.daysUntil)}d`:(r.daysUntil===0?'hoy':'mañana')}`).join(' · ');
+            html=`<button class="reminder-bell-chip" title="${resumen}" aria-label="Recordatorios de pago urgentes">
+                    <i class="fas fa-bell"></i>
+                    <span>${urgentReminders.length}</span>
+                 </button>`;
             cont.innerHTML=html;
         }
         
