@@ -1,10 +1,10 @@
-<div id="view-historial" class="tab-content">
+<div id="view-historial" class="tab-content view-stack">
                 <div class="export-btns">
                     <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
                     <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                 </div>
                 <div class="card">
-                    <h3 style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+                    <h3 class="card-title" style="display:flex; align-items:center; gap:10px;">
                         <i class="fas fa-filter" style="color:var(--primary);"></i> Historial y Filtros
                     </h3>
                     
@@ -57,6 +57,7 @@
                     </div>
 
                     <div class="table-container">
+                        <div class="table-scroll-hint"><i class="fas fa-arrows-left-right"></i> Desliza para ver más</div>
                         <table>
                             <thead>
                                 <tr>
@@ -72,5 +73,6 @@
                             <tbody id="transactionList"></tbody>
                         </table>
                     </div>
+                    <div id="historyEmptyState" class="section-empty-state hidden"><strong>No hay transacciones para este filtro.</strong> Ajusta fechas/tipo o crea una nueva transacción para empezar.</div>
                 </div>
             </div>
