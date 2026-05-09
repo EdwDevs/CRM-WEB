@@ -2932,3 +2932,376 @@
 .debug-panel__body { padding: 8px 10px; max-height: 220px; overflow: auto; }
 .debug-panel__list { margin: 6px 0 0; padding-left: 14px; }
 .debug-panel__list li { margin-bottom: 4px; }
+
+/* IMPORTANTE: patrones visuales compartidos para headers, paneles especiales e iconos; reemplazan inline styles repetidos. */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title-icon {
+    color: var(--primary);
+    margin-right: 8px;
+}
+
+.card-title--muted {
+    color: var(--text-secondary);
+}
+
+.hero-note {
+    font-size: 0.85rem;
+    margin-top: 10px;
+    opacity: 0.85;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-action {
+    margin-top: 20px;
+    color: var(--primary);
+    border-color: var(--primary);
+    position: relative;
+    z-index: 2;
+}
+
+.grid-span-12 {
+    grid-column: span 12;
+}
+
+.icon-surface--info {
+    background: var(--info-light) !important;
+    color: var(--info) !important;
+}
+
+.icon-surface--success {
+    background: var(--success-light) !important;
+    color: var(--success) !important;
+}
+
+.icon-surface--danger {
+    background: var(--danger-light) !important;
+    color: var(--danger) !important;
+}
+
+.icon-surface--warning {
+    background: var(--warning-light) !important;
+    color: var(--warning) !important;
+}
+
+.icon-surface--credit {
+    background: var(--credit-light) !important;
+    color: var(--credit) !important;
+}
+
+.icon-surface--neutral {
+    background: rgba(148, 163, 184, 0.15) !important;
+    color: var(--text-secondary) !important;
+}
+
+.mini-footer--compact {
+    padding-top: 8px;
+}
+
+.mini-caption {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.stat-progress-bg--daily {
+    height: 8px;
+    margin-top: 20px;
+}
+
+.stat-progress-fill--secondary { background: var(--text-secondary); }
+.stat-progress-fill--info { background: var(--info); }
+.stat-progress-fill--success { background: var(--success); }
+.stat-progress-fill--warning { background: var(--warning); }
+
+.form-panel--credit,
+.form-panel--success {
+    /* IMPORTANTE: estos fondos diferencian créditos y pagos de tarjeta durante edición; no remover sin validar contraste. */
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.form-panel--credit {
+    background: #fff1f2;
+    border: 1px solid #fda4af;
+}
+
+.form-panel--success {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+}
+
+.form-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.form-control--money {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.daily-cap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+}
+
+.daily-cap-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.daily-cap-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.daily-cap-note {
+    margin-top: 16px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.status-pill {
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+}
+
+.status-pill--success {
+    background: var(--success-light);
+    color: #047857;
+}
+
+.debt-total {
+    color: var(--danger);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.ai-report-title {
+    margin: 0;
+    color: #0f172a;
+}
+
+.ai-report-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.prediction-note {
+    font-size: 0.85rem;
+    color: var(--text-light, var(--text-muted));
+    margin-top: 5px;
+}
+
+.summary-value--danger { color: var(--danger) !important; }
+.summary-value--success { color: var(--success) !important; }
+
+.credit-installment-summary {
+    background: var(--card-bg, var(--bg-surface));
+    border: 1px solid rgba(148,163,184,0.25);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.credit-installment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(148,163,184,0.2);
+}
+
+.credit-installment-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    font-weight: 700;
+}
+
+.installment-card {
+    background: var(--bg-body);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(148,163,184,0.1);
+}
+
+.installment-desc {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.installment-meta,
+.installment-date {
+    font-size: 0.8rem;
+}
+
+.installment-meta {
+    color: var(--text-muted);
+}
+
+.installment-amount {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.btn-cuota-edit {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.goal-percent {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.goal-stats--spaced {
+    margin-top: 5px;
+}
+
+.pending-badge {
+    color: var(--warning);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* IMPORTANTE: clases puente para modales y resúmenes dinámicos generados desde index.html. */
+.mobile-theme-button {
+    width: 38px;
+    height: 38px;
+}
+
+.card-detail-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.card-detail-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.modal-help-text {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.credit-card-debt {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--danger);
+}
+
+/* IMPORTANTE: modales compactos y acciones reutilizables para evitar estilos inline en overlays. */
+.sidebar-footer {
+    padding: 24px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.quota-list-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.modal-content--sm {
+    max-width: 500px;
+}
+
+.modal-content--xs {
+    max-width: 420px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-actions--wide-gap {
+    gap: 12px;
+}
+
+.btn--grow {
+    flex: 1;
+}
+
+.btn--primary-dark-text {
+    background-color: var(--primary);
+    color: #000;
+}
+
+.payment-quota-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.payment-summary {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.debug-section-title {
+    margin-top: 8px;
+}
+
+.history-method {
+    font-size: 0.85rem;
+    color: #4b5563;
+}
+
+.report-icon--danger { color: #ef4444; }
+.report-icon--warning { color: #eab308; }
+.report-icon--amber { color: #f59e0b; }
+
+.member-stat-line {
+    font-size: 0.8rem;
+    color: var(--text-light, var(--text-muted));
+}
+
+/* IMPORTANTE: altura de skeletons del resumen familiar preserva el layout mientras cargan datos. */
+.member-card-skeleton {
+    height: 120px;
+}

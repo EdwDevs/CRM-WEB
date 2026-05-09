@@ -31,7 +31,7 @@
             <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Objetivos</span></div>
             <div class="nav-item" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor Experto</span></div>
         </div>
-        <div style="padding: 24px; font-size: 0.75rem; color: #9ca3af; text-align: center;">Hogar & Finanzas © 2026</div>
+        <div class="sidebar-footer">Hogar & Finanzas © 2026</div>
     </nav>
 
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -65,12 +65,12 @@
                 <i class="fas fa-bars"></i>
             </button>
             <div class="page-title" id="pageTitle">Resumen Financiero</div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button onclick="toggleTheme()" class="btn btn--icon btn--ghost" aria-label="Cambiar tema" style="width: 38px; height: 38px;">
+            <div class="inline-actions">
+                <button onclick="toggleTheme()" class="btn btn--icon btn--ghost mobile-theme-button" aria-label="Cambiar tema">
                     <i class="fas fa-moon" id="mobileThemeIcon"></i>
                 </button>
                 <div class="date-filter-pill" id="headerDateFilter">
-                    <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
+                    <i class="far fa-calendar-alt text-primary"></i>
                     <input type="month" id="dashboardMonth" onchange="updateDashboardView()">
                 </div>
             </div>
@@ -98,7 +98,7 @@
 
     <div class="modal-overlay" id="confirmActionModal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div class="section-header mb-md">
                 <h3 class="modal-title" id="confirmActionTitle">Confirmar acción</h3>
                 <button onclick="closeConfirmActionModal()" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
@@ -116,7 +116,7 @@
     
     <div class="modal-overlay" id="quotaModal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div class="section-header mb-md">
                 <h3 class="modal-title">Gestión de Créditos y Tarjetas</h3>
                 <button onclick="closeModal('quotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
@@ -133,7 +133,7 @@
                     <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
                     <input type="hidden" id="editCardId">
                 </div>
-                <div id="quotaListContainer" style="max-height:300px; overflow-y:auto;"></div>
+                <div id="quotaListContainer" class="quota-list-scroll"></div>
                 <div class="audit-panel">
                     <div class="audit-header">
                         <div>
@@ -173,11 +173,11 @@
 
     <div class="modal-overlay" id="cardDetailModal">
         <div class="modal-content modal-content--wide">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div class="section-header mb-sm">
                 <div>
                     <h3 class="modal-title">Detalle de Tarjeta</h3>
-                    <div id="cardDetailName" style="font-size:1rem; font-weight:600; color:var(--primary);"></div>
-                    <div id="cardDetailMeta" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;"></div>
+                    <div id="cardDetailName" class="card-detail-name"></div>
+                    <div id="cardDetailMeta" class="card-detail-meta"></div>
                 </div>
                 <button onclick="closeModal('cardDetailModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
@@ -202,12 +202,12 @@
     </div>
 
     <div class="modal-overlay" id="arqueoModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 class="modal-title"><i class="fas fa-balance-scale" style="color:var(--primary);"></i> Arqueo de Cuentas</h3>
+        <div class="modal-content modal-content--sm">
+            <div class="section-header mb-md">
+                <h3 class="modal-title"><i class="fas fa-balance-scale text-primary"></i> Arqueo de Cuentas</h3>
                 <button onclick="closeModal('arqueoModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
-            <p style="color:var(--text-secondary); margin-bottom: 20px; font-size:0.9rem;">
+            <p class="modal-help-text">
                 Ingresa el saldo real de cada cuenta. El sistema calculará la diferencia y registrará un ajuste si es necesario.
             </p>
             <form id="arqueoForm" onsubmit="event.preventDefault(); submitArqueo();">
@@ -223,9 +223,9 @@
                     <label>Billetera Digital / Nequi (Saldo actual: <span id="arqueoCurrentNequi"></span>)</label>
                     <input type="text" id="arqueoRealNequi" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
-                <div style="display:flex; gap:10px; margin-top: 20px;">
-                    <button type="button" class="btn btn--ghost" style="flex:1;" onclick="closeModal('arqueoModal')">Cancelar</button>
-                    <button type="submit" class="btn btn--primary" style="flex:1; background-color: var(--primary); color: #000;">Guardar Arqueo</button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--ghost btn--grow" onclick="closeModal('arqueoModal')">Cancelar</button>
+                    <button type="submit" class="btn btn--primary btn--grow btn--primary-dark-text">Guardar Arqueo</button>
                 </div>
             </form>
         </div>
@@ -233,7 +233,7 @@
 
     <div class="modal-overlay" id="goalModal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
+            <div class="section-header mb-md"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="form-group"><label>Nombre del Objetivo</label><input type="text" id="goalName" placeholder="Ej: Vacaciones"></div>
             <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
@@ -243,14 +243,15 @@
     </div>
 
     <div class="modal-overlay" id="pagoCuotaModal">
-        <div class="modal-content" style="max-width:420px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div class="modal-content modal-content--xs">
+            <div class="section-header">
                 <h3 class="modal-title">📅 Programar Próxima Cuota</h3>
                 <button onclick="closeModal('pagoCuotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
-            <div style="text-align:center; margin-bottom:15px;">
-                <div id="pagoCuotaInfo" style="font-size:0.9rem; color:var(--text-muted);"></div>
+            <div class="payment-summary">
+                <div id="pagoCuotaInfo" class="payment-quota-info"></div>
             </div>
+            <!-- IMPORTANTE: display inline inicia oculto el calendario legado hasta que JS lo active. -->
             <div class="calendar-container" style="display:none;">
                 <div class="calendar-header">
                     <button class="calendar-nav-btn" onclick="cambiarMesCalendario(-1)">&#8249;</button>
@@ -262,7 +263,7 @@
                 </div>
                 <div id="calendarDays" class="calendar-days"></div>
             </div>
-            <div style="display:flex; gap:12px; margin-top:20px;">
+            <div class="modal-actions modal-actions--wide-gap">
                 <button class="btn btn--ghost btn--lg btn--full" onclick="closeModal('pagoCuotaModal')">Cancelar</button>
                 <button class="btn btn--primary btn--lg btn--full" onclick="confirmarPagoCuota()" id="btnConfirmarPagoCuota">💰 Confirmar Pago</button>
             </div>
@@ -357,7 +358,7 @@
         // IMPORTANTE: registrar acciones críticas en un único formato simplifica depuración y seguimiento.
         function logEvent(type,payload={}){ const entry={type,payload,at:new Date().toISOString()}; console.info('[crm-web:event]',entry); debugState.lastEvents=[entry,...debugState.lastEvents].slice(0,12); renderDebugPanel(); return entry; }
         function registerDebugError(scope,error){ const entry={scope,message:error?.message||String(error),at:new Date().toISOString()}; debugState.lastErrors=[entry,...debugState.lastErrors].slice(0,8); renderDebugPanel(); }
-        function renderDebugPanel(){ if(!debugState.enabled)return; let panel=document.getElementById('debugPanel'); if(!panel){ panel=document.createElement('section'); panel.id='debugPanel'; panel.className='debug-panel'; document.body.appendChild(panel);} panel.innerHTML=`<div class="debug-panel__head"><strong>Debug local</strong><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div style="margin-top:8px;"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div style="margin-top:8px;"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`; }
+        function renderDebugPanel(){ if(!debugState.enabled)return; let panel=document.getElementById('debugPanel'); if(!panel){ panel=document.createElement('section'); panel.id='debugPanel'; panel.className='debug-panel'; document.body.appendChild(panel);} panel.innerHTML=`<div class="debug-panel__head"><strong>Debug local</strong><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div class="debug-section-title"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div class="debug-section-title"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`; }
         let syncCardIdMap=null;
         const confirmActionState = { onConfirm: null };
         let isSyncingOfflineQueue = false;
@@ -890,7 +891,7 @@
                         ? '<span class="pending-label pending-delete-label">Pendiente de eliminación</span>'
                         : '';
                 const actionButtons=t.pendingSync || t.pendingDelete
-                    ? `<span style="color:${t.pendingDelete?'var(--danger)':'var(--warning)'};font-size:0.75rem;font-weight:600;">Pendiente</span>`
+                    ? `<span class="pending-badge ${t.pendingDelete?'text-danger':'text-warning'}">Pendiente</span>`
                     : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button>`;
                 const typeClassMap={
@@ -904,11 +905,11 @@
                 tbody.innerHTML += `<tr class="${rowClass}">
                     <td>${t.fecha}</td>
                     <td><span class="type-badge type-${t.tipo}">${t.tipo.replace('_',' ')}</span></td>
-                    <td style="font-size:0.85rem;color:#4b5563;">${met}</td>
+                    <td class="history-method">${met}</td>
                     <td>${t.categoria||'-'}</td>
                     <td>${t.descripcion} ${pendingLabel}</td>
-                    <td class="${color}" style="font-weight:bold;">${symbol} ${formatMoney(t.monto)}</td>
-                    <td style="text-align:right;">
+                    <td class="${color} text-bold">${symbol} ${formatMoney(t.monto)}</td>
+                    <td class="text-right">
                         ${actionButtons}
                     </td>
                 </tr>`;
@@ -922,7 +923,7 @@
                 const d=prepareFinancialContext();
                 let score=100; if(d.cashFlow<0)score-=30; if((d.cashFlow/d.income)<0.1)score-=10; if(d.totalDebt>d.income)score-=20;
                 let debtHTML=d.totalDebt===0?`<div class="insight-item"><div class="insight-val text-success">Sin Deuda</div></div>`:`<div class="insight-grid"><div class="insight-item"><div class="insight-label">Deuda</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div><div class="insight-item"><div class="insight-label">Ratio</div><div class="insight-val">${((d.totalDebt/d.income)*100).toFixed(0)}%</div></div></div>`;
-                const html=`<div class="report-section"><h4><i class="fas fa-heartbeat" style="color:#ef4444"></i> Diagnóstico</h4><div class="insight-grid"><div class="insight-item"><div class="insight-label">Ingresos</div><div class="insight-val text-success">${formatMoney(d.income)}</div></div><div class="insight-item"><div class="insight-label">Gastos</div><div class="insight-val text-danger">${formatMoney(d.expenses)}</div></div><div class="insight-item"><div class="insight-label">Flujo</div><div class="insight-val">${formatMoney(d.cashFlow)}</div></div></div></div><div class="report-section"><h4><i class="fas fa-shield-alt" style="color:#eab308"></i> Deudas</h4>${debtHTML}</div><div class="report-section"><h4><i class="fas fa-lightbulb" style="color:#f59e0b"></i> Recomendaciones</h4><ul class="ai-list">${generateRecommendations(d)}</ul></div>`;
+                const html=`<div class="report-section"><h4><i class="fas fa-heartbeat report-icon--danger"></i> Diagnóstico</h4><div class="insight-grid"><div class="insight-item"><div class="insight-label">Ingresos</div><div class="insight-val text-success">${formatMoney(d.income)}</div></div><div class="insight-item"><div class="insight-label">Gastos</div><div class="insight-val text-danger">${formatMoney(d.expenses)}</div></div><div class="insight-item"><div class="insight-label">Flujo</div><div class="insight-val">${formatMoney(d.cashFlow)}</div></div></div></div><div class="report-section"><h4><i class="fas fa-shield-alt report-icon--warning"></i> Deudas</h4>${debtHTML}</div><div class="report-section"><h4><i class="fas fa-lightbulb report-icon--amber"></i> Recomendaciones</h4><ul class="ai-list">${generateRecommendations(d)}</ul></div>`;
                 document.getElementById('aiContentBody').innerHTML=html; document.getElementById('aiScoreBadge').textContent=`SCORE: ${score}/100`;
                 predictNextMonthExpenses();
                 loader.style.display='none';result.style.display='block';btn.disabled=false;
@@ -1032,7 +1033,7 @@
             detailBody.innerHTML='';
 
             if(creditos.length===0){
-                detailBody.innerHTML='<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin compras a crédito registradas.</td></tr>';
+                detailBody.innerHTML='<tr><td colspan="7" class="table-empty-cell">Sin compras a crédito registradas.</td></tr>';
             }else{
                 creditos.forEach(cred=>{
                     const total=cred.totalDeuda||cred.monto||0;
@@ -1065,7 +1066,7 @@
             summary.innerHTML=`
                 <div class="summary-tile">
                     <div class="summary-label">Deuda total</div>
-                    <div class="summary-value" style="color:var(--danger);">${formatMoney(totalDebt)}</div>
+                    <div class="summary-value summary-value--danger">${formatMoney(totalDebt)}</div>
                 </div>
                 <div class="summary-tile">
                     <div class="summary-label">Cuota siguiente estimada</div>
@@ -1073,7 +1074,7 @@
                 </div>
                 <div class="summary-tile">
                     <div class="summary-label">Cupo disponible</div>
-                    <div class="summary-value" style="color:var(--success);">${formatMoney(available)}</div>
+                    <div class="summary-value summary-value--success">${formatMoney(available)}</div>
                 </div>`;
         }
 
@@ -1315,13 +1316,13 @@
             });
         if(resumenCuotas.length>0){
             const totalResumen=resumenCuotas.reduce((sum,item)=>sum+item.cuota,0);
-            const resumenItems=resumenCuotas.map(item=>`<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(148,163,184,0.2);">
+            const resumenItems=resumenCuotas.map(item=>`<div class="credit-installment-row">
                 <span>💳 ${item.cardName} - Próxima cuota aprox.</span>
                 <strong>${formatMoney(item.cuota)}</strong>
             </div>`).join('');
-            dv.innerHTML+=`<div style="background:var(--card-bg); border:1px solid rgba(148,163,184,0.25); border-radius:12px; padding:12px 16px; margin-bottom:16px;">
+            dv.innerHTML+=`<div class="credit-installment-summary">
                 ${resumenItems}
-                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; font-weight:700;">
+                <div class="credit-installment-total">
                     <span>Total general</span>
                     <span>${formatMoney(totalResumen)}</span>
                 </div>
@@ -1338,9 +1339,9 @@
                 const fechaLabel=cuotaSiguiente>0&&fechaSiguiente?`Fecha estimada: ${fechaSiguiente.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}`:'';
                 const safeCardName=k.replace(/'/g,"\\'");
                 dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
-            <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><div style="display:flex; gap:10px; align-items:center;">
+            <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><div class="inline-actions">
                 <button class="btn btn--ghost btn--sm" onclick="openCardDetail('${safeCardName}')"><i class="fas fa-eye"></i> Detalle</button>
-                <span style="font-size:1.25rem;font-weight:700;color:var(--danger);">${formatMoney(dm[k])}</span></div></div>
+                <span class="credit-card-debt">${formatMoney(dm[k])}</span></div></div>
             <div class="next-installment-section">
                 <div class="next-installment-title"><i class="fas fa-calendar-alt"></i> Próxima cuota estimada</div>
                 <div class="next-installment-value">${cuotaLabel}</div>
@@ -1372,16 +1373,16 @@
                 const isVencida=today>nextPaymentDate;
                 const diasRestantes=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));
                 
-                container.innerHTML+=`<div style="background:var(--bg-body);border-radius:var(--radius-md);padding:16px;margin-bottom:12px;border:1px solid rgba(148,163,184,0.1);">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <div><span style="font-weight:600;font-size:1rem;color:var(--text-primary);">${cred.descripcion||'Crédito'}</span>
-                        <div style="font-size:0.8rem;color:var(--text-muted);">Cuota ${siguienteCuota} de ${cuotaTotal}</div></div>
-                        <div style="text-align:right;"><span style="font-weight:700;font-size:1.2rem;color:var(--primary);">${formatMoney(montoPorCuota)}</span>
-                        <div style="font-size:0.8rem;color:${isVencida?'var(--danger)':'var(--success)'};">${isVencida?'Vencida':'Pago: '+nextPaymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</div></div>
+                container.innerHTML+=`<div class="installment-card">
+                    <div class="section-header mb-sm">
+                        <div><span class="installment-desc">${cred.descripcion||'Crédito'}</span>
+                        <div class="installment-meta">Cuota ${siguienteCuota} de ${cuotaTotal}</div></div>
+                        <div class="text-right"><span class="installment-amount">${formatMoney(montoPorCuota)}</span>
+                        <div class="installment-date ${isVencida?'text-danger':'text-success'}">${isVencida?'Vencida':'Pago: '+nextPaymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</div></div>
                     </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-cuota-pagar btn--full" style="flex:1;" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${cardName}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Pago</button>
-                        <button class="btn btn--secondary btn--full" style="flex:1; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="editTransaction('${cred.id}')"><i class="fas fa-edit"></i> Editar</button>
+                    <div class="inline-actions inline-actions--sm">
+                        <button class="btn-cuota-pagar btn--full" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${cardName}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Pago</button>
+                        <button class="btn btn--secondary btn--full btn-cuota-edit" onclick="editTransaction('${cred.id}')"><i class="fas fa-edit"></i> Editar</button>
                     </div>
                 </div>`;
             });
@@ -1395,7 +1396,7 @@
         
         function updateFamilySummary(){const cont=document.getElementById('familySummary');const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const miembros={papa:{name:'Papá',icon:'👨'},mama:{name:'Mamá',icon:'👩'},hijo1:{name:'Hijo/a',icon:'👶'},compartido:{name:'Compartido',icon:'👨‍👩‍👧‍👦'}};const stats={};Object.keys(miembros).forEach(m=>stats[m]={gastos:0,ingresos:0});
         transactions.forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)===vm&&ty===vy){const m=parseFloat(t.monto);const mem=t.miembro||'compartido';if(t.tipo==='gasto'||t.tipo==='credito')stats[mem].gastos+=m;if(t.tipo==='ingreso')stats[mem].ingresos+=m;}});
-        let html='';Object.keys(stats).forEach(k=>{const mem=miembros[k];const net=stats[k].ingresos-stats[k].gastos;html+=`<div class="member-card"><div class="member-avatar">${mem.icon}</div><div class="member-name">${mem.name}</div><div style="font-size:0.8rem;color:var(--text-light);">Gastos: <span class="member-total gastos">${formatMoney(stats[k].gastos)}</span></div><div style="font-size:0.8rem;color:var(--text-light);">Ingresos: <span class="member-total ingresos">${formatMoney(stats[k].ingresos)}</div></div>`;});cont.innerHTML=html;}
+        let html='';Object.keys(stats).forEach(k=>{const mem=miembros[k];const net=stats[k].ingresos-stats[k].gastos;html+=`<div class="member-card"><div class="member-avatar">${mem.icon}</div><div class="member-name">${mem.name}</div><div class="member-stat-line">Gastos: <span class="member-total gastos">${formatMoney(stats[k].gastos)}</span></div><div class="member-stat-line">Ingresos: <span class="member-total ingresos">${formatMoney(stats[k].ingresos)}</div></div>`;});cont.innerHTML=html;}
         
         function checkBudgetAlerts(){const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const budgets={};transactions.filter(t=>{const[ty,tm]=t.fecha.split('-').map(Number);return(t.tipo==='gasto'||t.tipo==='credito')&&(tm-1)===vm&&ty===vy;}).forEach(t=>{budgets[t.categoria]=(budgets[t.categoria]||0)+parseFloat(t.monto);});
         let exceeded=null;Object.keys(budgets).forEach(cat=>{if(budgets[cat]>1000000&&!exceeded){exceeded=cat;}});const alertDiv=document.getElementById('budgetAlert');if(exceeded){alertDiv.classList.remove('hidden');document.getElementById('budgetAlertDesc').textContent=`Has excedido $1,000,000 en ${exceeded.toUpperCase().replace(/_/g,' ')}`;}else{alertDiv.classList.add('hidden');}}
@@ -1579,7 +1580,7 @@
         }
         
         function renderGoals(){const cont=document.getElementById('goalsContainer');const goalsEmptyState=document.getElementById('goalsEmptyState');if(goals.length===0){cont.innerHTML='';if(goalsEmptyState)goalsEmptyState.classList.remove('hidden');return;}if(goalsEmptyState)goalsEmptyState.classList.add('hidden');
-        let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div style="font-weight:700;color:var(--primary);">${pct}%</div></div><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats" style="margin-top:5px;"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn btn--primary btn--sm" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn btn--danger btn--sm" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
+        let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div class="goal-percent">${pct}%</div></div><!-- IMPORTANTE: el width inline representa el porcentaje calculado de cada objetivo. --><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats goal-stats--spaced"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn btn--primary btn--sm" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn btn--danger btn--sm" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
         
         function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);AppStore.setGoals(goals);}else{AppStore.setGoals([]);}}
         async function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseCurrencyInput(document.getElementById('goalTarget').value);const saved=parseCurrencyInput(document.getElementById('goalSaved').value);const deadline=document.getElementById('goalDeadline').value;if(!name||target<=0){showToast('Completa los campos correctamente','error');return;}
@@ -2309,7 +2310,7 @@
             if (!tbody) return;
             const creditTransactions = transactions.filter(t => t.tipo === 'credito' && !t.pendingDelete);
             if (!creditTransactions.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:16px;">Sin créditos registrados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="table-empty-cell">Sin créditos registrados.</td></tr>';
                 return;
             }
             tbody.innerHTML = creditTransactions.map(tx => {
@@ -2322,7 +2323,7 @@
                 const saldoPendiente = (total / cuotas) * Math.max(0, cuotas - pagadas);
                 const cuotasLabel = `${pagadas}/${cuotas}`;
                 const actionButtons = tx.pendingSync
-                    ? '<span style="color:var(--warning);font-size:0.75rem;font-weight:600;">Pendiente</span>'
+                    ? '<span class="pending-badge">Pendiente</span>'
                     : `<button onclick="openAdjustPaymentDateModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Ajustar fecha de pago" aria-label="Ajustar fecha de pago"><i class="fas fa-calendar-alt"></i></button>
                        <button onclick="editCreditFromQuotaModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Editar crédito" aria-label="Editar crédito"><i class="fas fa-pen"></i></button>
                        <button onclick="requestCreditDelete('${tx.id}')" class="btn-icon-action btn-icon-action--danger" title="Eliminar crédito" aria-label="Eliminar crédito"><i class="fas fa-trash"></i></button>`;
@@ -2332,9 +2333,9 @@
                         <td>${formatDate(tx.fecha)}</td>
                         <td>${tx.descripcion || 'Compra crédito'}</td>
                         <td>${cuotasLabel}</td>
-                        <td class="text-danger" style="font-weight:600;">${formatMoney(total)}</td>
+                        <td class="text-danger text-strong">${formatMoney(total)}</td>
                         <td>${formatMoney(saldoPendiente)}</td>
-                        <td style="text-align:right;">${actionButtons}</td>
+                        <td class="text-right">${actionButtons}</td>
                     </tr>
                 `;
             }).join('');
@@ -2357,7 +2358,7 @@
 
             return `
                 <p>¿Deseas eliminar este crédito? Esta acción no se puede deshacer.</p>
-                <div class="modal-details" style="margin-bottom:0;">
+                <div class="modal-details modal-details--flush">
                     <div class="modal-row"><span>Tarjeta:</span><strong>${cardName}</strong></div>
                     <div class="modal-row"><span>Fecha:</span><span>${formatDate(tx.fecha)}</span></div>
                     <div class="modal-row"><span>Descripción:</span><span>${tx.descripcion || 'Compra crédito'}</span></div>
@@ -2392,11 +2393,11 @@
             const resolvedDate = tx.proximaFechaPago || formatLocalDate(resolveCurrentPaymentDate(tx, paymentDay));
             const body = `
                 <p>Selecciona la fecha de pago para este crédito. Se usará como próxima fecha de pago.</p>
-                <div class="modal-details" style="margin-bottom:0;">
+                <div class="modal-details modal-details--flush">
                     <div class="modal-row"><span>Tarjeta:</span><strong>${cardName}</strong></div>
                     <div class="modal-row"><span>Crédito:</span><span>${tx.descripcion || 'Compra crédito'}</span></div>
                 </div>
-                <div class="form-group" style="margin-top:12px;">
+                <div class="form-group mt-sm">
                     <label for="adjustPaymentDateInput">Nueva fecha de pago</label>
                     <input type="date" id="adjustPaymentDateInput" value="${resolvedDate}">
                 </div>
@@ -2439,7 +2440,7 @@
                 const safeName=c.name.replace(/'/g,"\\'");
                 const el=document.createElement('div');
                 el.className='quota-card';
-                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span class="text-danger">Deuda a la fecha: ${formatMoney(db)}</span><span style="color:var(--success);">Cupo disponible: ${formatMoney(av)}</span></div>`;
+                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span class="text-danger">Deuda a la fecha: ${formatMoney(db)}</span><span class="text-success">Cupo disponible: ${formatMoney(av)}</span></div>`;
                 d.appendChild(el);
             });
             document.getElementById('cardNameInput').value='';
@@ -2637,7 +2638,7 @@
             const txCount=relatedTransactions.length;
             const confirmBody = `
                 <p>${txCount ? `Esta tarjeta tiene <strong>${txCount}</strong> transacción(es) asociada(s). Se desvincularán y quedarán marcadas como tarjeta eliminada.` : `Se eliminará la tarjeta "<strong>${cardName || 'Sin nombre'}</strong>".`}</p>
-                <div class="modal-details" style="margin-bottom:0;">
+                <div class="modal-details modal-details--flush">
                     <div class="modal-row"><span>Tarjeta:</span><strong>${cardName || 'Sin nombre'}</strong></div>
                     <div class="modal-row"><span>Transacciones afectadas:</span><span>${txCount}</span></div>
                 </div>
