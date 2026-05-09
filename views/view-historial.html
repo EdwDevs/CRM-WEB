@@ -1,10 +1,10 @@
 <div id="view-historial" class="tab-content view-stack">
                 <header class="view-header">
                     <div>
-                        <h1 class="view-title">Historial</h1>
-                        <p class="view-subtitle">Revisa movimientos en una tabla clara, con filtros disponibles sin saturar la vista inicial.</p>
+                        <h1 class="view-header__title">Historial</h1>
+                        <p class="view-header__subtitle">Revisa movimientos en una tabla clara, con filtros disponibles sin saturar la vista inicial.</p>
                     </div>
-                    <div class="view-actions">
+                    <div class="view-header__actions">
                         <button class="btn btn--primary btn--md" onclick="renderHistory()"><i class="fas fa-search"></i> Aplicar filtros</button>
                     </div>
                 </header>
@@ -34,8 +34,8 @@
                 </section>
 
                 <details class="card collapsible-card history-filter-panel" data-force-collapsed="true">
-                    <summary class="collapsible-card__summary">
-                        <h3 class="card-title section-title">
+                    <summary class="collapsible-card__summary card-header">
+                        <h3 class="card-title">
                             <i class="fas fa-filter text-primary"></i> Filtros
                         </h3>
                     </summary>
@@ -89,9 +89,9 @@
                 </details>
 
                 <section class="card view-primary-card history-table-card">
-                    <div class="section-header mb-md">
-                        <h3 class="card-title section-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
-                        <div class="export-btns">
+                    <div class="card-header mb-md">
+                        <h3 class="card-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
+                        <div class="card-actions export-btns">
                             <!-- IMPORTANTE: exportToCSV() usa los mismos IDs de filtros para exportar la vista filtrada. -->
                             <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
                             <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>

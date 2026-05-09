@@ -1,8 +1,8 @@
 <div id="view-dashboard" class="tab-content active view-stack">
     <header class="view-header">
         <div>
-            <h1 class="view-title">Resumen financiero</h1>
-            <p class="view-subtitle">Lectura ejecutiva de patrimonio, flujo mensual, alertas y acciones clave con el detalle secundario en plegables.</p>
+            <h1 class="view-header__title">Resumen financiero</h1>
+            <p class="view-header__subtitle">Lectura ejecutiva de patrimonio, flujo mensual, alertas y acciones clave con el detalle secundario en plegables.</p>
         </div>
     </header>
 
@@ -117,7 +117,7 @@
 
     <div class="view-secondary-stack">
         <details class="card collapsible-card" data-force-collapsed="true">
-            <summary class="collapsible-card__summary">
+            <summary class="collapsible-card__summary card-header">
                 <h3 class="card-title card-title--muted">Flujo y rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
             </summary>
             <div class="stats-grid collapsible-card__content">
@@ -158,8 +158,8 @@
         </details>
 
         <details class="card collapsible-card" data-force-collapsed="true">
-            <summary class="collapsible-card__summary">
-                <h3 class="card-title section-title"><i class="fas fa-users section-title-icon"></i> Resumen familiar</h3>
+            <summary class="collapsible-card__summary card-header">
+                <h3 class="card-title"><i class="fas fa-users section-title-icon"></i> Resumen familiar</h3>
             </summary>
             <!-- IMPORTANTE: familySummary es poblado por updateFamilySummary(); conservar ID. -->
             <div class="family-summary collapsible-card__content" id="familySummary">
@@ -171,12 +171,10 @@
         </details>
 
         <details class="card collapsible-card" id="dailyCapCard" data-force-collapsed="true">
-            <summary class="collapsible-card__summary">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-calendar-day section-title-icon"></i> Capacidad diaria</h3>
-                    <!-- IMPORTANTE: dailyCapStatus es actualizado por updateDashboard(); conservar ID. -->
-                    <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
-                </div>
+            <summary class="collapsible-card__summary card-header">
+                <h3 class="card-title"><i class="fas fa-calendar-day section-title-icon"></i> Capacidad diaria</h3>
+                <!-- IMPORTANTE: dailyCapStatus es actualizado por updateDashboard(); conservar ID. -->
+                <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
             </summary>
             <div class="collapsible-card__content">
                 <div class="daily-cap-grid">
@@ -192,9 +190,9 @@
         </details>
 
         <details class="card collapsible-card" data-force-collapsed="true">
-            <summary class="collapsible-card__summary">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
+            <summary class="collapsible-card__summary card-header">
+                <h3 class="card-title"><i class="fas fa-credit-card text-primary"></i> Deudas Tarjetas</h3>
+                <div class="card-actions">
                     <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
                 </div>
             </summary>
