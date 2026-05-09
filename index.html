@@ -24,12 +24,22 @@
             <span id="themeText">Modo Oscuro</span>
         </button>
         <div class="nav-links">
-            <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Dashboard</span></div>
-            <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Transacciones</span></div>
-            <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Estadísticas</span></div>
+            <div class="nav-section-label">Operación</div>
+            <!-- IMPORTANTE: El nombre visual "Inicio" mantiene el id interno "dashboard" para no romper switchView() ni VIEW_CONFIG. -->
+            <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Inicio</span></div>
+            <!-- IMPORTANTE: El nombre visual "Movimientos" mantiene el id interno "transacciones" para no romper switchView() ni VIEW_CONFIG. -->
+            <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Movimientos</span></div>
+            <div class="nav-section-label">Finanzas</div>
+            <!-- IMPORTANTE: El nombre visual "Historial" mantiene el id interno "historial" para no romper switchView() ni VIEW_CONFIG. -->
             <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Historial</span></div>
-            <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Objetivos</span></div>
-            <div class="nav-item" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor Experto</span></div>
+            <div class="nav-section-label">Análisis</div>
+            <!-- IMPORTANTE: El nombre visual "Análisis" mantiene el id interno "estadisticas" para no romper switchView() ni VIEW_CONFIG. -->
+            <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Análisis</span></div>
+            <div class="nav-section-label">Control</div>
+            <!-- IMPORTANTE: El nombre visual "Metas" mantiene el id interno "objetivos" para no romper switchView() ni VIEW_CONFIG. -->
+            <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Metas</span></div>
+            <!-- IMPORTANTE: El nombre visual "Asesor / Control" mantiene el id interno "asistente" para no romper switchView() ni VIEW_CONFIG. -->
+            <div class="nav-item ai-nav" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor / Control</span></div>
         </div>
         <div class="sidebar-footer">Hogar & Finanzas © 2026</div>
     </nav>
@@ -37,11 +47,12 @@
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
     <nav class="mobile-nav">
+        <!-- IMPORTANTE: Navegación móvil usa nombres visuales cortos pero conserva ids internos compatibles con switchView() y VIEW_CONFIG. -->
         <button class="mob-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Inicio</span></button>
-        <button class="mob-link" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Trans.</span></button>
+        <button class="mob-link" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Mov.</span></button>
         <button class="mob-link mob-fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
         <button class="mob-link" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Hist.</span></button>
-        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Expert</span></button>
+        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Control</span></button>
     </nav>
 
     <div class="sync-indicator offline" id="syncIndicator">
@@ -2746,10 +2757,11 @@
             document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
             const s=document.querySelectorAll('.sidebar .nav-item');
             const m=document.querySelectorAll('.mobile-nav .mob-link');
+            // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG aunque los nombres visuales estén agrupados.
             if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
             if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
-            if(id==='estadisticas'){s[2].classList.add('active');}
-            if(id==='historial'){s[3].classList.add('active');m[3].classList.add('active');}
+            if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
+            if(id==='estadisticas'){s[3].classList.add('active');}
             if(id==='objetivos'){s[4].classList.add('active');}
             if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
             // IMPORTANTE: ejecutar hooks de render de la vista activa (documentación funcional en VIEW_CONFIG).
