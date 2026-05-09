@@ -405,13 +405,14 @@
         const categorias=categories;
 
 
-        // IMPORTANTE: Mapa centralizado entre vista y archivo fragmento + hooks de render al activar la vista.
+        // IMPORTANTE: Mapa centralizado entre vista, archivo fragmento, hooks y comportamiento visual inicial.
+        // IMPORTANTE: focusMode/defaultCollapsedSections reducen ruido al entrar a cada vista; mantener sincronizado con las secciones secundarias del HTML.
         const VIEW_CONFIG={
-            dashboard:{fragment:'views/view-dashboard.html', onActivate:[initCollapsibleCards, ()=>{updateDashboard(); updateDailyCapIndicator();}]},
+            dashboard:{fragment:'views/view-dashboard.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, ()=>{updateDashboard(); updateDailyCapIndicator();}]},
             transacciones:{fragment:'views/view-transacciones.html', onActivate:[initCollapsibleCards, initTransactionFormBindings]},
-            estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
-            historial:{fragment:'views/view-historial.html', onActivate:[initCollapsibleCards, renderHistory]},
-            objetivos:{fragment:'views/view-objetivos.html', onActivate:[initCollapsibleCards, renderGoals]},
+            estadisticas:{fragment:'views/view-estadisticas.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
+            historial:{fragment:'views/view-historial.html', focusMode:true, defaultCollapsedSections:['.history-filter-panel'], onActivate:[initCollapsibleCards, renderHistory]},
+            objetivos:{fragment:'views/view-objetivos.html', focusMode:true, defaultCollapsedSections:['.goal-history-details'], onActivate:[renderGoals, initCollapsibleCards]},
             asistente:{fragment:'views/view-asistente.html', onActivate:[initCollapsibleCards]}
         };
         const loadedViews=new Set();
@@ -430,6 +431,22 @@
         async function preloadViews(){
             // IMPORTANTE: cargamos todas las vistas al inicio para preservar IDs y compatibilidad con lógica existente.
             await Promise.all(Object.keys(VIEW_CONFIG).map(loadView));
+            // IMPORTANTE: las vistas precargadas también reciben su comportamiento visual inicial antes de enlazar plegables.
+            Object.keys(VIEW_CONFIG).forEach(applyViewVisualConfig);
+        }
+        function applyViewVisualConfig(viewId){
+            const config=VIEW_CONFIG[viewId];
+            const viewRoot=document.getElementById('view-'+viewId);
+            if(!config||!viewRoot)return;
+            viewRoot.dataset.focusMode=config.focusMode?'true':'false'; // IMPORTANTE: expone el modo de enfoque por vista para CSS/QA sin duplicar lógica.
+            (config.defaultCollapsedSections||[]).forEach(selector=>{
+                viewRoot.querySelectorAll(selector).forEach(section=>{
+                    // IMPORTANTE: estas marcas identifican secciones secundarias que deben iniciar plegadas para reducir ruido visual.
+                    section.dataset.forceCollapsed='true';
+                    section.dataset.secondarySection='true';
+                    if(section.tagName==='DETAILS')section.open=false;
+                });
+            });
         }
         function initCollapsibleCards(){
             const cards=document.querySelectorAll('.collapsible-card');
@@ -1761,7 +1778,9 @@
             const remainingGoals=mappedGoals.filter(item=>item.index!==featured.index);
             // IMPORTANTE: si solo existe una meta, el grid secundario muestra una acción para crear otro objetivo y no queda vacío.
             const remainingHtml=remainingGoals.length?remainingGoals.map(item=>renderGoalCard(item.goal,item.visual)).join(''):renderEmptyState({icon:'fas fa-bullseye',title:'Solo tienes una meta activa.',message:'Crea otro objetivo para comparar prioridades del hogar.',actionLabel:'Crear objetivo',actionOnclick:'openGoalModal()'});
-            cont.innerHTML=`<div class="goals-featured-wrap"><div class="goals-section-kicker">Objetivo destacado</div>${renderGoalCard(featured.goal,featured.visual,true)}</div><div class="goals-rest-section"><div class="goals-section-header"><div><span class="goals-section-kicker">Resto de metas</span><h2>Seguimiento general</h2></div><span>${remainingGoals.length} objetivo${remainingGoals.length===1?'':'s'}</span></div><div class="goals-grid">${remainingHtml}</div></div>`;
+            cont.innerHTML=`<div class="goals-featured-wrap"><div class="goals-section-kicker">Objetivo destacado</div>${renderGoalCard(featured.goal,featured.visual,true)}</div><details class="card collapsible-card goals-rest-section goal-history-details" data-force-collapsed="true" data-secondary-section="true"><summary class="collapsible-card__summary goals-section-header"><div><span class="goals-section-kicker">Detalles históricos</span><h2>Seguimiento general</h2></div><span>${remainingGoals.length} objetivo${remainingGoals.length===1?'':'s'}</span></summary><div class="goals-grid collapsible-card__content">${remainingHtml}</div></details>`;
+            applyViewVisualConfig('objetivos'); // IMPORTANTE: renderGoals() reconstruye el bloque histórico; reponemos marcas y plegado inicial.
+            initCollapsibleCards(); // IMPORTANTE: las metas se renderizan dinámicamente y necesitan enlazar su details secundario tras cada actualización.
             applyGoalProgressStyles(cont);
         }
         
@@ -3005,6 +3024,7 @@
             if(!VIEW_CONFIG[id])return;
             logEvent('switchView',{view:id});
             await loadView(id);
+            applyViewVisualConfig(id); // IMPORTANTE: tras cargar la vista aplicamos foco/plegados definidos en VIEW_CONFIG antes de mostrarla.
             document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
             const targetView=document.getElementById('view-'+id);
             if(targetView)targetView.classList.add('active');
