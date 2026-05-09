@@ -160,6 +160,204 @@
             text-shadow: 0 0 24px rgba(10, 132, 255, 0.28); /* IMPORTANTE: inmersión visual controlada del valor principal */
         }
 
+
+        .dashboard-hero {
+            /* IMPORTANTE: Hero ejecutivo del dashboard; concentra IDs de KPIs consumidos por updateDashboard(). */
+            display: grid;
+            grid-template-columns: minmax(280px, 1.25fr) minmax(0, 1.75fr);
+            gap: 18px;
+            align-items: stretch;
+            padding: 18px;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(135deg, color-mix(in srgb, var(--bg-surface) 90%, #0B1220) 0%, color-mix(in srgb, var(--bg-elevated) 72%, #111827) 100%);
+            border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border-light));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-xl), 0 0 44px -22px rgba(59, 130, 246, 0.52);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-hero::before {
+            content: '';
+            position: absolute;
+            inset: -35% -15% auto auto;
+            width: 440px;
+            height: 440px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 62%);
+            pointer-events: none;
+        }
+
+        .dashboard-hero__balance,
+        .dashboard-hero__metric {
+            position: relative;
+            z-index: 1;
+            border: 1px solid color-mix(in srgb, var(--border-light) 65%, transparent);
+            background: color-mix(in srgb, var(--bg-surface) 78%, transparent);
+            backdrop-filter: blur(14px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-sm);
+        }
+
+        .dashboard-hero__balance {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 260px;
+            padding: clamp(24px, 4vw, 42px);
+            border-radius: var(--radius-xl);
+        }
+
+        .dashboard-hero__eyebrow {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .dashboard-hero__amount {
+            margin-top: 12px;
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.35rem, 5vw, 4.6rem);
+            font-weight: 800;
+            letter-spacing: -0.06em;
+            line-height: 0.98;
+            text-shadow: 0 0 24px rgba(10, 132, 255, 0.24);
+        }
+
+        .dashboard-hero__metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .dashboard-hero__metric {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .dashboard-hero__metric::after {
+            content: '';
+            position: absolute;
+            inset: auto 18px 0 18px;
+            height: 3px;
+            border-radius: var(--radius-full);
+            opacity: 0.9;
+        }
+
+        .dashboard-hero__metric--success::after { background: var(--success); }
+        .dashboard-hero__metric--danger::after { background: var(--danger); }
+        .dashboard-hero__metric--info::after { background: var(--info); }
+
+        .dashboard-alert-strip {
+            /* IMPORTANTE: Franja inmediatamente bajo el hero para señales críticas actualizadas por JS. */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: -12px;
+        }
+
+        .dashboard-alert-strip:empty {
+            display: none;
+        }
+
+        .quick-actions-grid {
+            /* IMPORTANTE: Acciones primarias del dashboard sin depender de IDs dinámicos. */
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .quick-action-card {
+            appearance: none;
+            border: 1px solid color-mix(in srgb, var(--border-light) 72%, transparent);
+            border-radius: var(--radius-lg);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 92%, transparent), color-mix(in srgb, var(--bg-elevated) 52%, transparent));
+            color: var(--text-primary);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm);
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+        }
+
+        .quick-action-card:hover {
+            border-color: color-mix(in srgb, var(--primary) 42%, transparent);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .quick-action-card__icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.05rem;
+        }
+
+        .quick-action-card__label {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .account-summary-grid {
+            /* IMPORTANTE: Cuentas y métodos de pago compactos; los IDs internos son actualizados por updateDashboard(). */
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .account-card--compact {
+            margin: 0;
+            min-width: 0;
+            padding: 18px;
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-hero__balance {
+                min-height: 220px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .dashboard-grid {
+                gap: 18px;
+                margin-bottom: 24px;
+            }
+
+            .dashboard-hero,
+            .dashboard-hero__metrics,
+            .quick-actions-grid,
+            .account-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-hero {
+                padding: 12px;
+            }
+
+            .dashboard-hero__balance {
+                min-height: 190px;
+            }
+        }
+
         /* --- Bento Box Dashboard Layout --- */
         .dashboard-grid {
             display: grid;
@@ -3446,4 +3644,12 @@
 /* IMPORTANTE: altura de skeletons del resumen familiar preserva el layout mientras cargan datos. */
 .member-card-skeleton {
     height: 120px;
+}
+
+@media (max-width: 760px) {
+    .dashboard-grid {
+        /* IMPORTANTE: override final porque la grilla Bento legacy también define .dashboard-grid más arriba. */
+        gap: 18px;
+        margin-bottom: 24px;
+    }
 }
