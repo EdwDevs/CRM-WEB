@@ -461,6 +461,7 @@
             const todayLocal=new Date(yyyy, t.getMonth(), t.getDate());
             document.getElementById('dashboardMonth').value=`${yyyy}-${mm}`;document.getElementById('fecha').valueAsDate=todayLocal;
             const firstDay=`${yyyy}-${mm}-01`;const lastDay=formatLocalDate(new Date(yyyy,t.getMonth()+1,0));
+            // IMPORTANTE: filterStart/filterEnd inicializan los filtros de view-historial.html antes del primer renderHistory().
             document.getElementById('filterStart').value=firstDay;document.getElementById('filterEnd').value=lastDay;
             document.getElementById('goalDeadline').value=lastDay;
             loadCards();loadGoals();
@@ -846,6 +847,7 @@
             }
         }
         function clearFilters() {
+            // IMPORTANTE: estos IDs pertenecen a views/view-historial.html; mantenerlos sincronizados con el markup de filtros.
             document.getElementById('filterText').value = '';
             document.getElementById('filterType').value = 'all';
             document.getElementById('filterMethod').value = 'all';
@@ -858,32 +860,45 @@
         }
 
         function populateMethodFilter() {
+            // IMPORTANTE: filterMethod debe conservarse porque renderHistory() y clearFilters() dependen de este ID exacto.
             const sel = document.getElementById('filterMethod');
             sel.innerHTML = '<option value="all">Cualquiera</option>';
             ['debito', 'efectivo', 'nequi'].forEach(m => sel.add(new Option(m.charAt(0).toUpperCase() + m.slice(1), m)));
             cardsList.forEach(c => sel.add(new Option('💳 ' + c.name, c.name)));
         }
 
-        function renderHistory() {
-            const tbody = document.getElementById('transactionList'); tbody.innerHTML = '';
-            const historyEmptyState = document.getElementById('historyEmptyState');
-            const txt = document.getElementById('filterText').value.toLowerCase();
-            const type = document.getElementById('filterType').value;
-            const method = document.getElementById('filterMethod').value;
-            const start = document.getElementById('filterStart').value;
-            const end = document.getElementById('filterEnd').value;
+        function getHistoryFilterState() {
+            // IMPORTANTE: los IDs filterText/filterType/filterMethod/filterStart/filterEnd viven en view-historial.html y son contrato con filtros, resumen y exportación.
+            return {
+                txt: document.getElementById('filterText').value.trim().toLowerCase(),
+                type: document.getElementById('filterType').value,
+                method: document.getElementById('filterMethod').value,
+                start: document.getElementById('filterStart').value,
+                end: document.getElementById('filterEnd').value
+            };
+        }
+
+        function hasActiveHistoryFilters(filters) {
+            return Boolean(filters.txt || filters.type !== 'all' || filters.method !== 'all' || filters.start || filters.end);
+        }
+
+        function getFilteredHistoryData() {
+            const filters = getHistoryFilterState();
             let inc = 0, exp = 0;
             const filtered = transactions.filter(t => {
-                if (start && t.fecha < start) return false;
-                if (end && t.fecha > end) return false;
-                if (type !== 'all' && t.tipo !== type) return false;
-                const textMatch = t.descripcion.toLowerCase().includes(txt) || (t.categoria && t.categoria.toLowerCase().includes(txt)) || (t.subcategoria && t.subcategoria.toLowerCase().includes(txt));
+                if (filters.start && t.fecha < filters.start) return false;
+                if (filters.end && t.fecha > filters.end) return false;
+                if (filters.type !== 'all' && t.tipo !== filters.type) return false;
+                const description = (t.descripcion || '').toLowerCase();
+                const category = (t.categoria || '').toLowerCase();
+                const subcategory = (t.subcategoria || '').toLowerCase();
+                const textMatch = !filters.txt || description.includes(filters.txt) || category.includes(filters.txt) || subcategory.includes(filters.txt);
                 if (!textMatch) return false;
-                if (method !== 'all') {
+                if (filters.method !== 'all') {
                     const creditName = t.tipo === 'credito' ? resolveCreditCardName(t) : null;
-                    const m1 = t.tipo !== 'credito' && t.metodoPago === method;
-                    const m2 = t.tipo === 'credito' && creditName === method;
-                    const m3 = (t.tipo === 'pago_tarjeta' || t.tipo === 'transferencia') && (t.metodoPago === method || t.tarjetaDestino === method || t.metodoDestino === method);
+                    const m1 = t.tipo !== 'credito' && t.metodoPago === filters.method;
+                    const m2 = t.tipo === 'credito' && creditName === filters.method;
+                    const m3 = (t.tipo === 'pago_tarjeta' || t.tipo === 'transferencia') && (t.metodoPago === filters.method || t.tarjetaDestino === filters.method || t.metodoDestino === filters.method);
                     if (!(m1 || m2 || m3)) return false;
                 }
                 const m = parseFloat(t.monto);
@@ -891,14 +906,32 @@
                 if (t.tipo === 'gasto' || t.tipo === 'credito') exp += m;
                 return true;
             });
+            return { filtered, filters, inc, exp };
+        }
+
+        function setHistoryEmptyState({ hasTransactions, hasResults, hasFilters }) {
+            const noTransactionsState = document.getElementById('historyNoTransactionsState');
+            const noFilterResultsState = document.getElementById('historyNoFilterResultsState');
+            if (noTransactionsState) noTransactionsState.classList.toggle('hidden', hasTransactions);
+            if (noFilterResultsState) noFilterResultsState.classList.toggle('hidden', !hasTransactions || hasResults || !hasFilters);
+        }
+
+        function renderHistory() {
+            // IMPORTANTE: transactionList es el ID de tbody definido en view-historial.html; no cambiar sin actualizar esta función.
+            const tbody = document.getElementById('transactionList');
+            tbody.innerHTML = '';
+            const { filtered, filters, inc, exp } = getFilteredHistoryData();
+            const hasTransactions = transactions.length > 0;
+            const hasResults = filtered.length > 0;
+            const hasFilters = hasActiveHistoryFilters(filters);
             document.getElementById('valFilteredInc').textContent = formatMoney(inc);
             document.getElementById('valFilteredExp').textContent = formatMoney(exp);
-            if(filtered.length===0){
-                // IMPORTANTE: estado vacío unificado con mensaje accionable para el usuario.
-                if (historyEmptyState) historyEmptyState.classList.remove('hidden');
-                return;
-            }
-            if (historyEmptyState) historyEmptyState.classList.add('hidden');
+            const balanceEl = document.getElementById('valFilteredBalance');
+            const countEl = document.getElementById('historyFilteredCount');
+            if (balanceEl) balanceEl.textContent = formatMoney(inc - exp);
+            if (countEl) countEl.textContent = filtered.length.toString();
+            setHistoryEmptyState({ hasTransactions, hasResults, hasFilters });
+            if (!hasResults) return;
             filtered.forEach(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
@@ -1611,13 +1644,15 @@
         async function deleteGoal(id){if(!confirm('¿Eliminar este objetivo?'))return;goals=goals.filter(g=>g.id!==id);localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);showToast('Objetivo eliminado','success');}
         function openGoalModal(){document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalSaved').value='';document.getElementById('goalModal').style.display='flex';}
 
-        function exportToCSV(){let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';transactions.forEach(t=>{const m=t.monto;const metodo=t.tipo==='credito'?resolveCreditCardName(t):t.metodoPago;csv+=`${t.fecha},${t.tipo},${metodo},${t.categoria||''},${t.subcategoria||''},${t.miembro||''},"${t.descripcion.replace(/"/g,'""')}",${m}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero.csv';a.click();showToast('CSV exportado','success');}
+        function escapeCSVValue(value){return `"${String(value ?? '').replace(/"/g,'""')}"`;}
+        function exportToCSV(){const { filtered }=getFilteredHistoryData();let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';filtered.forEach(t=>{const m=t.monto;const metodo=t.tipo==='credito'?resolveCreditCardName(t):t.metodoPago;csv+=`${escapeCSVValue(t.fecha)},${escapeCSVValue(t.tipo)},${escapeCSVValue(metodo)},${escapeCSVValue(t.categoria||'')},${escapeCSVValue(t.subcategoria||'')},${escapeCSVValue(t.miembro||'')},${escapeCSVValue(t.descripcion)},${escapeCSVValue(m)}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero_filtrado.csv';a.click();URL.revokeObjectURL(url);showToast(`CSV exportado (${filtered.length} movimientos)`,'success');}
         function exportToPDF(){window.print();showToast('Usa Ctrl+P para guardar como PDF','info');}
 
         function toggleVoiceSearch(){const btn=document.getElementById('voiceSearchBtn');if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Búsqueda por voz no soportada','error');return;}
         const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;const recognition=new SpeechRecognition();recognition.lang='es-CO';recognition.interimResults=false;
         if(btn.classList.contains('recording')){recognition.stop();btn.classList.remove('recording');return;}
-        recognition.start();btn.classList.add('recording');recognition.onresult=(event=>{const text=event.results[0][0].transcript;document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
+        recognition.start();btn.classList.add('recording');recognition.onresult=(event=>{const text=event.results[0][0].transcript;// IMPORTANTE: filterText conecta búsqueda por voz con los filtros del historial.
+        document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
 
         function openArqueoModal() {
             let d = 0, e = 0, n = 0;

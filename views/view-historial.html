@@ -2,14 +2,38 @@
                 <header class="view-header">
                     <div>
                         <h1 class="view-title">Historial</h1>
-                        <p class="view-subtitle">Filtra movimientos y exporta resultados sin saturar la vista inicial.</p>
+                        <p class="view-subtitle">Revisa movimientos en una tabla clara, con filtros disponibles sin saturar la vista inicial.</p>
                     </div>
                     <div class="view-actions">
                         <button class="btn btn--primary btn--md" onclick="renderHistory()"><i class="fas fa-search"></i> Aplicar filtros</button>
                     </div>
                 </header>
 
-                <details class="card collapsible-card view-primary-card" open>
+                <!-- IMPORTANTE: estos IDs de resumen los actualiza renderHistory() con el resultado filtrado actual. -->
+                <section class="history-summary-grid" aria-label="Totales filtrados del historial">
+                    <article class="summary-pill inc">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>Ingresos</span>
+                        <strong id="valFilteredInc">$0</strong>
+                    </article>
+                    <article class="summary-pill exp">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Gastos</span>
+                        <strong id="valFilteredExp">$0</strong>
+                    </article>
+                    <article class="summary-pill">
+                        <i class="fas fa-scale-balanced"></i>
+                        <span>Balance</span>
+                        <strong id="valFilteredBalance">$0</strong>
+                    </article>
+                    <article class="summary-pill">
+                        <i class="fas fa-receipt"></i>
+                        <span>Movimientos</span>
+                        <strong id="historyFilteredCount">0</strong>
+                    </article>
+                </section>
+
+                <details class="card collapsible-card history-filter-panel" data-force-collapsed="true">
                     <summary class="collapsible-card__summary">
                         <h3 class="card-title section-title">
                             <i class="fas fa-filter text-primary"></i> Filtros
@@ -19,11 +43,13 @@
                         <div class="filter-row">
                             <div class="filter-group voice-search">
                                 <label>Buscar (Texto o Voz)</label>
+                                <!-- IMPORTANTE: el ID filterText es leído por renderHistory(), clearFilters() y toggleVoiceSearch(). -->
                                 <input type="text" id="filterText" class="filter-control" placeholder="Ej: Cena, Netflix...">
                                 <button class="voice-search-btn" id="voiceSearchBtn" onclick="toggleVoiceSearch()"><i class="fas fa-microphone"></i></button>
                             </div>
                             <div class="filter-group">
                                 <label>Tipo</label>
+                                <!-- IMPORTANTE: el ID filterType es leído por renderHistory() y clearFilters(); no cambiar sin actualizar esas funciones. -->
                                 <select id="filterType" class="filter-control">
                                     <option value="all">Todos</option>
                                     <option value="gasto">Gasto</option>
@@ -35,6 +61,7 @@
                             </div>
                             <div class="filter-group">
                                 <label>Método de Pago/Destino</label>
+                                <!-- IMPORTANTE: el ID filterMethod es poblado por populateMethodFilter() y leído por renderHistory(). -->
                                 <select id="filterMethod" class="filter-control">
                                     <option value="all">Cualquiera</option>
                                 </select>
@@ -43,10 +70,12 @@
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label>Desde</label>
+                                <!-- IMPORTANTE: el ID filterStart alimenta el filtro de fecha inicial en renderHistory(). -->
                                 <input type="date" id="filterStart" class="filter-control">
                             </div>
                             <div class="filter-group">
                                 <label>Hasta</label>
+                                <!-- IMPORTANTE: el ID filterEnd alimenta el filtro de fecha final en renderHistory(). -->
                                 <input type="date" id="filterEnd" class="filter-control">
                             </div>
                         </div>
@@ -59,53 +88,34 @@
                     </div>
                 </details>
 
-                <div class="view-secondary-stack">
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title section-title"><i class="fas fa-file-export text-primary"></i> Exportación</h3>
-                        </summary>
-                        <div class="export-btns collapsible-card__content">
-                            <!-- IMPORTANTE: se mantienen exportaciones separadas para no cambiar funciones existentes de CSV/PDF. -->
+                <section class="card view-primary-card history-table-card">
+                    <div class="section-header mb-md">
+                        <h3 class="card-title section-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
+                        <div class="export-btns">
+                            <!-- IMPORTANTE: exportToCSV() usa los mismos IDs de filtros para exportar la vista filtrada. -->
                             <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
                             <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                         </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title section-title"><i class="fas fa-chart-pie text-primary"></i> Resumen filtrado</h3>
-                        </summary>
-                        <!-- IMPORTANTE: los IDs de totales filtrados se conservan para renderHistory(). -->
-                        <div class="filter-summary collapsible-card__content">
-                            <div class="summary-pill inc"><i class="fas fa-arrow-down"></i> <span id="valFilteredInc">$0</span></div>
-                            <div class="summary-pill exp"><i class="fas fa-arrow-up"></i> <span id="valFilteredExp">$0</span></div>
-                        </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title section-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
-                        </summary>
-                        <div class="collapsible-card__content">
-                            <div class="table-container">
-                                <div class="table-scroll-hint"><i class="fas fa-arrows-left-right"></i> Desliza para ver más</div>
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Fecha</th>
-                                            <th>Tipo</th>
-                                            <th>Método</th>
-                                            <th>Cat.</th>
-                                            <th>Desc.</th>
-                                            <th>Monto</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="transactionList"></tbody>
-                                </table>
-                            </div>
-                            <div id="historyEmptyState" class="section-empty-state hidden"><strong>No hay transacciones para este filtro.</strong> Ajusta fechas/tipo o crea una nueva transacción para empezar.</div>
-                        </div>
-                    </details>
-                </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll-hint">Desliza para ver más</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Método</th>
+                                    <th>Categoría</th>
+                                    <th>Descripción</th>
+                                    <th>Monto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <!-- IMPORTANTE: el ID transactionList se mantiene porque renderHistory() inyecta aquí las filas. -->
+                            <tbody id="transactionList"></tbody>
+                        </table>
+                    </div>
+                    <div id="historyNoTransactionsState" class="section-empty-state hidden"><strong>Sin transacciones registradas.</strong> Crea tu primer movimiento para alimentar el historial.</div>
+                    <div id="historyNoFilterResultsState" class="section-empty-state hidden"><strong>Sin resultados para estos filtros.</strong> Ajusta fechas, texto, tipo o método para ampliar la búsqueda.</div>
+                </section>
             </div>

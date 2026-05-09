@@ -46,6 +46,30 @@
             gap: 12px;
         }
 
+        .history-summary-grid {
+            /* IMPORTANTE: Franja superior visible del historial; muestra totales filtrados sin abrir paneles. */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .history-filter-panel {
+            /* IMPORTANTE: Los filtros quedan plegados por defecto para que la tabla sea el foco inicial. */
+            margin-bottom: 0;
+        }
+
+        .history-table-card {
+            /* IMPORTANTE: Card principal siempre visible del historial; no debe convertirse en details. */
+            margin-bottom: 0;
+        }
+
+        .history-table-card .export-btns {
+            /* IMPORTANTE: En historial la exportación vive en el header de tabla y no debe sumar margen vertical extra. */
+            margin-bottom: 0;
+            flex-wrap: wrap;
+        }
+
         .view-primary-card {
             /* IMPORTANTE: Primera card visible de la vista; debe contener el flujo principal de trabajo. */
             margin-bottom: 0;
@@ -1024,6 +1048,25 @@
             gap: 12px;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
             letter-spacing: 0.05em;
+        }
+
+        .history-summary-grid .summary-pill {
+            min-height: 86px;
+            margin: 0;
+            justify-content: flex-start;
+        }
+
+        .history-summary-grid .summary-pill span {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .history-summary-grid .summary-pill strong {
+            margin-left: auto;
+            color: inherit;
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            letter-spacing: -0.02em;
         }
 
         .summary-pill.inc {
@@ -2274,6 +2317,10 @@
             font-size: 0.92rem;
             margin-bottom: 6px;
             color: var(--text-primary);
+        }
+
+        .history-table-card .section-empty-state {
+            margin-top: 16px;
         }
 
         @keyframes fadeIn {
