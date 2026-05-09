@@ -3371,10 +3371,110 @@
             gap: 12px;
         }
 
+        .audit-summary {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.35fr) repeat(3, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .audit-score,
+        .audit-summary-card {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .audit-score {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border-left: 4px solid var(--warning);
+        }
+
+        .audit-score--ok {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .audit-score--warning {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .audit-score--danger {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .audit-score span,
+        .audit-summary-card span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .audit-score strong,
+        .audit-summary-card strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            line-height: 1.2;
+        }
+
+        .audit-score small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+
         .audit-list {
             display: flex;
             flex-direction: column;
             gap: 16px;
+        }
+
+        .audit-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .audit-group--danger {
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .audit-group--warning {
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        .audit-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .audit-group-header strong {
+            min-width: 28px;
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            text-align: center;
         }
 
         .audit-item {
@@ -3432,6 +3532,16 @@
             color: var(--text-muted);
             text-align: center;
             padding: 12px 0;
+        }
+
+        @media (max-width: 900px) {
+            .audit-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .audit-header {
+                flex-direction: column;
+            }
         }
 
 /* IMPORTANTE: fallback visual para charts cuando no hay datos suficientes para una proyección fiable. */
