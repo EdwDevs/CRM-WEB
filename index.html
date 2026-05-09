@@ -1601,8 +1601,67 @@
             }
         }
         
-        function renderGoals(){const cont=document.getElementById('goalsContainer');const goalsEmptyState=document.getElementById('goalsEmptyState');if(goals.length===0){cont.innerHTML='';if(goalsEmptyState)goalsEmptyState.classList.remove('hidden');return;}if(goalsEmptyState)goalsEmptyState.classList.add('hidden');
-        let html='';goals.forEach(g=>{const pct=Math.min(100,Math.round((g.saved/g.target)*100));const daysLeft=Math.ceil((new Date(g.deadline)-new Date())/(1000*60*60*24));html+=`<div class="goal-card"><div class="goal-header"><div class="goal-name">${g.name}</div><div class="goal-percent">${pct}%</div></div><!-- IMPORTANTE: el width inline representa el porcentaje calculado de cada objetivo. --><div class="goal-progress"><div class="goal-progress-bar" style="width:${pct}%"></div></div><div class="goal-stats"><span>Ahorrado: ${formatMoney(g.saved)}</span><span>Meta: ${formatMoney(g.target)}</span></div><div class="goal-stats goal-stats--spaced"><span>${daysLeft>0?`${daysLeft} días restantes`:'Vencido'}</span></div><div class="goal-actions"><button class="btn btn--primary btn--sm" onclick="addToGoal('${g.id}')"><i class="fas fa-plus"></i> Agregar</button><button class="btn btn--danger btn--sm" onclick="deleteGoal('${g.id}')"><i class="fas fa-trash"></i></button></div></div>`;});cont.innerHTML=html;}
+        function escapeGoalText(value){return String(value ?? '').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+
+        function getGoalVisualState(goal){
+            const target=Number(goal.target)||0;
+            const saved=Number(goal.saved)||0;
+            // IMPORTANTE: el porcentaje se limita entre 0 y 100 para que la barra visual nunca se desborde aunque el ahorro supere la meta.
+            const pct=target>0?Math.min(100,Math.max(0,Math.round((saved/target)*100))):0;
+            const today=new Date();today.setHours(0,0,0,0);
+            const deadlineDate=goal.deadline?new Date(`${goal.deadline}T00:00:00`):null;
+            const daysLeft=deadlineDate&&!Number.isNaN(deadlineDate.getTime())?Math.ceil((deadlineDate-today)/(1000*60*60*24)):null;
+            let statusClass='goal-status--on-track';
+            let statusLabel='En curso';
+            let statusIcon='fa-arrow-trend-up';
+            // IMPORTANTE: el estado visual prioriza completado y vencido; riesgo se calcula por fecha cercana o avance bajo.
+            if(pct>=100){statusClass='goal-status--completed';statusLabel='Completado';statusIcon='fa-circle-check';}
+            else if(daysLeft!==null&&daysLeft<0){statusClass='goal-status--overdue';statusLabel='Vencido';statusIcon='fa-calendar-xmark';}
+            else if((daysLeft!==null&&daysLeft<=14)||pct<35){statusClass='goal-status--risk';statusLabel='En riesgo';statusIcon='fa-triangle-exclamation';}
+            return {pct,daysLeft,statusClass,statusLabel,statusIcon};
+        }
+
+        function renderGoalCard(goal,visual,isFeatured=false){
+            const safeName=escapeGoalText(goal.name||'Objetivo sin nombre');
+            const goalIdForAction=escapeGoalText(JSON.stringify(String(goal.id)));
+            const deadlineText=goal.deadline?formatDate(goal.deadline):'Sin fecha límite';
+            const daysText=visual.daysLeft===null?'Sin fecha definida':(visual.daysLeft>0?`${visual.daysLeft} días restantes`:(visual.daysLeft===0?'Vence hoy':'Vencido'));
+            const remaining=Math.max(0,(Number(goal.target)||0)-(Number(goal.saved)||0));
+            return `<article class="goal-card ${isFeatured?'featured-goal-card':''}">
+                <div class="goal-card__topline">
+                    <span class="goal-status ${visual.statusClass}"><i class="fas ${visual.statusIcon}"></i> ${visual.statusLabel}</span>
+                    <span class="goal-deadline"><i class="far fa-calendar"></i> ${deadlineText}</span>
+                </div>
+                <div class="goal-header">
+                    <div>
+                        <div class="goal-name">${safeName}</div>
+                        <div class="goal-helper">${isFeatured?'Meta prioritaria del hogar':daysText}</div>
+                    </div>
+                    <div class="goal-percent">${visual.pct}%</div>
+                </div>
+                <!-- IMPORTANTE: el width inline representa el porcentaje calculado en getGoalVisualState() para cada objetivo. -->
+                <div class="goal-progress"><div class="goal-progress-bar" style="width:${visual.pct}%"></div></div>
+                <div class="goal-stats">
+                    <span><strong>${formatMoney(Number(goal.saved)||0)}</strong><small>Ahorrado</small></span>
+                    <span><strong>${formatMoney(Number(goal.target)||0)}</strong><small>Meta</small></span>
+                    <span><strong>${formatMoney(remaining)}</strong><small>Faltante</small></span>
+                </div>
+                <div class="goal-actions">
+                    <button class="btn btn--primary btn--sm" onclick="addToGoal(${goalIdForAction})"><i class="fas fa-plus"></i> Agregar</button>
+                    <button class="btn btn--danger btn--sm" onclick="deleteGoal(${goalIdForAction})" aria-label="Eliminar ${safeName}"><i class="fas fa-trash"></i></button>
+                </div>
+            </article>`;
+        }
+
+        function renderGoals(){const cont=document.getElementById('goalsContainer');const goalsEmptyState=document.getElementById('goalsEmptyState');if(!cont)return;if(goals.length===0){cont.innerHTML='';if(goalsEmptyState)goalsEmptyState.classList.remove('hidden');return;}if(goalsEmptyState)goalsEmptyState.classList.add('hidden');
+            const mappedGoals=goals.map((goal,index)=>({goal,index,visual:getGoalVisualState(goal)}));
+            const upcomingGoals=mappedGoals.filter(item=>item.visual.pct<100&&item.visual.daysLeft!==null&&item.visual.daysLeft>=0).sort((a,b)=>a.visual.daysLeft-b.visual.daysLeft||b.visual.pct-a.visual.pct);
+            // IMPORTANTE: el destacado elige primero la meta más próxima; si no hay próximas, usa la de mayor porcentaje de avance.
+            const featured=upcomingGoals[0]||[...mappedGoals].sort((a,b)=>b.visual.pct-a.visual.pct||((a.visual.daysLeft??9999)-(b.visual.daysLeft??9999)))[0];
+            const remainingGoals=mappedGoals.filter(item=>item.index!==featured.index);
+            const remainingHtml=remainingGoals.length?remainingGoals.map(item=>renderGoalCard(item.goal,item.visual)).join(''):`<div class="section-empty-state goals-rest-empty"><strong>Solo tienes una meta activa.</strong> Crea otro objetivo para comparar prioridades del hogar.</div>`;
+            cont.innerHTML=`<div class="goals-featured-wrap"><div class="goals-section-kicker">Objetivo destacado</div>${renderGoalCard(featured.goal,featured.visual,true)}</div><div class="goals-rest-section"><div class="goals-section-header"><div><span class="goals-section-kicker">Resto de metas</span><h2>Seguimiento general</h2></div><span>${remainingGoals.length} objetivo${remainingGoals.length===1?'':'s'}</span></div><div class="goals-grid">${remainingHtml}</div></div>`;
+        }
         
         function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);AppStore.setGoals(goals);}else{AppStore.setGoals([]);}}
         async function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseCurrencyInput(document.getElementById('goalTarget').value);const saved=parseCurrencyInput(document.getElementById('goalSaved').value);const deadline=document.getElementById('goalDeadline').value;if(!name||target<=0){showToast('Completa los campos correctamente','error');return;}
