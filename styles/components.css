@@ -3653,3 +3653,130 @@
         margin-bottom: 24px;
     }
 }
+
+.transaction-form {
+    /* IMPORTANTE: formulario transaccional por secciones; los IDs internos siguen conectados con index.html. */
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.transaction-form .full-width {
+    grid-column: 1 / -1;
+}
+
+.transaction-type-selector,
+.transaction-panel {
+    /* IMPORTANTE: panel visual reutilizable para evitar estilos inline y mantener jerarquía limpia. */
+    border: 1px solid color-mix(in srgb, var(--border-light) 76%, transparent);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 82%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 54%, transparent) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm);
+    padding: clamp(16px, 2.4vw, 22px);
+}
+
+.transaction-type-selector {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+    gap: 18px;
+    align-items: end;
+    border-color: color-mix(in srgb, var(--primary) 34%, var(--border-light));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary-light) 16%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 82%, transparent) 100%);
+}
+
+.transaction-type-selector__control {
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+.transaction-panel__header {
+    margin-bottom: 18px;
+}
+
+.transaction-section-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.transaction-section-copy {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.transaction-panel__summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.transaction-panel__summary::-webkit-details-marker {
+    display: none;
+}
+
+.transaction-panel__summary::after {
+    content: '⌄';
+    color: var(--text-muted);
+    font-size: 1rem;
+    transition: transform var(--transition-fast);
+}
+
+.transaction-panel[open] > .transaction-panel__summary::after {
+    transform: rotate(180deg);
+}
+
+.transaction-panel__content {
+    margin-top: 16px;
+}
+
+.transaction-panel--credit,
+.transaction-panel--transfer,
+.transaction-panel--payment {
+    /* IMPORTANTE: variantes contextuales de transacciones; handleTipoChange() solo alterna .hidden. */
+    position: relative;
+    overflow: hidden;
+}
+
+.transaction-panel--credit {
+    border-color: color-mix(in srgb, var(--danger) 42%, var(--border-light));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--danger-light) 24%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 78%, transparent) 100%);
+}
+
+.transaction-panel--transfer {
+    border-color: color-mix(in srgb, var(--info) 42%, var(--border-light));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--info-light) 24%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 78%, transparent) 100%);
+}
+
+.transaction-panel--payment {
+    border-color: color-mix(in srgb, var(--success) 42%, var(--border-light));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--success-light) 24%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 78%, transparent) 100%);
+}
+
+.transaction-panel--credit::before,
+.transaction-panel--transfer::before,
+.transaction-panel--payment::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    border-radius: var(--radius-full);
+}
+
+.transaction-panel--credit::before { background: var(--danger); }
+.transaction-panel--transfer::before { background: var(--info); }
+.transaction-panel--payment::before { background: var(--success); }
+
+@media (max-width: 720px) {
+    .transaction-type-selector {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+}
