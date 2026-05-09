@@ -1,25 +1,21 @@
 <div id="view-objetivos" class="tab-content view-stack">
-                <header class="view-header">
+                <header class="view-header goals-view-header">
                     <div>
-                        <h1 class="view-title">Objetivos</h1>
-                        <p class="view-subtitle">Monitorea metas activas y crea una nueva meta desde la acción principal de la vista.</p>
+                        <p class="view-eyebrow"><i class="fas fa-bullseye"></i> Plan financiero</p>
+                        <h1 class="view-title">Metas del hogar</h1>
+                        <p class="view-subtitle">Prioriza los objetivos familiares, revisa su avance y mantén visible la próxima meta a cumplir.</p>
                     </div>
                     <div class="view-actions">
                         <button onclick="openGoalModal()" class="btn btn--primary btn--md"><i class="fas fa-plus"></i> Nuevo objetivo</button>
                     </div>
                 </header>
 
-                <details class="card collapsible-card view-primary-card" open>
-                    <summary class="collapsible-card__summary">
-                        <h3 class="card-title" style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos activos</h3>
-                    </summary>
-                    <!-- IMPORTANTE: renderGoals() usa estos IDs para pintar objetivos y estado vacío. -->
-                    <div class="collapsible-card__content">
-                        <div id="goalsContainer">
-                            <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
-                            <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
-                        </div>
-                        <div id="goalsEmptyState" class="section-empty-state hidden"><strong>Aún no tienes objetivos creados.</strong> Usa “Nuevo objetivo” para definir una meta con monto y fecha.</div>
+                <section class="goals-dashboard" aria-label="Resumen visual de metas del hogar">
+                    <!-- IMPORTANTE: renderGoals() usa estos IDs para pintar el objetivo destacado, el grid y el estado vacío sin romper el modal/formulario. -->
+                    <div id="goalsContainer" class="goals-layout">
+                        <div class="skeleton" style="height: 180px; margin-bottom: 15px;"></div>
+                        <div class="skeleton" style="height: 120px; margin-bottom: 15px;"></div>
                     </div>
-                </details>
+                    <div id="goalsEmptyState" class="section-empty-state hidden"><strong>Aún no tienes objetivos creados.</strong> Usa “Nuevo objetivo” para definir una meta con monto y fecha.</div>
+                </section>
             </div>
