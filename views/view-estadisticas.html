@@ -1,6 +1,14 @@
 <div id="view-estadisticas" class="tab-content view-stack">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Estadísticas</h1>
+                        <p class="view-subtitle">Revisa KPIs mensuales al entrar y despliega los gráficos solo cuando necesites el detalle.</p>
+                    </div>
+                    <div class="view-actions" aria-hidden="true"></div>
+                </header>
+
                 <!-- IMPORTANTE: Franja compacta de KPIs; conserva los IDs usados por renderCharts(). -->
-                <div id="statsKpiCard" class="stats-summary-strip" aria-label="KPIs rápidos del mes">
+                <div id="statsKpiCard" class="stats-summary-strip view-summary" aria-label="KPIs rápidos del mes">
                     <div class="stats-summary-strip__item">
                         <span class="stats-summary-strip__label"><i class="fas fa-calendar-day"></i> Promedio diario</span>
                         <strong class="stats-summary-strip__value" id="kpiDailyAverage">$0</strong>
@@ -15,49 +23,46 @@
                     </div>
                 </div>
 
-                <div class="stats-chart-grid">
-                    <details class="card collapsible-card" open>
+                <div class="view-secondary-stack">
+                    <details class="card collapsible-card view-primary-card" open>
                         <summary class="collapsible-card__summary stats-card-head">
                             <h3><i class="fas fa-wave-square" style="color:var(--primary); margin-right:8px;"></i>Tendencia (6 Meses)</h3>
                         </summary>
-                        <div class="stats-chart-wrap collapsible-card__content" style="height:300px;">
+                        <div class="stats-chart-wrap stats-chart-wrap--sm collapsible-card__content">
                             <canvas id="chartTendencias"></canvas>
                             <div id="fallbackTrendChart" class="chart-fallback hidden">Sin datos suficientes para proyección de tendencia.</div>
                         </div>
-                        <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTendencias"></canvas></div>
                     </details>
 
-                    <details class="card collapsible-card" open>
+                    <details class="card collapsible-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary stats-card-head">
                             <h3><i class="fas fa-chart-column" style="color:var(--primary); margin-right:8px;"></i>Ingresos vs Gastos (6 Meses)</h3>
                         </summary>
-                        <div class="stats-chart-wrap collapsible-card__content" style="height:320px;">
+                        <div class="stats-chart-wrap stats-chart-wrap--md collapsible-card__content">
                             <canvas id="chartIngresosGastos"></canvas>
                             <div id="fallbackIncomeExpenseChart" class="chart-fallback hidden">Sin datos suficientes para comparar ingresos y gastos.</div>
                         </div>
-                        <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartIngresosGastos"></canvas></div>
+                    </details>
+
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary stats-card-head">
+                            <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
+                        </summary>
+                        <div class="stats-chart-wrap stats-chart-wrap--md collapsible-card__content">
+                            <canvas id="chartCategorias"></canvas>
+                            <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
+                        </div>
+                    </details>
+
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary stats-card-head">
+                            <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
+                        </summary>
+                        <div class="top-category-grid collapsible-card__content">
+                            <div class="top-category-list" id="topCategoriasList"></div>
+                            <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTopCategorias"></canvas></div>
+                        </div>
+                        <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
                     </details>
                 </div>
-
-                <details class="card collapsible-card" open>
-                    <summary class="collapsible-card__summary stats-card-head">
-                        <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
-                    </summary>
-                    <div class="stats-chart-wrap collapsible-card__content" style="height:350px;">
-                        <canvas id="chartCategorias"></canvas>
-                        <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
-                    </div>
-                    <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartCategorias"></canvas></div>
-                </details>
-
-                <details class="card collapsible-card" open>
-                    <summary class="collapsible-card__summary stats-card-head">
-                        <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
-                    </summary>
-                    <div class="top-category-grid collapsible-card__content">
-                        <div class="top-category-list" id="topCategoriasList"></div>
-                        <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTopCategorias"></canvas></div>
-                    </div>
-                    <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
-                </details>
             </div>

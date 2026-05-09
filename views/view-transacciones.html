@@ -1,8 +1,17 @@
 <div id="view-transacciones" class="tab-content view-stack">
-                <details class="card collapsible-card" open>
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Transacciones</h1>
+                        <p class="view-subtitle">Registra ingresos, gastos, créditos, abonos y transferencias desde un formulario único.</p>
+                    </div>
+                    <div class="view-actions" aria-hidden="true"></div>
+                </header>
+
+                <details class="card collapsible-card view-primary-card" open>
                     <summary class="collapsible-card__summary">
                         <h2 class="card-title" id="formTitle">Formulario de nueva transacción</h2>
                     </summary>
+
                     <!-- IMPORTANTE: el formulario permanece dentro del plegable principal para conservar validación e IDs existentes. -->
                     <form id="transactionForm" class="collapsible-card__content">
                         <input type="hidden" id="editingId" value="">

@@ -1,12 +1,21 @@
 <div id="view-asistente" class="tab-content view-stack">
-                <div class="ai-welcome-card">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Asesor experto</h1>
+                        <p class="view-subtitle">Ejecuta una auditoría local de solvencia, liquidez y patrones de consumo.</p>
+                    </div>
+                    <div class="view-actions">
+                        <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Ejecutar auditoría</button>
+                    </div>
+                </header>
+
+                <div class="ai-welcome-card view-primary-card">
                     <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
                     <p>Análisis detallado de solvencia, liquidez y patrones de consumo. Ejecución 100% local y privada.</p>
-                    <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Ejecutar Auditoría</button>
                 </div>
                 <div id="aiLoading" class="ai-loading"><div class="ai-spinner"></div><div class="ai-loading-text">Calculando ratios...</div></div>
-                <div id="aiResultContainer" class="ai-response-container">
-                    <details class="card collapsible-card" open>
+                <div id="aiResultContainer" class="ai-response-container view-secondary-stack">
+                    <details class="card collapsible-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary">
                             <div class="ai-report-header">
                                 <div><h3 class="ai-report-title">Diagnóstico Integral</h3><span class="ai-report-subtitle">Basado en historial de 30 días</span></div>

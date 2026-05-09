@@ -1,8 +1,18 @@
 <div id="view-dashboard" class="tab-content active view-stack">
-                <!-- Bento Grid Layout -->
-                <div class="dashboard-grid">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Resumen financiero</h1>
+                        <p class="view-subtitle">Consulta patrimonio, flujo mensual y señales clave con el detalle secundario organizado en plegables.</p>
+                    </div>
+                    <div class="view-actions">
+                        <button class="btn btn--primary btn--md" onclick="openArqueoModal()">
+                            <i class="fas fa-balance-scale"></i> Arqueo de cuentas
+                        </button>
+                    </div>
+                </header>
 
-                    <details class="card collapsible-card grid-span-12" open>
+                <div class="dashboard-grid">
+                    <details class="card collapsible-card grid-span-12 view-primary-card" open>
                         <summary class="collapsible-card__summary">
                             <h3 class="card-title section-title"><i class="fas fa-wallet section-title-icon"></i> Resumen de cuentas</h3>
                         </summary>
@@ -14,9 +24,6 @@
                                 <div class="hero-note">
                                     <i class="fas fa-shield-alt"></i> Saldo neto consolidado
                                 </div>
-                                <button class="btn btn--outline hero-action" onclick="openArqueoModal()">
-                                    <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
-                                </button>
                             </div>
                             <div class="accounts-col">
                                 <div class="account-card">
@@ -43,35 +50,30 @@
                             </div>
                         </div>
                     </details>
+                </div>
 
-                    <details class="card collapsible-card grid-span-12" open>
+                <div class="view-secondary-stack">
+                    <details class="card collapsible-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary">
                             <h3 class="card-title card-title--muted">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
                         </summary>
                         <div class="stats-grid collapsible-card__content">
-                            <!-- Ingresos -->
                             <div class="mini-stat">
                                 <div class="mini-header">
                                     <span class="mini-label">Ingresos</span>
                                     <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-arrow-down"></i></div>
                                 </div>
                                 <div class="mini-value" id="totalIngresosMes">$0</div>
-                                <div class="mini-footer">
-                                    <div class="mini-delta" id="deltaIncomeMoM">--</div>
-                                </div>
+                                <div class="mini-footer"><div class="mini-delta" id="deltaIncomeMoM">--</div></div>
                             </div>
-                            <!-- Gastos -->
                             <div class="mini-stat">
                                 <div class="mini-header">
                                     <span class="mini-label">Gastos + TC</span>
                                     <div class="mini-icon-wrapper icon-surface--danger"><i class="fas fa-arrow-up"></i></div>
                                 </div>
                                 <div class="mini-value" id="totalGastosMes">$0</div>
-                                <div class="mini-footer">
-                                    <div class="mini-delta" id="deltaExpenseMoM">--</div>
-                                </div>
+                                <div class="mini-footer"><div class="mini-delta" id="deltaExpenseMoM">--</div></div>
                             </div>
-                            <!-- Balance Neto -->
                             <div class="mini-stat">
                                 <div class="mini-header">
                                     <span class="mini-label">Balance Neto</span>
@@ -83,7 +85,6 @@
                                     <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill stat-progress-fill--secondary" style="width: 50%;"></div></div>
                                 </div>
                             </div>
-                            <!-- Tasa de Ahorro -->
                             <div class="mini-stat">
                                 <div class="mini-header">
                                     <span class="mini-label">Tasa de Ahorro</span>
@@ -95,18 +96,14 @@
                                     <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill stat-progress-fill--info" style="width: 0%;"></div></div>
                                 </div>
                             </div>
-                            <!-- Flujo Neto Real -->
                             <div class="mini-stat">
                                 <div class="mini-header">
                                     <span class="mini-label">Flujo Neto Real</span>
                                     <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-money-bill-trend-up"></i></div>
                                 </div>
                                 <div class="mini-value" id="netCashFlow">$0</div>
-                                <div class="mini-footer mini-footer--compact">
-                                    <span class="mini-caption">Ingresos menos todos los gastos</span>
-                                </div>
+                                <div class="mini-footer mini-footer--compact"><span class="mini-caption">Ingresos menos todos los gastos</span></div>
                             </div>
-                            <!-- Uso de cupos de TC -->
                             <div class="mini-stat">
                                 <div class="mini-header">
                                     <span class="mini-label">Uso de TC</span>
@@ -120,35 +117,37 @@
                             </div>
                         </div>
                     </details>
-                </div>
 
-                <details class="card collapsible-card" data-force-collapsed="true">
-                    <summary class="collapsible-card__summary">
-                        <h3 class="card-title section-title"><i class="fas fa-bell section-title-icon"></i> Alertas / recordatorios</h3>
-                    </summary>
-                    <!-- IMPORTANTE: estos IDs se mantienen porque updateFamilySummary/updatePaymentReminders los actualizan directamente. -->
-                    <div class="collapsible-card__content">
-                        <div id="budgetAlert" class="budget-alert hidden">
-                            <div class="budget-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="budget-alert-text">
-                                <div class="budget-alert-title">¡Alerta de Presupuesto!</div>
-                                <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title section-title"><i class="fas fa-bell section-title-icon"></i> Alertas / recordatorios</h3>
+                        </summary>
+                        <!-- IMPORTANTE: estos IDs se mantienen porque updateFamilySummary/updatePaymentReminders los actualizan directamente. -->
+                        <div class="collapsible-card__content">
+                            <div id="budgetAlert" class="budget-alert hidden">
+                                <div class="budget-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div class="budget-alert-text">
+                                    <div class="budget-alert-title">¡Alerta de Presupuesto!</div>
+                                    <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
+                                </div>
                             </div>
+                            <div id="remindersContainer"></div>
                         </div>
-                        <div id="remindersContainer"></div>
-                    </div>
-                </details>
+                    </details>
 
-                <div class="family-summary" id="familySummary">
-                    <div class="member-card skeleton member-card-skeleton"></div>
-                    <div class="member-card skeleton member-card-skeleton"></div>
-                    <div class="member-card skeleton member-card-skeleton"></div>
-                    <div class="member-card skeleton member-card-skeleton"></div>
-                </div>
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title section-title"><i class="fas fa-users section-title-icon"></i> Resumen familiar</h3>
+                        </summary>
+                        <div class="family-summary collapsible-card__content" id="familySummary">
+                            <div class="member-card skeleton member-card-skeleton"></div>
+                            <div class="member-card skeleton member-card-skeleton"></div>
+                            <div class="member-card skeleton member-card-skeleton"></div>
+                            <div class="member-card skeleton member-card-skeleton"></div>
+                        </div>
+                    </details>
 
-                <div class="dashboard-grid">
-                    <!-- Tope Diario -->
-                    <details class="card collapsible-card grid-span-12" id="dailyCapCard" open>
+                    <details class="card collapsible-card" id="dailyCapCard" data-force-collapsed="true">
                         <summary class="collapsible-card__summary">
                             <div class="section-header">
                                 <h3 class="section-title"><i class="fas fa-calendar-day section-title-icon"></i> Capacidad diaria</h3>
@@ -157,35 +156,28 @@
                         </summary>
                         <div class="collapsible-card__content">
                             <div class="daily-cap-grid">
-                                <div>
-                                    <div class="daily-cap-label">Límite hoy</div>
-                                    <div class="daily-cap-value" id="dailyCapValue">$0</div>
-                                </div>
-                                <div>
-                                    <div class="daily-cap-label">Gastado hoy</div>
-                                    <div class="daily-cap-value text-danger" id="dailySpendValue">$0</div>
-                                </div>
-                                <div>
-                                    <div class="daily-cap-label">Promedio Mes</div>
-                                    <div class="daily-cap-value" id="avgDailySpend">$0</div>
-                                </div>
+                                <div><div class="daily-cap-label">Límite hoy</div><div class="daily-cap-value" id="dailyCapValue">$0</div></div>
+                                <div><div class="daily-cap-label">Gastado hoy</div><div class="daily-cap-value text-danger" id="dailySpendValue">$0</div></div>
+                                <div><div class="daily-cap-label">Promedio Mes</div><div class="daily-cap-value" id="avgDailySpend">$0</div></div>
                             </div>
                             <!-- IMPORTANTE: el width inline se actualiza desde JS para el tope diario responsive. -->
                             <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success" style="width: 0%;"></div></div>
-                            <div class="daily-cap-note">
-                                * El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.
-                            </div>
+                            <div class="daily-cap-note">* El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.</div>
                         </div>
                     </details>
-                </div>
 
-                <div class="card">
-                    <div class="section-header">
-                        <h3 class="section-title"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
-                        <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
-                    </div>
-                    <div class="hero-amount debt-total" id="deudaTotalTC">$0</div>
-                    <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
-                    <div id="cardsEmptyState" class="section-empty-state hidden"><strong>Sin deudas de tarjetas activas.</strong> Registra una compra a crédito o configura una tarjeta para ver su detalle.</div>
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary">
+                            <div class="section-header">
+                                <h3 class="section-title"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
+                                <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
+                            </div>
+                        </summary>
+                        <div class="collapsible-card__content">
+                            <div class="hero-amount debt-total" id="deudaTotalTC">$0</div>
+                            <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
+                            <div id="cardsEmptyState" class="section-empty-state hidden"><strong>Sin deudas de tarjetas activas.</strong> Registra una compra a crédito o configura una tarjeta para ver su detalle.</div>
+                        </div>
+                    </details>
                 </div>
             </div>

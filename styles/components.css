@@ -1,5 +1,65 @@
 /* IMPORTANTE: componentes (card, mini-stat, table-container, audit-panel) */
 
+
+
+        .view-header {
+            /* IMPORTANTE: Cabecera común para que cada vista comunique contexto y acción principal sin agregar cards. */
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 4px 2px 8px;
+        }
+
+        .view-title {
+            /* IMPORTANTE: Título base de vista; evita estilos inline y mantiene jerarquía consistente. */
+            margin: 0;
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .view-subtitle {
+            margin: 8px 0 0;
+            color: var(--text-secondary);
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            line-height: 1.5;
+            max-width: 720px;
+        }
+
+        .view-actions {
+            /* IMPORTANTE: Solo debe contener la acción principal (y variantes secundarias inevitables) de la vista. */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .view-summary {
+            /* IMPORTANTE: Banda breve de lectura rápida antes del detalle plegable de cada vista. */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .view-primary-card {
+            /* IMPORTANTE: Primera card visible de la vista; debe contener el flujo principal de trabajo. */
+            margin-bottom: 0;
+            border-color: color-mix(in srgb, var(--primary) 28%, var(--border-light));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-md);
+        }
+
+        .view-secondary-stack {
+            /* IMPORTANTE: Agrupa detalle secundario en plegables para reducir densidad inicial. */
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
         .card {
             /* IMPORTANTE: Todas las tarjetas se mantienen; solo elevamos su lenguaje visual premium */
             background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 92%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 40%, transparent) 100%);
@@ -520,6 +580,27 @@
         .top-category-amount {
             font-weight: 700;
             color: var(--text-primary);
+        }
+
+
+
+        @media (max-width: 720px) {
+            .view-header {
+                /* IMPORTANTE: En móvil la acción baja para mantener títulos legibles y evitar overflow horizontal. */
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-actions {
+                justify-content: stretch;
+            }
+
+            .view-actions .btn,
+            .view-actions .btn-export,
+            .view-actions .btn-ai-action {
+                justify-content: center;
+                width: 100%;
+            }
         }
 
         @media (max-width: 960px) {
@@ -1895,7 +1976,9 @@
                 font-size: clamp(1.9rem, 6vw, 2.35rem);
             }
 
-            .card {
+
+
+        .card {
                 padding: 18px; /* IMPORTANTE: densidad móvil sin perder información */
             }
 
