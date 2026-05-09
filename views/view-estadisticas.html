@@ -25,7 +25,7 @@
 
                 <div class="view-secondary-stack">
                     <!-- IMPORTANTE: Orden visual 1. Este bloque debe aparecer antes que los plegables porque renderCharts() usa #chartCategorias. -->
-                    <section class="card view-primary-card">
+                    <section class="card view-primary-card stats-mobile-chart-card">
                         <div class="card-header">
                             <h3 class="card-title"><i class="fas fa-chart-pie text-primary"></i> Distribución de Gastos</h3>
                         </div>
@@ -43,7 +43,7 @@
                     </section>
 
                     <!-- IMPORTANTE: Orden visual 2. Mantener #chartTopCategorias y #topCategoriasList visibles para renderCharts(). -->
-                    <section class="card">
+                    <section class="card stats-mobile-chart-card">
                         <div class="card-header">
                             <h3 class="card-title"><i class="fas fa-ranking-star text-primary"></i> Top categorías del mes</h3>
                         </div>
@@ -58,7 +58,7 @@
                     </section>
 
                     <!-- IMPORTANTE: Orden visual secundario. #chartTendencias queda en details cerrado; JS debe renderizar al abrir. -->
-                    <details class="card collapsible-card" data-force-collapsed="true" data-secondary-section="true">
+                    <details class="card collapsible-card stats-mobile-chart-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary card-header">
                             <h3 class="card-title"><i class="fas fa-wave-square text-primary"></i> Tendencia (6 Meses)</h3>
                         </summary>
@@ -69,7 +69,7 @@
                     </details>
 
                     <!-- IMPORTANTE: Orden visual secundario. #chartIngresosGastos queda en details cerrado; JS debe renderizar al abrir. -->
-                    <details class="card collapsible-card" data-force-collapsed="true" data-secondary-section="true">
+                    <details class="card collapsible-card stats-mobile-chart-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary card-header">
                             <h3 class="card-title"><i class="fas fa-chart-column text-primary"></i> Ingresos vs Gastos (6 Meses)</h3>
                         </summary>
