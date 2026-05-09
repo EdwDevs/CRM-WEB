@@ -394,6 +394,12 @@
                 card.addEventListener('toggle',()=>{
                     if(!card.open)return;
                     setTimeout(()=>{
+                        if(card.querySelector('#chartTendencias, #chartIngresosGastos')){
+                            renderTrendChart();
+                        }
+                        if(card.querySelector('#chartCategorias, #chartTopCategorias')){
+                            renderCharts();
+                        }
                         if(chartInstance)chartInstance.resize();
                         if(trendChartInstance)trendChartInstance.resize();
                         if(trendBarChartInstance)trendBarChartInstance.resize();
@@ -1693,8 +1699,37 @@
         }
 
         function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); AppStore.updateViewDate(new Date(parseInt(y),parseInt(m)-1,1));}}
-        function renderTrendChart(){const trendCanvas=document.getElementById('chartTendencias');const barCanvas=document.getElementById('chartIngresosGastos'); if(trendChartInstance)trendChartInstance.destroy(); if(trendBarChartInstance)trendBarChartInstance.destroy(); if(!trendCanvas)return; const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate); const l=trend.map(t=>t.label); const i=trend.map(t=>t.income); const g=trend.map(t=>t.expense); trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}}); if(barCanvas){trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});} }
-        function renderCharts(){const c=document.getElementById('chartCategorias'); if(chartInstance)chartInstance.destroy(); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}}); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+        function isCanvasInsideClosedCollapsible(canvas){
+            const parentDetails=canvas?.closest('details.collapsible-card');
+            return Boolean(parentDetails&&!parentDetails.open);
+        }
+
+        function renderTrendChart(){
+            const trendCanvas=document.getElementById('chartTendencias');
+            const barCanvas=document.getElementById('chartIngresosGastos');
+            const canRenderTrend=trendCanvas&&!isCanvasInsideClosedCollapsible(trendCanvas);
+            const canRenderBar=barCanvas&&!isCanvasInsideClosedCollapsible(barCanvas);
+            if(!canRenderTrend&&!canRenderBar)return;
+
+            const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate);
+            const l=trend.map(t=>t.label);
+            const i=trend.map(t=>t.income);
+            const g=trend.map(t=>t.expense);
+
+            // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
+            if(canRenderTrend){
+                if(trendChartInstance)trendChartInstance.destroy();
+                trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}});
+            }
+            // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
+            if(canRenderBar){
+                if(trendBarChartInstance)trendBarChartInstance.destroy();
+                trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});
+            }
+        }
+        function renderCharts(){const c=document.getElementById('chartCategorias'); const canRenderCategory=c&&!isCanvasInsideClosedCollapsible(c); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}});
+            // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
+            if(canRenderCategory){ if(chartInstance)chartInstance.destroy(); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}}); }
             const statsEmptyState=document.getElementById('statsEmptyState');
             if(statsEmptyState) statsEmptyState.classList.toggle('hidden', monthly.monthTransactions.length>0);
             const avgDaily=daysInMonth>0?monthlyExpenses/daysInMonth:0;
@@ -1735,19 +1770,24 @@
                         </div>`).join('');
                 }
             }
-            if(topCategoriesChartInstance)topCategoriesChartInstance.destroy();
             const topFallback=document.getElementById('fallbackTopChart');
+            const canRenderTop=topCanvas&&!isCanvasInsideClosedCollapsible(topCanvas);
             if(topCanvas&&sortedEntries.length){
                 topCanvas.classList.remove('hidden');
                 if(topFallback)topFallback.classList.add('hidden');
-                const topLabels=sortedEntries.slice(0,5).map(([name])=>name);
-                const topValues=sortedEntries.slice(0,5).map(([,value])=>value);
-                topCategoriesChartInstance=new Chart(topCanvas,{type:'bar',data:{labels:topLabels,datasets:[{label:'Gasto',data:topValues,backgroundColor:'rgba(79,70,229,0.6)',borderColor:'#4f46e5',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+                // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
+                if(canRenderTop){
+                    if(topCategoriesChartInstance)topCategoriesChartInstance.destroy();
+                    const topLabels=sortedEntries.slice(0,5).map(([name])=>name);
+                    const topValues=sortedEntries.slice(0,5).map(([,value])=>value);
+                    topCategoriesChartInstance=new Chart(topCanvas,{type:'bar',data:{labels:topLabels,datasets:[{label:'Gasto',data:topValues,backgroundColor:'rgba(79,70,229,0.6)',borderColor:'#4f46e5',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+                }
             }else if(topCanvas){
                 topCanvas.classList.add('hidden');
                 if(topFallback)topFallback.classList.remove('hidden');
+                if(topCategoriesChartInstance){topCategoriesChartInstance.destroy(); topCategoriesChartInstance=null;}
             }
-            logEvent('renderCharts',{target:'estadisticas',categories:sortedEntries.length,hasCategoryData});
+            logEvent('renderCharts',{target:'estadisticas',categories:sortedEntries.length,hasCategoryData:Object.keys(ct).length>0});
         }
         
         async function loadCards(){
