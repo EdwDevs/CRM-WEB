@@ -5,7 +5,7 @@
                         <p class="view-header__subtitle">Revisa movimientos en una tabla clara, con filtros disponibles sin saturar la vista inicial.</p>
                     </div>
                     <div class="view-header__actions">
-                        <button class="btn btn--primary btn--md" onclick="renderHistory()"><i class="fas fa-search"></i> Aplicar filtros</button>
+                        <button class="btn btn--primary btn--md sticky-mobile-action" onclick="renderHistory()"><i class="fas fa-search"></i> Aplicar filtros</button>
                     </div>
                 </header>
 
@@ -97,9 +97,9 @@
                             <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                         </div>
                     </div>
-                    <div class="table-container">
+                    <div class="table-container mobile-card-list">
                         <div class="table-scroll-hint">Desliza para ver más</div>
-                        <table>
+                        <table class="responsive-table-card">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>

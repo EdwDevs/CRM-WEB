@@ -327,3 +327,16 @@
             display: flex;
             flex-direction: column;
         }
+
+/* IMPORTANTE: complemento responsive del layout global; mantiene el scroll principal libre de la mobile nav fija. */
+@media (max-width: 768px) {
+    .main-wrapper {
+        /* IMPORTANTE: padding inferior global para que acciones sticky y últimos campos no choquen con navegación móvil. */
+        padding-bottom: calc(var(--bottom-nav-safe-area) + 32px);
+    }
+
+    .content-container {
+        /* IMPORTANTE: todas las vistas cargadas en #viewsHost terminan por encima de la mobile nav. */
+        padding-bottom: calc(var(--bottom-nav-safe-area) + 56px);
+    }
+}
