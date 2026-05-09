@@ -2782,22 +2782,110 @@
 
         /* IMPORTANTE: modo compacto de recordatorios; solo campana para pagos con menos de 2 días. */
         .reminder-bell-chip {
+            position: relative;
             border: 1px solid var(--warning);
             background: var(--warning-light);
             color: #b45309;
             border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 700;
+        }
+
+        .reminder-bell-chip summary {
+            list-style: none;
             padding: 6px 10px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-weight: 700;
-            cursor: default;
+            cursor: pointer;
+        }
+
+        .reminder-bell-chip summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .reminder-bell-chip--danger {
+            background: color-mix(in srgb, var(--danger) 14%, var(--bg-surface));
+            color: var(--danger);
+            border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+        }
+
+        .reminder-bell-chip--warning {
+            background: var(--warning-light);
+            color: #b45309;
+            border-color: var(--warning);
         }
 
         [data-theme="dark"] .reminder-bell-chip {
             background: rgba(245, 158, 11, 0.2);
             color: #fbbf24;
             border-color: rgba(245, 158, 11, 0.45);
+        }
+
+        [data-theme="dark"] .reminder-bell-chip--danger {
+            background: rgba(239, 68, 68, 0.18);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.48);
+        }
+
+        .reminder-popover {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: min(320px, calc(100vw - 32px));
+            z-index: 30;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .reminder-bell-chip[open] .reminder-popover {
+            display: grid;
+            gap: 8px;
+        }
+
+        .reminder-popover__item {
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+            border-left: 3px solid var(--warning);
+        }
+
+        .reminder-popover__item--vencido,
+        .reminder-popover__item--hoy {
+            border-left-color: var(--danger);
+        }
+
+        .reminder-popover__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .reminder-popover__status {
+            border-radius: var(--radius-full);
+            padding: 2px 8px;
+            background: color-mix(in srgb, currentColor 10%, transparent);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .reminder-popover__meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-top: 4px;
         }
 
         .prediction-card {
