@@ -33,6 +33,13 @@
                             <canvas id="chartCategorias"></canvas>
                             <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
                         </div>
+                        <!-- IMPORTANTE: este estado evita que renderCharts() deje la tarjeta principal en blanco cuando aún no hay movimientos del mes. -->
+                        <div id="statsEmptyState" class="empty-state hidden" role="status">
+                            <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
+                            <strong class="empty-state__title">Sin estadísticas disponibles.</strong>
+                            <p class="empty-state__message">Registra movimientos en “Transacciones” para generar gráficos y KPIs del mes.</p>
+                            <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="goToAddTransaction()">Crear transacción</button>
+                        </div>
                     </section>
 
                     <!-- IMPORTANTE: Orden visual 2. Mantener #chartTopCategorias y #topCategoriasList visibles para renderCharts(). -->
@@ -47,7 +54,7 @@
                                 <div id="fallbackTopChart" class="chart-fallback hidden">Sin datos suficientes para ranking de categorías.</div>
                             </div>
                         </div>
-                        <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
+                        <!-- IMPORTANTE: renderCharts() reemplaza esta lista por un estado compacto para evitar espacios vacíos si no hay categorías. -->
                     </section>
 
                     <!-- IMPORTANTE: Orden visual secundario. #chartTendencias queda en details cerrado; JS debe renderizar al abrir. -->

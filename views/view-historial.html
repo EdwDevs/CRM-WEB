@@ -115,7 +115,18 @@
                             <tbody id="transactionList"></tbody>
                         </table>
                     </div>
-                    <div id="historyNoTransactionsState" class="section-empty-state hidden"><strong>Sin transacciones registradas.</strong> Crea tu primer movimiento para alimentar el historial.</div>
-                    <div id="historyNoFilterResultsState" class="section-empty-state hidden"><strong>Sin resultados para estos filtros.</strong> Ajusta fechas, texto, tipo o método para ampliar la búsqueda.</div>
+                    <!-- IMPORTANTE: estos estados evitan que renderHistory() deje una tabla vacía sin orientación. -->
+                    <div id="historyNoTransactionsState" class="empty-state hidden" role="status">
+                        <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                        <strong class="empty-state__title">Sin transacciones registradas.</strong>
+                        <p class="empty-state__message">Crea tu primer movimiento para alimentar el historial y habilitar los análisis.</p>
+                        <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="goToAddTransaction()">Crear transacción</button>
+                    </div>
+                    <div id="historyNoFilterResultsState" class="empty-state hidden" role="status">
+                        <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-filter-circle-xmark"></i></span>
+                        <strong class="empty-state__title">Sin resultados para estos filtros.</strong>
+                        <p class="empty-state__message">Quita los filtros activos para volver a ver todos los movimientos disponibles.</p>
+                        <button class="btn btn--ghost btn--sm empty-state__action" type="button" onclick="clearFilters()">Limpiar filtros</button>
+                    </div>
                 </section>
             </div>

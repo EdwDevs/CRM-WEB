@@ -166,7 +166,13 @@
                         </div>
                     </div>
                     <div id="consistencyAlertList" class="audit-list">
-                        <div class="audit-empty">Ejecuta la auditoría para ver diferencias.</div>
+                        <!-- IMPORTANTE: estado inicial accionable para que el contenedor dinámico de auditoría no arranque en blanco. -->
+                        <div class="empty-state" role="status">
+                            <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
+                            <strong class="empty-state__title">Auditoría pendiente.</strong>
+                            <p class="empty-state__message">Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.</p>
+                            <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="runConsistencyAudit()">Ejecutar auditoría</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -901,6 +907,17 @@
             return Boolean(filters.txt || filters.type !== 'all' || filters.method !== 'all' || filters.start || filters.end);
         }
 
+        function renderEmptyState({ icon, title, message, actionLabel, actionOnclick }) {
+            // IMPORTANTE: helper único para estados vacíos dinámicos; evita pantallas en blanco y garantiza una acción recomendada.
+            return `
+                <div class="empty-state" role="status">
+                    <span class="empty-state__icon" aria-hidden="true"><i class="${icon}"></i></span>
+                    <strong class="empty-state__title">${title}</strong>
+                    <p class="empty-state__message">${message}</p>
+                    <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="${actionOnclick}">${actionLabel}</button>
+                </div>`;
+        }
+
         function getFilteredHistoryData() {
             const filters = getHistoryFilterState();
             let inc = 0, exp = 0;
@@ -931,6 +948,7 @@
         function setHistoryEmptyState({ hasTransactions, hasResults, hasFilters }) {
             const noTransactionsState = document.getElementById('historyNoTransactionsState');
             const noFilterResultsState = document.getElementById('historyNoFilterResultsState');
+            // IMPORTANTE: estos estados vacíos evitan que el historial quede como una tabla en blanco sin siguiente paso.
             if (noTransactionsState) noTransactionsState.classList.toggle('hidden', hasTransactions);
             if (noFilterResultsState) noFilterResultsState.classList.toggle('hidden', !hasTransactions || hasResults || !hasFilters);
         }
@@ -1740,7 +1758,8 @@
             // IMPORTANTE: el destacado elige primero la meta más próxima; si no hay próximas, usa la de mayor porcentaje de avance.
             const featured=upcomingGoals[0]||[...mappedGoals].sort((a,b)=>b.visual.pct-a.visual.pct||((a.visual.daysLeft??9999)-(b.visual.daysLeft??9999)))[0];
             const remainingGoals=mappedGoals.filter(item=>item.index!==featured.index);
-            const remainingHtml=remainingGoals.length?remainingGoals.map(item=>renderGoalCard(item.goal,item.visual)).join(''):`<div class="section-empty-state goals-rest-empty"><strong>Solo tienes una meta activa.</strong> Crea otro objetivo para comparar prioridades del hogar.</div>`;
+            // IMPORTANTE: si solo existe una meta, el grid secundario muestra una acción para crear otro objetivo y no queda vacío.
+            const remainingHtml=remainingGoals.length?remainingGoals.map(item=>renderGoalCard(item.goal,item.visual)).join(''):renderEmptyState({icon:'fas fa-bullseye',title:'Solo tienes una meta activa.',message:'Crea otro objetivo para comparar prioridades del hogar.',actionLabel:'Crear objetivo',actionOnclick:'openGoalModal()'});
             cont.innerHTML=`<div class="goals-featured-wrap"><div class="goals-section-kicker">Objetivo destacado</div>${renderGoalCard(featured.goal,featured.visual,true)}</div><div class="goals-rest-section"><div class="goals-section-header"><div><span class="goals-section-kicker">Resto de metas</span><h2>Seguimiento general</h2></div><span>${remainingGoals.length} objetivo${remainingGoals.length===1?'':'s'}</span></div><div class="goals-grid">${remainingHtml}</div></div>`;
             applyGoalProgressStyles(cont);
         }
@@ -1894,10 +1913,17 @@
             }
         }
         function renderCharts(){const c=document.getElementById('chartCategorias'); const canRenderCategory=c&&!isCanvasInsideClosedCollapsible(c); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}});
-            // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
-            if(canRenderCategory){ if(chartInstance)chartInstance.destroy(); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}}); }
+            const hasMonthlyTransactions=monthly.monthTransactions.length>0;
+            const hasCategoryData=Object.keys(ct).length>0;
+            const categoryFallback=document.getElementById('fallbackCategoryChart');
             const statsEmptyState=document.getElementById('statsEmptyState');
-            if(statsEmptyState) statsEmptyState.classList.toggle('hidden', monthly.monthTransactions.length>0);
+            // IMPORTANTE: el estado vacío principal evita que Estadísticas muestre un canvas en blanco cuando no hay movimientos del mes.
+            if(statsEmptyState) statsEmptyState.classList.toggle('hidden', hasMonthlyTransactions);
+            if(c)c.classList.toggle('hidden', !hasCategoryData);
+            if(categoryFallback)categoryFallback.classList.toggle('hidden', !hasMonthlyTransactions || hasCategoryData);
+            if(!hasCategoryData&&chartInstance){chartInstance.destroy();chartInstance=null;}
+            // IMPORTANTE: Chart.js necesita canvas visible y datos reales para medir correctamente; no inicializar si el details está cerrado.
+            if(canRenderCategory&&hasCategoryData){ if(chartInstance)chartInstance.destroy(); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}}); }
             const avgDaily=daysInMonth>0?monthlyExpenses/daysInMonth:0;
             const savingsRate=monthlyIncome===0?0:((monthlyIncome-monthlyExpenses)/monthlyIncome)*100;
             const balance=monthlyIncome-monthlyExpenses;
@@ -1926,7 +1952,8 @@
             const sortedEntries=Object.entries(ct).sort(([,a],[,b])=>b-a);
             if(topList){
                 if(sortedEntries.length===0){
-                    topList.innerHTML='<div class="top-category-item">Sin datos</div>';
+                    // IMPORTANTE: el ranking de categorías también entrega una acción cuando no hay gastos para evitar un bloque dinámico vacío.
+                    topList.innerHTML=renderEmptyState({icon:'fas fa-ranking-star',title:'Sin categorías para mostrar.',message:'Crea una transacción de gasto para construir el ranking del mes.',actionLabel:'Crear transacción',actionOnclick:'goToAddTransaction()'});
                 }else{
                     const totalExpenses=monthlyExpenses||1;
                     topList.innerHTML=sortedEntries.slice(0,5).map(([name,value])=>`
@@ -1953,7 +1980,7 @@
                 if(topFallback)topFallback.classList.remove('hidden');
                 if(topCategoriesChartInstance){topCategoriesChartInstance.destroy(); topCategoriesChartInstance=null;}
             }
-            logEvent('renderCharts',{target:'estadisticas',categories:sortedEntries.length,hasCategoryData:Object.keys(ct).length>0});
+            logEvent('renderCharts',{target:'estadisticas',categories:sortedEntries.length,hasCategoryData});
         }
         
         async function loadCards(){
@@ -2473,7 +2500,14 @@
             if (!container) return;
             updateAuditSummary(issues, corrections, consistencyAudit.lastRunAt);
             if (!issues.length) {
-                container.innerHTML = `<div class="audit-empty">${consistencyAudit.lastRunAt ? 'No se encontraron inconsistencias.' : 'Ejecuta la auditoría para ver diferencias.'}</div>`;
+                // IMPORTANTE: el panel de consistencia nunca queda en blanco; ofrece ejecutar/repetir auditoría como acción segura.
+                container.innerHTML = renderEmptyState({
+                    icon: consistencyAudit.lastRunAt ? 'fas fa-circle-check' : 'fas fa-shield-halved',
+                    title: consistencyAudit.lastRunAt ? 'Sin inconsistencias detectadas.' : 'Auditoría pendiente.',
+                    message: consistencyAudit.lastRunAt ? 'Puedes repetir la revisión si agregaste nuevas transacciones o editaste cupos.' : 'Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.',
+                    actionLabel: 'Ejecutar auditoría',
+                    actionOnclick: 'runConsistencyAudit()'
+                });
                 if (btn) btn.disabled = true;
                 return;
             }

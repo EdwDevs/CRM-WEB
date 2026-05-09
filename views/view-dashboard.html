@@ -201,7 +201,12 @@
                 <div class="hero-amount debt-total" id="deudaTotalTC">$0</div>
                 <!-- IMPORTANTE: cardsBreakdown y cardsEmptyState son actualizados por updateDashboard(); conservar IDs. -->
                 <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
-                <div id="cardsEmptyState" class="section-empty-state hidden"><strong>Sin deudas de tarjetas activas.</strong> Registra una compra a crédito o configura una tarjeta para ver su detalle.</div>
+                <div id="cardsEmptyState" class="empty-state hidden" role="status">
+                    <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-credit-card"></i></span>
+                    <strong class="empty-state__title">Sin deudas de tarjetas activas.</strong>
+                    <p class="empty-state__message">Registra una compra a crédito o configura una tarjeta para ver su detalle.</p>
+                    <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="goToAddTransaction()">Crear transacción</button>
+                </div>
             </div>
         </details>
     </div>
