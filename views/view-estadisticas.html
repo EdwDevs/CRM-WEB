@@ -1,27 +1,19 @@
 <div id="view-estadisticas" class="tab-content view-stack">
-                <div class="card">
-                    <div class="stats-section-title">
-                        <h3><i class="fas fa-gauge-high" style="color:var(--primary);"></i> KPIs rápidos</h3>
-                        <span>Resumen ejecutivo mensual</span>
-                    </summary>
-                    <div class="kpi-grid collapsible-card__content">
-                        <div class="mini-stat">
-                            <div class="mini-label"><i class="fas fa-calendar-day"></i> Promedio diario</div>
-                            <div class="mini-value" id="kpiDailyAverage">$0</div>
-                            <div class="kpi-subtitle">Gasto promedio del mes</div>
-                        </div>
-                        <div class="mini-stat">
-                            <div class="mini-label"><i class="fas fa-piggy-bank"></i> Tasa de ahorro</div>
-                            <div class="mini-value" id="kpiSavingsRate">0%</div>
-                            <div class="kpi-subtitle">Ingresos netos vs ingresos</div>
-                        </div>
-                        <div class="mini-stat">
-                            <div class="mini-label"><i class="fas fa-chart-line"></i> Variación mensual</div>
-                            <div class="mini-value" id="kpiMonthlyVariation">$0</div>
-                            <div class="kpi-delta" id="kpiMonthlyVariationDetail">--</div>
-                        </div>
+                <!-- IMPORTANTE: Franja compacta de KPIs; conserva los IDs usados por renderCharts(). -->
+                <div id="statsKpiCard" class="stats-summary-strip" aria-label="KPIs rápidos del mes">
+                    <div class="stats-summary-strip__item">
+                        <span class="stats-summary-strip__label"><i class="fas fa-calendar-day"></i> Promedio diario</span>
+                        <strong class="stats-summary-strip__value" id="kpiDailyAverage">$0</strong>
                     </div>
-                </details>
+                    <div class="stats-summary-strip__item">
+                        <span class="stats-summary-strip__label"><i class="fas fa-piggy-bank"></i> Ahorro</span>
+                        <strong class="stats-summary-strip__value" id="kpiSavingsRate">0%</strong>
+                    </div>
+                    <div class="stats-summary-strip__item">
+                        <span class="stats-summary-strip__label"><i class="fas fa-chart-line"></i> Variación</span>
+                        <strong class="stats-summary-strip__value" id="kpiMonthlyVariation">$0</strong>
+                    </div>
+                </div>
 
                 <div class="stats-chart-grid">
                     <details class="card collapsible-card" open>
@@ -33,7 +25,7 @@
                             <div id="fallbackTrendChart" class="chart-fallback hidden">Sin datos suficientes para proyección de tendencia.</div>
                         </div>
                         <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTendencias"></canvas></div>
-                    </div>
+                    </details>
 
                     <details class="card collapsible-card" open>
                         <summary class="collapsible-card__summary stats-card-head">
@@ -44,7 +36,7 @@
                             <div id="fallbackIncomeExpenseChart" class="chart-fallback hidden">Sin datos suficientes para comparar ingresos y gastos.</div>
                         </div>
                         <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartIngresosGastos"></canvas></div>
-                    </div>
+                    </details>
                 </div>
 
                 <details class="card collapsible-card" open>
@@ -56,7 +48,7 @@
                         <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
                     </div>
                     <div class="stats-chart-wrap stats-chart-wrap--md"><canvas id="chartCategorias"></canvas></div>
-                </div>
+                </details>
 
                 <details class="card collapsible-card" open>
                     <summary class="collapsible-card__summary stats-card-head">
@@ -67,5 +59,5 @@
                         <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTopCategorias"></canvas></div>
                     </div>
                     <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
-                </div>
+                </details>
             </div>
