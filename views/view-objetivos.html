@@ -16,6 +16,12 @@
                         <div class="skeleton" style="height: 180px; margin-bottom: 15px;"></div>
                         <div class="skeleton" style="height: 120px; margin-bottom: 15px;"></div>
                     </div>
-                    <div id="goalsEmptyState" class="section-empty-state hidden"><strong>Aún no tienes objetivos creados.</strong> Usa “Nuevo objetivo” para definir una meta con monto y fecha.</div>
+                    <!-- IMPORTANTE: este estado evita que renderGoals() deje el tablero de metas en blanco cuando no hay objetivos. -->
+                    <div id="goalsEmptyState" class="empty-state hidden" role="status">
+                        <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
+                        <strong class="empty-state__title">Aún no tienes objetivos creados.</strong>
+                        <p class="empty-state__message">Define una meta con monto y fecha para comenzar a medir el avance del hogar.</p>
+                        <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="openGoalModal()">Crear objetivo</button>
+                    </div>
                 </section>
             </div>
