@@ -1,4 +1,4 @@
-<div id="view-asistente" class="tab-content">
+<div id="view-asistente" class="tab-content view-stack">
                 <div class="ai-welcome-card">
                     <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
                     <p>Análisis detallado de solvencia, liquidez y patrones de consumo. Ejecución 100% local y privada.</p>
@@ -6,17 +6,24 @@
                 </div>
                 <div id="aiLoading" class="ai-loading"><div class="ai-spinner"></div><div class="ai-loading-text">Calculando ratios...</div></div>
                 <div id="aiResultContainer" class="ai-response-container">
-                    <div class="card">
-                        <div class="ai-report-header">
-                            <div><h3 class="ai-report-title">Diagnóstico Integral</h3><span class="ai-report-subtitle">Basado en historial de 30 días</span></div>
-                            <div id="aiScoreBadge" class="score-badge">SCORE: --</div>
+                    <details class="card collapsible-card" open>
+                        <summary class="collapsible-card__summary">
+                            <div class="ai-report-header">
+                                <div><h3 class="ai-report-title">Diagnóstico Integral</h3><span class="ai-report-subtitle">Basado en historial de 30 días</span></div>
+                                <div id="aiScoreBadge" class="score-badge">SCORE: --</div>
+                            </div>
+                        </summary>
+                        <!-- IMPORTANTE: generateLocalAnalysis() inyecta el diagnóstico en este contenedor. -->
+                        <div id="aiContentBody" class="collapsible-card__content"></div>
+                    </details>
+                    <details class="card prediction-card collapsible-card" data-force-collapsed="true" id="predictionCard">
+                        <summary class="collapsible-card__summary">
+                            <div class="prediction-title"><i class="fas fa-crystal-ball"></i> Proyección / recomendaciones</div>
+                        </summary>
+                        <div class="collapsible-card__content">
+                            <div class="prediction-value" id="predictedExpenses">$0</div>
+                            <div class="prediction-note">Gastos estimados basándose en tu historial</div>
                         </div>
-                        <div id="aiContentBody"></div>
-                    </div>
-                    <div class="prediction-card" id="predictionCard">
-                        <div class="prediction-title"><i class="fas fa-crystal-ball"></i> Predicción Próximo Mes</div>
-                        <div class="prediction-value" id="predictedExpenses">$0</div>
-                        <div class="prediction-note">Gastos estimados basándose en tu historial</div>
-                    </div>
+                    </details>
                 </div>
             </div>
