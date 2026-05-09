@@ -11,8 +11,9 @@
             padding: 4px 2px 8px;
         }
 
+        .view-header__title,
         .view-title {
-            /* IMPORTANTE: Título base de vista; evita estilos inline y mantiene jerarquía consistente. */
+            /* IMPORTANTE: .view-header__title es el estándar visual para títulos de vista; .view-title queda como alias legacy temporal. */
             margin: 0;
             color: var(--text-primary);
             font-family: 'Syne', sans-serif;
@@ -21,7 +22,9 @@
             letter-spacing: -0.03em;
         }
 
+        .view-header__subtitle,
         .view-subtitle {
+            /* IMPORTANTE: .view-header__subtitle es el estándar visual para descripciones de vista; evita subtítulos inline. */
             margin: 8px 0 0;
             color: var(--text-secondary);
             font-size: clamp(0.9rem, 2vw, 1rem);
@@ -29,8 +32,9 @@
             max-width: 720px;
         }
 
+        .view-header__actions,
         .view-actions {
-            /* IMPORTANTE: Solo debe contener la acción principal (y variantes secundarias inevitables) de la vista. */
+            /* IMPORTANTE: .view-header__actions es el contenedor estándar para acciones primarias de cada vista. */
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -95,20 +99,53 @@
             transition: box-shadow var(--transition-slow), transform var(--transition-slow), border-color var(--transition-fast);
         }
 
+        .card-header {
+            /* IMPORTANTE: .card-header es el estándar visual para encabezados internos de .card; reemplaza headers específicos e inline. */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
         .card-title {
-            /* IMPORTANTE: Jerarquía tipográfica estable para títulos de tarjeta en móvil y desktop */
+            /* IMPORTANTE: .card-title es el estándar visual para títulos de tarjeta en móvil y desktop. */
             margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: clamp(1rem, 2.4vw, 1.2rem);
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.01em;
         }
 
+        .card-header .card-title {
+            /* IMPORTANTE: dentro de .card-header el espaciado lo gobierna el contenedor estándar. */
+            margin-bottom: 0;
+        }
+
         .card-subtitle {
-            /* IMPORTANTE: Subtítulo consistente y legible en todas las vistas */
+            /* IMPORTANTE: .card-subtitle es el estándar visual para metadatos y ayudas debajo de títulos de tarjeta. */
             margin: -8px 0 0;
             font-size: clamp(0.78rem, 2vw, 0.9rem);
             color: var(--text-muted);
+        }
+
+        .card-body {
+            /* IMPORTANTE: .card-body delimita contenido de tarjetas y evita padding/márgenes inline. */
+            min-width: 0;
+        }
+
+        .card-actions {
+            /* IMPORTANTE: .card-actions es el estándar visual para botones secundarios dentro de tarjetas. */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
         }
 
         .card:hover {
@@ -693,6 +730,7 @@
         }
 
         .stats-section-title {
+            /* IMPORTANTE: Alias legacy; usar .card-header + .card-title en nuevas secciones de estadísticas. */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -722,6 +760,7 @@
         }
 
         .stats-card-head {
+            /* IMPORTANTE: Alias legacy; el estándar actual es .card-header para mantener compatibilidad visual con .card. */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -821,13 +860,29 @@
                 align-items: stretch;
             }
 
+            .view-header__actions,
             .view-actions {
                 justify-content: stretch;
             }
 
+            .card-header {
+                /* IMPORTANTE: En móvil los headers de card apilan acciones para conservar legibilidad. */
+                align-items: stretch;
+            }
+
+            .card-actions {
+                justify-content: stretch;
+            }
+
+            .view-header__actions .btn,
+            .view-header__actions .btn-export,
+            .view-header__actions .btn-ai-action,
             .view-actions .btn,
             .view-actions .btn-export,
-            .view-actions .btn-ai-action {
+            .view-actions .btn-ai-action,
+            .card-actions .btn,
+            .card-actions .btn-export,
+            .card-actions .btn-ai-action {
                 justify-content: center;
                 width: 100%;
             }
