@@ -1,183 +1,210 @@
 <div id="view-dashboard" class="tab-content active view-stack">
-                <header class="view-header">
-                    <div>
-                        <h1 class="view-title">Resumen financiero</h1>
-                        <p class="view-subtitle">Consulta patrimonio, flujo mensual y señales clave con el detalle secundario organizado en plegables.</p>
-                    </div>
-                    <div class="view-actions">
-                        <button class="btn btn--primary btn--md" onclick="openArqueoModal()">
-                            <i class="fas fa-balance-scale"></i> Arqueo de cuentas
-                        </button>
-                    </div>
-                </header>
+    <header class="view-header">
+        <div>
+            <h1 class="view-title">Resumen financiero</h1>
+            <p class="view-subtitle">Lectura ejecutiva de patrimonio, flujo mensual, alertas y acciones clave con el detalle secundario en plegables.</p>
+        </div>
+    </header>
 
-                <div class="dashboard-grid">
-                    <details class="card collapsible-card grid-span-12 view-primary-card" open>
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title section-title"><i class="fas fa-wallet section-title-icon"></i> Resumen de cuentas</h3>
-                        </summary>
-                        <!-- IMPORTANTE: el contenido conserva la grilla Bento original para no alterar el layout responsive. -->
-                        <div class="bento-hero collapsible-card__content">
-                            <div class="hero-balance">
-                                <div class="hero-title">Patrimonio Líquido Total</div>
-                                <div class="hero-amount" id="saldoTotal">$ 0</div>
-                                <div class="hero-note">
-                                    <i class="fas fa-shield-alt"></i> Saldo neto consolidado
-                                </div>
-                            </div>
-                            <div class="accounts-col">
-                                <div class="account-card">
-                                    <div class="account-icon icon-surface--info"><i class="fas fa-university"></i></div>
-                                    <div class="account-info">
-                                        <span class="account-label">Débito / Bancos</span>
-                                        <span class="account-amount" id="saldoDebito">$0</span>
-                                    </div>
-                                </div>
-                                <div class="account-card">
-                                    <div class="account-icon icon-surface--success"><i class="fas fa-money-bill-wave"></i></div>
-                                    <div class="account-info">
-                                        <span class="account-label">Efectivo Físico</span>
-                                        <span class="account-amount" id="saldoEfectivo">$0</span>
-                                    </div>
-                                </div>
-                                <div class="account-card">
-                                    <div class="account-icon icon-surface--credit"><i class="fas fa-mobile-alt"></i></div>
-                                    <div class="account-info">
-                                        <span class="account-label">Billetera Digital</span>
-                                        <span class="account-amount" id="saldoNequi">$0</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-                </div>
-
-                <div class="view-secondary-stack">
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title card-title--muted">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
-                        </summary>
-                        <div class="stats-grid collapsible-card__content">
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Ingresos</span>
-                                    <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-arrow-down"></i></div>
-                                </div>
-                                <div class="mini-value" id="totalIngresosMes">$0</div>
-                                <div class="mini-footer"><div class="mini-delta" id="deltaIncomeMoM">--</div></div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Gastos + TC</span>
-                                    <div class="mini-icon-wrapper icon-surface--danger"><i class="fas fa-arrow-up"></i></div>
-                                </div>
-                                <div class="mini-value" id="totalGastosMes">$0</div>
-                                <div class="mini-footer"><div class="mini-delta" id="deltaExpenseMoM">--</div></div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Balance Neto</span>
-                                    <div class="mini-icon-wrapper icon-surface--neutral"><i class="fas fa-scale-balanced"></i></div>
-                                </div>
-                                <div class="mini-value" id="balanceMes">$0</div>
-                                <div class="mini-footer mini-footer--compact">
-                                    <!-- IMPORTANTE: el width inline se actualiza desde JS para animar el progreso del KPI. -->
-                                    <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill stat-progress-fill--secondary" style="width: 50%;"></div></div>
-                                </div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Tasa de Ahorro</span>
-                                    <div class="mini-icon-wrapper icon-surface--info"><i class="fas fa-piggy-bank"></i></div>
-                                </div>
-                                <div class="mini-value" id="savingsRate">0%</div>
-                                <div class="mini-footer mini-footer--compact">
-                                    <!-- IMPORTANTE: el width inline se actualiza desde JS para animar la tasa de ahorro. -->
-                                    <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill stat-progress-fill--info" style="width: 0%;"></div></div>
-                                </div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Flujo Neto Real</span>
-                                    <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-money-bill-trend-up"></i></div>
-                                </div>
-                                <div class="mini-value" id="netCashFlow">$0</div>
-                                <div class="mini-footer mini-footer--compact"><span class="mini-caption">Ingresos menos todos los gastos</span></div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-header">
-                                    <span class="mini-label">Uso de TC</span>
-                                    <div class="mini-icon-wrapper icon-surface--warning"><i class="fas fa-credit-card"></i></div>
-                                </div>
-                                <div class="mini-value" id="creditUtilization">0%</div>
-                                <div class="mini-footer mini-footer--compact">
-                                    <!-- IMPORTANTE: el width inline se actualiza desde JS para reflejar uso de cupos TC. -->
-                                    <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill stat-progress-fill--warning" style="width: 0%;"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title section-title"><i class="fas fa-bell section-title-icon"></i> Alertas / recordatorios</h3>
-                        </summary>
-                        <!-- IMPORTANTE: estos IDs se mantienen porque updateFamilySummary/updatePaymentReminders los actualizan directamente. -->
-                        <div class="collapsible-card__content">
-                            <div id="budgetAlert" class="budget-alert hidden">
-                                <div class="budget-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                                <div class="budget-alert-text">
-                                    <div class="budget-alert-title">¡Alerta de Presupuesto!</div>
-                                    <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
-                                </div>
-                            </div>
-                            <div id="remindersContainer"></div>
-                        </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <h3 class="card-title section-title"><i class="fas fa-users section-title-icon"></i> Resumen familiar</h3>
-                        </summary>
-                        <div class="family-summary collapsible-card__content" id="familySummary">
-                            <div class="member-card skeleton member-card-skeleton"></div>
-                            <div class="member-card skeleton member-card-skeleton"></div>
-                            <div class="member-card skeleton member-card-skeleton"></div>
-                            <div class="member-card skeleton member-card-skeleton"></div>
-                        </div>
-                    </details>
-
-                    <details class="card collapsible-card" id="dailyCapCard" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <div class="section-header">
-                                <h3 class="section-title"><i class="fas fa-calendar-day section-title-icon"></i> Capacidad diaria</h3>
-                                <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
-                            </div>
-                        </summary>
-                        <div class="collapsible-card__content">
-                            <div class="daily-cap-grid">
-                                <div><div class="daily-cap-label">Límite hoy</div><div class="daily-cap-value" id="dailyCapValue">$0</div></div>
-                                <div><div class="daily-cap-label">Gastado hoy</div><div class="daily-cap-value text-danger" id="dailySpendValue">$0</div></div>
-                                <div><div class="daily-cap-label">Promedio Mes</div><div class="daily-cap-value" id="avgDailySpend">$0</div></div>
-                            </div>
-                            <!-- IMPORTANTE: el width inline se actualiza desde JS para el tope diario responsive. -->
-                            <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success" style="width: 0%;"></div></div>
-                            <div class="daily-cap-note">* El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.</div>
-                        </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary">
-                            <div class="section-header">
-                                <h3 class="section-title"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
-                                <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
-                            </div>
-                        </summary>
-                        <div class="collapsible-card__content">
-                            <div class="hero-amount debt-total" id="deudaTotalTC">$0</div>
-                            <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
-                            <div id="cardsEmptyState" class="section-empty-state hidden"><strong>Sin deudas de tarjetas activas.</strong> Registra una compra a crédito o configura una tarjeta para ver su detalle.</div>
-                        </div>
-                    </details>
+    <section class="dashboard-grid" aria-label="Vista ejecutiva del dashboard">
+        <div class="dashboard-hero grid-span-12">
+            <div class="dashboard-hero__balance">
+                <span class="dashboard-hero__eyebrow">Balance consolidado</span>
+                <!-- IMPORTANTE: saldoTotal es consumido por updateDashboard(); no cambiar este ID sin actualizar JS. -->
+                <div class="dashboard-hero__amount" id="saldoTotal">$ 0</div>
+                <div class="hero-note">
+                    <i class="fas fa-shield-alt"></i> Patrimonio líquido disponible
                 </div>
             </div>
+
+            <div class="dashboard-hero__metrics">
+                <article class="dashboard-hero__metric dashboard-hero__metric--success">
+                    <div class="mini-header">
+                        <span class="mini-label">Ingresos</span>
+                        <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-arrow-down"></i></div>
+                    </div>
+                    <!-- IMPORTANTE: totalIngresosMes es consumido por updateDashboard(); conservar el ID para evitar romper KPIs. -->
+                    <div class="mini-value" id="totalIngresosMes">$0</div>
+                    <!-- IMPORTANTE: deltaIncomeMoM es actualizado por JS para variación mes a mes. -->
+                    <div class="mini-footer"><div class="mini-delta" id="deltaIncomeMoM">--</div></div>
+                </article>
+
+                <article class="dashboard-hero__metric dashboard-hero__metric--danger">
+                    <div class="mini-header">
+                        <span class="mini-label">Gastos + TC</span>
+                        <div class="mini-icon-wrapper icon-surface--danger"><i class="fas fa-arrow-up"></i></div>
+                    </div>
+                    <!-- IMPORTANTE: totalGastosMes es consumido por updateDashboard(); conservar el ID para evitar romper KPIs. -->
+                    <div class="mini-value" id="totalGastosMes">$0</div>
+                    <!-- IMPORTANTE: deltaExpenseMoM es actualizado por JS para variación mes a mes. -->
+                    <div class="mini-footer"><div class="mini-delta" id="deltaExpenseMoM">--</div></div>
+                </article>
+
+                <article class="dashboard-hero__metric dashboard-hero__metric--info">
+                    <div class="mini-header">
+                        <span class="mini-label">Ahorro</span>
+                        <div class="mini-icon-wrapper icon-surface--info"><i class="fas fa-piggy-bank"></i></div>
+                    </div>
+                    <!-- IMPORTANTE: savingsRate es consumido por updateDashboard(); conservar el ID para evitar romper KPIs. -->
+                    <div class="mini-value" id="savingsRate">0%</div>
+                    <div class="mini-footer mini-footer--compact">
+                        <!-- IMPORTANTE: savingsProgressBar recibe width inline desde JS para animar la tasa de ahorro. -->
+                        <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill stat-progress-fill--info" style="width: 0%;"></div></div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <section class="dashboard-alert-strip grid-span-12" aria-label="Alertas y recordatorios críticos">
+            <!-- IMPORTANTE: budgetAlert y budgetAlertDesc son consumidos por updateFamilySummary/updateDashboard; mantener IDs. -->
+            <div id="budgetAlert" class="budget-alert hidden">
+                <div class="budget-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="budget-alert-text">
+                    <div class="budget-alert-title">¡Alerta de Presupuesto!</div>
+                    <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
+                </div>
+            </div>
+            <!-- IMPORTANTE: remindersContainer es llenado dinámicamente por updatePaymentReminders(); no cambiar este ID. -->
+            <div id="remindersContainer"></div>
+        </section>
+
+        <nav class="quick-actions-grid grid-span-12" aria-label="Acciones rápidas del dashboard">
+            <button class="quick-action-card" type="button" onclick="switchView('transacciones')">
+                <span class="quick-action-card__icon icon-surface--success"><i class="fas fa-plus"></i></span>
+                <span class="quick-action-card__label">Nueva transacción</span>
+            </button>
+            <button class="quick-action-card" type="button" onclick="openArqueoModal()">
+                <span class="quick-action-card__icon icon-surface--info"><i class="fas fa-balance-scale"></i></span>
+                <span class="quick-action-card__label">Arqueo</span>
+            </button>
+            <button class="quick-action-card" type="button" onclick="openQuotaModal()">
+                <span class="quick-action-card__icon icon-surface--warning"><i class="fas fa-credit-card"></i></span>
+                <span class="quick-action-card__label">Cupos / Deudas</span>
+            </button>
+            <button class="quick-action-card" type="button" onclick="switchView('objetivos')">
+                <span class="quick-action-card__icon icon-surface--credit"><i class="fas fa-bullseye"></i></span>
+                <span class="quick-action-card__label">Objetivos</span>
+            </button>
+        </nav>
+
+        <section class="account-summary-grid grid-span-12" aria-label="Cuentas y métodos de pago">
+            <article class="account-card account-card--compact">
+                <div class="account-icon icon-surface--info"><i class="fas fa-university"></i></div>
+                <div class="account-info">
+                    <span class="account-label">Débito / Bancos</span>
+                    <!-- IMPORTANTE: saldoDebito es consumido por updateDashboard(); conservar ID. -->
+                    <span class="account-amount" id="saldoDebito">$0</span>
+                </div>
+            </article>
+            <article class="account-card account-card--compact">
+                <div class="account-icon icon-surface--success"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="account-info">
+                    <span class="account-label">Efectivo físico</span>
+                    <!-- IMPORTANTE: saldoEfectivo es consumido por updateDashboard(); conservar ID. -->
+                    <span class="account-amount" id="saldoEfectivo">$0</span>
+                </div>
+            </article>
+            <article class="account-card account-card--compact">
+                <div class="account-icon icon-surface--credit"><i class="fas fa-mobile-alt"></i></div>
+                <div class="account-info">
+                    <span class="account-label">Billetera digital</span>
+                    <!-- IMPORTANTE: saldoNequi es consumido por updateDashboard(); conservar ID. -->
+                    <span class="account-amount" id="saldoNequi">$0</span>
+                </div>
+            </article>
+        </section>
+    </section>
+
+    <div class="view-secondary-stack">
+        <details class="card collapsible-card" data-force-collapsed="true">
+            <summary class="collapsible-card__summary">
+                <h3 class="card-title card-title--muted">Flujo y rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
+            </summary>
+            <div class="stats-grid collapsible-card__content">
+                <div class="mini-stat">
+                    <div class="mini-header">
+                        <span class="mini-label">Balance Neto</span>
+                        <div class="mini-icon-wrapper icon-surface--neutral"><i class="fas fa-scale-balanced"></i></div>
+                    </div>
+                    <!-- IMPORTANTE: balanceMes es consumido por updateDashboard(); conservar ID. -->
+                    <div class="mini-value" id="balanceMes">$0</div>
+                    <div class="mini-footer mini-footer--compact">
+                        <!-- IMPORTANTE: balanceProgressBar recibe width inline desde JS para animar el progreso del KPI. -->
+                        <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill stat-progress-fill--secondary" style="width: 50%;"></div></div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-header">
+                        <span class="mini-label">Flujo Neto Real</span>
+                        <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-money-bill-trend-up"></i></div>
+                    </div>
+                    <!-- IMPORTANTE: netCashFlow es consumido por updateDashboard(); conservar ID. -->
+                    <div class="mini-value" id="netCashFlow">$0</div>
+                    <div class="mini-footer mini-footer--compact"><span class="mini-caption">Ingresos menos todos los gastos</span></div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-header">
+                        <span class="mini-label">Uso de TC</span>
+                        <div class="mini-icon-wrapper icon-surface--warning"><i class="fas fa-credit-card"></i></div>
+                    </div>
+                    <!-- IMPORTANTE: creditUtilization es consumido por updateDashboard(); conservar ID. -->
+                    <div class="mini-value" id="creditUtilization">0%</div>
+                    <div class="mini-footer mini-footer--compact">
+                        <!-- IMPORTANTE: creditUtilizationBar recibe width inline desde JS para reflejar uso de cupos TC. -->
+                        <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill stat-progress-fill--warning" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details class="card collapsible-card" data-force-collapsed="true">
+            <summary class="collapsible-card__summary">
+                <h3 class="card-title section-title"><i class="fas fa-users section-title-icon"></i> Resumen familiar</h3>
+            </summary>
+            <!-- IMPORTANTE: familySummary es poblado por updateFamilySummary(); conservar ID. -->
+            <div class="family-summary collapsible-card__content" id="familySummary">
+                <div class="member-card skeleton member-card-skeleton"></div>
+                <div class="member-card skeleton member-card-skeleton"></div>
+                <div class="member-card skeleton member-card-skeleton"></div>
+                <div class="member-card skeleton member-card-skeleton"></div>
+            </div>
+        </details>
+
+        <details class="card collapsible-card" id="dailyCapCard" data-force-collapsed="true">
+            <summary class="collapsible-card__summary">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-calendar-day section-title-icon"></i> Capacidad diaria</h3>
+                    <!-- IMPORTANTE: dailyCapStatus es actualizado por updateDashboard(); conservar ID. -->
+                    <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
+                </div>
+            </summary>
+            <div class="collapsible-card__content">
+                <div class="daily-cap-grid">
+                    <!-- IMPORTANTE: dailyCapValue, dailySpendValue y avgDailySpend son consumidos por updateDashboard(); conservar IDs. -->
+                    <div><div class="daily-cap-label">Límite hoy</div><div class="daily-cap-value" id="dailyCapValue">$0</div></div>
+                    <div><div class="daily-cap-label">Gastado hoy</div><div class="daily-cap-value text-danger" id="dailySpendValue">$0</div></div>
+                    <div><div class="daily-cap-label">Promedio Mes</div><div class="daily-cap-value" id="avgDailySpend">$0</div></div>
+                </div>
+                <!-- IMPORTANTE: dailySpendProgressBar recibe width inline desde JS para el tope diario responsive. -->
+                <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success" style="width: 0%;"></div></div>
+                <div class="daily-cap-note">* El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.</div>
+            </div>
+        </details>
+
+        <details class="card collapsible-card" data-force-collapsed="true">
+            <summary class="collapsible-card__summary">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Deudas Tarjetas</h3>
+                    <button onclick="openQuotaModal()" class="btn btn--secondary btn--sm"><i class="fas fa-cog"></i> Gestionar</button>
+                </div>
+            </summary>
+            <div class="collapsible-card__content">
+                <!-- IMPORTANTE: deudaTotalTC es consumido por updateDashboard(); conservar ID. -->
+                <div class="hero-amount debt-total" id="deudaTotalTC">$0</div>
+                <!-- IMPORTANTE: cardsBreakdown y cardsEmptyState son actualizados por updateDashboard(); conservar IDs. -->
+                <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
+                <div id="cardsEmptyState" class="section-empty-state hidden"><strong>Sin deudas de tarjetas activas.</strong> Registra una compra a crédito o configura una tarjeta para ver su detalle.</div>
+            </div>
+        </details>
+    </div>
+</div>
