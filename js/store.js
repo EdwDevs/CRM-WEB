@@ -5,7 +5,7 @@
     transactions: [],
     cards: [],
     goals: [],
-    audit: { issues: [], corrections: [] },
+    audit: { issues: [], corrections: [], lastRunAt: null },
     viewDate: new Date()
   };
 
@@ -48,7 +48,8 @@
 
   function setAudit(audit) {
     const prevState = state;
-    state = { ...state, audit: audit || { issues: [], corrections: [] } };
+    const nextAudit = audit || { issues: [], corrections: [], lastRunAt: null };
+    state = { ...state, audit: { issues: [], corrections: [], lastRunAt: null, ...nextAudit } };
     emit(prevState);
   }
 

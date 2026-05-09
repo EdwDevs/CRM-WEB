@@ -142,8 +142,27 @@
                             <div class="audit-subtitle">Lectura contable y financiera en vivo: consistencia, flujo, riesgo y proyecciones.</div>
                         </div>
                         <div class="audit-actions">
-                            <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar auditoría</button>
-                            <button class="btn btn--primary btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
+                            <button class="btn btn--primary btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar auditoría</button>
+                            <button class="btn btn--ghost btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
+                        </div>
+                    </div>
+                    <div class="audit-summary" aria-live="polite">
+                        <div id="auditScore" class="audit-score audit-score--warning">
+                            <span>Estado visual</span>
+                            <strong id="auditStatusLabel">Sin ejecutar</strong>
+                            <small id="auditStatusDetail">Ejecuta la auditoría para calcular consistencia.</small>
+                        </div>
+                        <div class="audit-summary-card">
+                            <span>Total de issues</span>
+                            <strong id="auditIssueTotal">0</strong>
+                        </div>
+                        <div class="audit-summary-card">
+                            <span>Correcciones disponibles</span>
+                            <strong id="auditCorrectionTotal">0</strong>
+                        </div>
+                        <div class="audit-summary-card">
+                            <span>Última ejecución</span>
+                            <strong id="auditLastRun">Pendiente</strong>
                         </div>
                     </div>
                     <div id="consistencyAlertList" class="audit-list">
@@ -336,7 +355,7 @@
             }
         }
 
-        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[], lastRunAt:null}, currentQuotaTab='cards', returnToQuotaModal=false;
         const debugState={enabled:isLocalDebugEnvironment(),expanded:false,lastEvents:[],lastErrors:[]};
         // IMPORTANTE: aliases locales para compatibilidad con funciones existentes, sincronizados por suscripción del store.
         function syncLocalStateFromStore(){
@@ -2355,32 +2374,106 @@
             const financialInsights = buildFinancialAuditInsights();
             issues.push(...financialInsights);
 
-            consistencyAudit = { issues, corrections: Array.from(correctionMap.values()) };
+            consistencyAudit = { issues, corrections: Array.from(correctionMap.values()), lastRunAt: new Date().toISOString() };
             AppStore.setAudit(consistencyAudit);
             renderConsistencyAlerts();
             logEvent('runConsistencyAudit', { issues: issues.length, corrections: consistencyAudit.corrections.length });
         }
 
+        function getAuditIssueSeverity(issue) {
+            const badgeClass = String(issue?.badgeClass || '');
+            const badge = String(issue?.badge || '').toLowerCase();
+            const title = String(issue?.title || '').toLowerCase();
+            // IMPORTANTE: esta clasificación centralizada mantiene alineados el resumen visual y los grupos por severidad.
+            if (['danger', 'warning', 'ok'].includes(issue?.severity)) return issue.severity;
+            // IMPORTANTE: los badges de peligro representan inconsistencias que pueden afectar cálculos o datos persistidos.
+            if (badgeClass.includes('danger') || badge.includes('riesgo') || title.includes('inválid')) return 'danger';
+            // IMPORTANTE: las alertas no críticas se muestran como warning para revisión manual antes de corregir.
+            return 'warning';
+        }
+
+        function escapeAuditHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+        }
+
+        function formatAuditLastRun(lastRunAt) {
+            if (!lastRunAt) return 'Pendiente';
+            const date = new Date(lastRunAt);
+            if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+            return date.toLocaleString();
+        }
+
+        function updateAuditSummary(issues, corrections, lastRunAt) {
+            const score = document.getElementById('auditScore');
+            const statusLabel = document.getElementById('auditStatusLabel');
+            const statusDetail = document.getElementById('auditStatusDetail');
+            const issueTotal = document.getElementById('auditIssueTotal');
+            const correctionTotal = document.getElementById('auditCorrectionTotal');
+            const lastRun = document.getElementById('auditLastRun');
+            const severityCounts = issues.reduce((acc, issue) => {
+                const severity = getAuditIssueSeverity(issue);
+                acc[severity] = (acc[severity] || 0) + 1;
+                return acc;
+            }, { danger: 0, warning: 0 });
+            const statusClass = !lastRunAt
+                ? 'audit-score--warning'
+                : severityCounts.danger > 0
+                    ? 'audit-score--danger'
+                    : issues.length > 0
+                        ? 'audit-score--warning'
+                        : 'audit-score--ok';
+            const label = !lastRunAt ? 'Sin ejecutar' : severityCounts.danger > 0 ? 'Riesgo alto' : issues.length > 0 ? 'Revisión' : 'OK';
+            const detail = !lastRunAt
+                ? 'Ejecuta la auditoría para calcular consistencia.'
+                : `${severityCounts.danger} críticas · ${severityCounts.warning} advertencias`;
+
+            if (score) score.className = `audit-score ${statusClass}`;
+            if (statusLabel) statusLabel.textContent = label;
+            if (statusDetail) statusDetail.textContent = detail;
+            if (issueTotal) issueTotal.textContent = issues.length;
+            if (correctionTotal) correctionTotal.textContent = corrections.length;
+            if (lastRun) lastRun.textContent = formatAuditLastRun(lastRunAt);
+        }
+
         function renderConsistencyAlerts() {
             const container = document.getElementById('consistencyAlertList');
             const btn = document.getElementById('btnApplyConsistencyCorrections');
+            const issues = Array.isArray(consistencyAudit.issues) ? consistencyAudit.issues : [];
+            const corrections = Array.isArray(consistencyAudit.corrections) ? consistencyAudit.corrections : [];
             if (!container) return;
-            if (!consistencyAudit.issues.length) {
-                container.innerHTML = '<div class="audit-empty">No se encontraron inconsistencias.</div>';
+            updateAuditSummary(issues, corrections, consistencyAudit.lastRunAt);
+            if (!issues.length) {
+                container.innerHTML = `<div class="audit-empty">${consistencyAudit.lastRunAt ? 'No se encontraron inconsistencias.' : 'Ejecuta la auditoría para ver diferencias.'}</div>`;
                 if (btn) btn.disabled = true;
                 return;
             }
-            container.innerHTML = consistencyAudit.issues.map(issue => `
-                <div class="audit-item">
-                    <div class="audit-item-header">
-                        <span class="audit-item-title">${issue.title}</span>
-                        <span class="audit-badge ${issue.badgeClass || ''}">${issue.badge}</span>
+            const severityLabels = { danger: 'Críticas', warning: 'Advertencias', ok: 'Informativas' };
+            const groupedIssues = issues.reduce((groups, issue) => {
+                const severity = getAuditIssueSeverity(issue);
+                if (!groups[severity]) groups[severity] = [];
+                groups[severity].push(issue);
+                return groups;
+            }, {});
+            // IMPORTANTE: el orden prioriza las incidencias críticas para que el usuario actúe primero sobre cálculos sensibles.
+            container.innerHTML = ['danger', 'warning', 'ok'].filter(severity => groupedIssues[severity]?.length).map(severity => `
+                <section class="audit-group audit-group--${severity}">
+                    <div class="audit-group-header">
+                        <span>${severityLabels[severity] || severity}</span>
+                        <strong>${groupedIssues[severity].length}</strong>
                     </div>
-                    <div class="audit-item-body">${issue.body}</div>
-                    <div class="audit-item-meta">${issue.meta || 'Sin acción sugerida.'}</div>
-                </div>
+                    ${groupedIssues[severity].map(issue => `
+                        <div class="audit-item">
+                            <div class="audit-item-header">
+                                <span class="audit-item-title">${escapeAuditHtml(issue.title)}</span>
+                                <span class="audit-badge ${escapeAuditHtml(issue.badgeClass || '')}">${escapeAuditHtml(issue.badge)}</span>
+                            </div>
+                            <div class="audit-item-body">${escapeAuditHtml(issue.body)}</div>
+                            <div class="audit-item-meta">${escapeAuditHtml(issue.meta || 'Sin acción sugerida.')}</div>
+                        </div>
+                    `).join('')}
+                </section>
             `).join('');
-            if (btn) btn.disabled = !consistencyAudit.corrections.length;
+            if (btn) btn.disabled = !corrections.length;
         }
 
         async function applyConsistencyCorrections() {
@@ -2603,7 +2696,7 @@
             document.getElementById('cardPaymentDayInput').value='';
             document.getElementById('editCardId').value='';
             document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';
-            consistencyAudit = { issues: [], corrections: [] };
+            consistencyAudit = { issues: [], corrections: [], lastRunAt: null };
             AppStore.setAudit(consistencyAudit);
             renderConsistencyAlerts();
             renderQuotaCreditList();
