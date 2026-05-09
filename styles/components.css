@@ -404,8 +404,8 @@
         }
 
         .view-stack {
-            /* IMPORTANTE: Espaciado vertical homogéneo entre bloques principales */
-            display: flex;
+            /* IMPORTANTE: Espaciado vertical homogéneo entre bloques principales sin crear un segundo scroll. */
+            min-height: 0;
             flex-direction: column;
             gap: 24px;
         }
@@ -1847,7 +1847,8 @@
 
             .main-wrapper {
                 margin-left: 0;
-                padding-bottom: 100px;
+                /* IMPORTANTE: espacio extra para que el último control no quede tapado por la nav móvil fija. */
+                padding-bottom: var(--bottom-nav-safe-area);
             }
 
             .top-header {
@@ -1862,8 +1863,7 @@
 
             .content-container {
                 --section-gap: 24px;
-                padding: 18px;
-                margin-bottom: 24px;
+                padding: 18px 18px calc(var(--bottom-nav-safe-area) + 24px);
             }
 
             .stats-grid {
@@ -1941,7 +1941,7 @@
         @media (max-width: 480px) {
             .content-container {
                 --section-gap: 16px;
-                padding: 16px;
+                padding: 16px 16px calc(var(--bottom-nav-safe-area) + 24px);
             }
 
             .table-container table {
@@ -1965,11 +1965,17 @@
 
         .tab-content {
             display: none;
+            min-height: 0;
             animation: fadeIn 0.3s ease;
         }
 
         .tab-content.active {
             display: block;
+        }
+
+        .tab-content.active.view-stack {
+            /* IMPORTANTE: conserva el apilado de secciones en vistas largas sin depender de scrolls internos. */
+            display: flex;
         }
 
         .section-empty-state {
