@@ -1910,18 +1910,22 @@
             const mp=document.getElementById('metodoPagoDiv');
             const md=document.getElementById('metodoDestinoDiv');
             const cat=document.getElementById('categoria');
+            const categoryContext=document.getElementById('categoriaContextDiv');
             cc.classList.add('hidden');
             pc.classList.add('hidden');
             mp.classList.remove('hidden');
             md.classList.add('hidden');
+            if(categoryContext)categoryContext.classList.remove('hidden');
             if(t==='credito'){
                 cc.classList.remove('hidden');
                 mp.classList.add('hidden');
                 syncCreditPaymentDateField(true);
             }else if(t==='pago_tarjeta'){
                 pc.classList.remove('hidden');
+                if(categoryContext)categoryContext.classList.add('hidden');
             }else if(t==='transferencia'){
                 md.classList.remove('hidden');
+                if(categoryContext)categoryContext.classList.add('hidden');
             }
             cat.innerHTML='<option value="">Seleccione...</option>';
             document.getElementById('subcategoriaDiv').classList.add('hidden');
