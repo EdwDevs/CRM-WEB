@@ -24,7 +24,34 @@
                 </div>
 
                 <div class="view-secondary-stack">
-                    <details class="card collapsible-card view-primary-card" open>
+                    <!-- IMPORTANTE: Orden visual 1. Este bloque debe aparecer antes que los plegables porque renderCharts() usa #chartCategorias. -->
+                    <section class="card view-primary-card">
+                        <div class="stats-card-head">
+                            <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
+                        </div>
+                        <div class="stats-chart-wrap stats-chart-wrap--md">
+                            <canvas id="chartCategorias"></canvas>
+                            <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
+                        </div>
+                    </section>
+
+                    <!-- IMPORTANTE: Orden visual 2. Mantener #chartTopCategorias y #topCategoriasList visibles para renderCharts(). -->
+                    <section class="card">
+                        <div class="stats-card-head">
+                            <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
+                        </div>
+                        <div class="top-category-grid">
+                            <div class="top-category-list" id="topCategoriasList"></div>
+                            <div class="stats-chart-wrap stats-chart-wrap--sm">
+                                <canvas id="chartTopCategorias"></canvas>
+                                <div id="fallbackTopChart" class="chart-fallback hidden">Sin datos suficientes para ranking de categorías.</div>
+                            </div>
+                        </div>
+                        <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
+                    </section>
+
+                    <!-- IMPORTANTE: Orden visual secundario. #chartTendencias queda en details cerrado; JS debe renderizar al abrir. -->
+                    <details class="card collapsible-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary stats-card-head">
                             <h3><i class="fas fa-wave-square" style="color:var(--primary); margin-right:8px;"></i>Tendencia (6 Meses)</h3>
                         </summary>
@@ -34,6 +61,7 @@
                         </div>
                     </details>
 
+                    <!-- IMPORTANTE: Orden visual secundario. #chartIngresosGastos queda en details cerrado; JS debe renderizar al abrir. -->
                     <details class="card collapsible-card" data-force-collapsed="true">
                         <summary class="collapsible-card__summary stats-card-head">
                             <h3><i class="fas fa-chart-column" style="color:var(--primary); margin-right:8px;"></i>Ingresos vs Gastos (6 Meses)</h3>
@@ -42,27 +70,6 @@
                             <canvas id="chartIngresosGastos"></canvas>
                             <div id="fallbackIncomeExpenseChart" class="chart-fallback hidden">Sin datos suficientes para comparar ingresos y gastos.</div>
                         </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary stats-card-head">
-                            <h3><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:8px;"></i>Distribución de Gastos</h3>
-                        </summary>
-                        <div class="stats-chart-wrap stats-chart-wrap--md collapsible-card__content">
-                            <canvas id="chartCategorias"></canvas>
-                            <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
-                        </div>
-                    </details>
-
-                    <details class="card collapsible-card" data-force-collapsed="true">
-                        <summary class="collapsible-card__summary stats-card-head">
-                            <h3><i class="fas fa-ranking-star" style="color:var(--primary); margin-right:8px;"></i>Top categorías del mes</h3>
-                        </summary>
-                        <div class="top-category-grid collapsible-card__content">
-                            <div class="top-category-list" id="topCategoriasList"></div>
-                            <div class="stats-chart-wrap stats-chart-wrap--sm"><canvas id="chartTopCategorias"></canvas></div>
-                        </div>
-                        <div id="statsEmptyState" class="section-empty-state hidden"><strong>Sin estadísticas disponibles.</strong> Registra movimientos en “Transacciones” para generar gráficos y KPIs.</div>
                     </details>
                 </div>
             </div>
