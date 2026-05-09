@@ -78,16 +78,6 @@
 
         <div class="content-container">
             
-            <div id="budgetAlert" class="budget-alert hidden">
-                <div class="budget-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="budget-alert-text">
-                    <div class="budget-alert-title">¡Alerta de Presupuesto!</div>
-                    <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
-                </div>
-            </div>
-
-            <div id="remindersContainer"></div>
-
             <!-- IMPORTANTE: Contenedor dinámico para vistas cargadas desde /views -->
             <div id="viewsHost"></div>
 
@@ -369,12 +359,12 @@
 
         // IMPORTANTE: Mapa centralizado entre vista y archivo fragmento + hooks de render al activar la vista.
         const VIEW_CONFIG={
-            dashboard:{fragment:'views/view-dashboard.html', onActivate:[()=>{updateDashboard(); updateDailyCapIndicator();}]},
-            transacciones:{fragment:'views/view-transacciones.html', onActivate:[initTransactionFormBindings]},
-            estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[renderCharts, renderTrendChart]},
-            historial:{fragment:'views/view-historial.html', onActivate:[renderHistory]},
-            objetivos:{fragment:'views/view-objetivos.html', onActivate:[renderGoals]},
-            asistente:{fragment:'views/view-asistente.html', onActivate:[]}
+            dashboard:{fragment:'views/view-dashboard.html', onActivate:[initCollapsibleCards, ()=>{updateDashboard(); updateDailyCapIndicator();}]},
+            transacciones:{fragment:'views/view-transacciones.html', onActivate:[initCollapsibleCards, initTransactionFormBindings]},
+            estadisticas:{fragment:'views/view-estadisticas.html', onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
+            historial:{fragment:'views/view-historial.html', onActivate:[initCollapsibleCards, renderHistory]},
+            objetivos:{fragment:'views/view-objetivos.html', onActivate:[initCollapsibleCards, renderGoals]},
+            asistente:{fragment:'views/view-asistente.html', onActivate:[initCollapsibleCards]}
         };
         const loadedViews=new Set();
 
@@ -398,6 +388,8 @@
             cards.forEach(card=>{
                 if(card.dataset.bound==='1')return;
                 card.dataset.bound='1';
+                // IMPORTANTE: las secciones secundarias marcadas por vista arrancan cerradas aunque el HTML sea reutilizado.
+                if(card.dataset.forceCollapsed==='true')card.open=false;
                 // IMPORTANTE: al expandir, forzar resize evita charts cortados tras abrir panel plegado.
                 card.addEventListener('toggle',()=>{
                     if(!card.open)return;
@@ -435,6 +427,7 @@
         document.addEventListener('DOMContentLoaded', async () => { 
             initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
             await preloadViews();
+            initCollapsibleCards(); // IMPORTANTE: dashboard inicia activo sin pasar por switchView(), por eso enlazamos plegables tras precargar.
             const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0');
             const todayLocal=new Date(yyyy, t.getMonth(), t.getDate());
             document.getElementById('dashboardMonth').value=`${yyyy}-${mm}`;document.getElementById('fecha').valueAsDate=todayLocal;
