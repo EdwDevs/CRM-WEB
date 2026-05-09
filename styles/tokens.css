@@ -44,6 +44,8 @@
             --transition-base: 260ms ease;
             --header-height: 64px;
             --nav-width: 278px;
+            /* IMPORTANTE: Reserva global para que el scroll principal no quede oculto bajo la navegación móvil. */
+            --bottom-nav-safe-area: calc(96px + env(safe-area-inset-bottom));
         }
 
         [data-theme="dark"] {
@@ -82,12 +84,19 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+        html {
+            height: 100%;
+        }
+
         body {
             /* Option 2: Tipografía "Outfit" y "Syne" */
             font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-body);
             color: var(--text-primary);
+            /* IMPORTANTE: el body fija el viewport y delega el desplazamiento vertical a .main-wrapper. */
             height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
             overflow: hidden;
             display: flex;
             transition: background-color var(--transition-base), color var(--transition-base);
