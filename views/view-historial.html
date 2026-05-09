@@ -1,9 +1,15 @@
 <div id="view-historial" class="tab-content view-stack">
-                <div class="export-btns">
-                    <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-                    <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                </div>
-                <details class="card collapsible-card" open>
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Historial</h1>
+                        <p class="view-subtitle">Filtra movimientos y exporta resultados sin saturar la vista inicial.</p>
+                    </div>
+                    <div class="view-actions">
+                        <button class="btn btn--primary btn--md" onclick="renderHistory()"><i class="fas fa-search"></i> Aplicar filtros</button>
+                    </div>
+                </header>
+
+                <details class="card collapsible-card view-primary-card" open>
                     <summary class="collapsible-card__summary">
                         <h3 class="card-title section-title">
                             <i class="fas fa-filter text-primary"></i> Filtros
@@ -53,40 +59,53 @@
                     </div>
                 </details>
 
-                <details class="card collapsible-card" data-force-collapsed="true">
-                    <summary class="collapsible-card__summary">
-                        <h3 class="card-title section-title"><i class="fas fa-chart-pie text-primary"></i> Resumen filtrado</h3>
-                    </summary>
-                    <!-- IMPORTANTE: los IDs de totales filtrados se conservan para renderHistory(). -->
-                    <div class="filter-summary collapsible-card__content">
-                        <div class="summary-pill inc"><i class="fas fa-arrow-down"></i> <span id="valFilteredInc">$0</span></div>
-                        <div class="summary-pill exp"><i class="fas fa-arrow-up"></i> <span id="valFilteredExp">$0</span></div>
-                    </div>
-                </details>
-
-                <details class="card collapsible-card" open>
-                    <summary class="collapsible-card__summary">
-                        <h3 class="card-title section-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
-                    </summary>
-                    <div class="collapsible-card__content">
-                        <div class="table-container">
-                            <div class="table-scroll-hint"><i class="fas fa-arrows-left-right"></i> Desliza para ver más</div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Tipo</th>
-                                        <th>Método</th>
-                                        <th>Cat.</th>
-                                        <th>Desc.</th>
-                                        <th>Monto</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="transactionList"></tbody>
-                            </table>
+                <div class="view-secondary-stack">
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title section-title"><i class="fas fa-file-export text-primary"></i> Exportación</h3>
+                        </summary>
+                        <div class="export-btns collapsible-card__content">
+                            <!-- IMPORTANTE: se mantienen exportaciones separadas para no cambiar funciones existentes de CSV/PDF. -->
+                            <button class="btn-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+                            <button class="btn-export" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                         </div>
-                        <div id="historyEmptyState" class="section-empty-state hidden"><strong>No hay transacciones para este filtro.</strong> Ajusta fechas/tipo o crea una nueva transacción para empezar.</div>
-                    </div>
-                </details>
+                    </details>
+
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title section-title"><i class="fas fa-chart-pie text-primary"></i> Resumen filtrado</h3>
+                        </summary>
+                        <!-- IMPORTANTE: los IDs de totales filtrados se conservan para renderHistory(). -->
+                        <div class="filter-summary collapsible-card__content">
+                            <div class="summary-pill inc"><i class="fas fa-arrow-down"></i> <span id="valFilteredInc">$0</span></div>
+                            <div class="summary-pill exp"><i class="fas fa-arrow-up"></i> <span id="valFilteredExp">$0</span></div>
+                        </div>
+                    </details>
+
+                    <details class="card collapsible-card" data-force-collapsed="true">
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title section-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
+                        </summary>
+                        <div class="collapsible-card__content">
+                            <div class="table-container">
+                                <div class="table-scroll-hint"><i class="fas fa-arrows-left-right"></i> Desliza para ver más</div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Método</th>
+                                            <th>Cat.</th>
+                                            <th>Desc.</th>
+                                            <th>Monto</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactionList"></tbody>
+                                </table>
+                            </div>
+                            <div id="historyEmptyState" class="section-empty-state hidden"><strong>No hay transacciones para este filtro.</strong> Ajusta fechas/tipo o crea una nueva transacción para empezar.</div>
+                        </div>
+                    </details>
+                </div>
             </div>
