@@ -2,45 +2,53 @@
                 <!-- Bento Grid Layout -->
                 <div class="dashboard-grid">
 
-                    <div class="bento-hero">
-                        <div class="hero-balance">
-                            <div class="hero-title">Patrimonio Líquido Total</div>
-                            <div class="hero-amount" id="saldoTotal">$ 0</div>
-                            <div class="hero-note">
-                                <i class="fas fa-shield-alt"></i> Saldo neto consolidado
+                    <details class="card collapsible-card grid-span-12" open>
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title section-title"><i class="fas fa-wallet section-title-icon"></i> Resumen de cuentas</h3>
+                        </summary>
+                        <!-- IMPORTANTE: el contenido conserva la grilla Bento original para no alterar el layout responsive. -->
+                        <div class="bento-hero collapsible-card__content">
+                            <div class="hero-balance">
+                                <div class="hero-title">Patrimonio Líquido Total</div>
+                                <div class="hero-amount" id="saldoTotal">$ 0</div>
+                                <div class="hero-note">
+                                    <i class="fas fa-shield-alt"></i> Saldo neto consolidado
+                                </div>
+                                <button class="btn btn--outline hero-action" onclick="openArqueoModal()">
+                                    <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
+                                </button>
                             </div>
-                            <button class="btn btn--outline hero-action" onclick="openArqueoModal()">
-                                <i class="fas fa-balance-scale"></i> Arqueo de Cuentas
-                            </button>
+                            <div class="accounts-col">
+                                <div class="account-card">
+                                    <div class="account-icon icon-surface--info"><i class="fas fa-university"></i></div>
+                                    <div class="account-info">
+                                        <span class="account-label">Débito / Bancos</span>
+                                        <span class="account-amount" id="saldoDebito">$0</span>
+                                    </div>
+                                </div>
+                                <div class="account-card">
+                                    <div class="account-icon icon-surface--success"><i class="fas fa-money-bill-wave"></i></div>
+                                    <div class="account-info">
+                                        <span class="account-label">Efectivo Físico</span>
+                                        <span class="account-amount" id="saldoEfectivo">$0</span>
+                                    </div>
+                                </div>
+                                <div class="account-card">
+                                    <div class="account-icon icon-surface--credit"><i class="fas fa-mobile-alt"></i></div>
+                                    <div class="account-info">
+                                        <span class="account-label">Billetera Digital</span>
+                                        <span class="account-amount" id="saldoNequi">$0</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="accounts-col">
-                            <div class="account-card">
-                                <div class="account-icon icon-surface--info"><i class="fas fa-university"></i></div>
-                                <div class="account-info">
-                                    <span class="account-label">Débito / Bancos</span>
-                                    <span class="account-amount" id="saldoDebito">$0</span>
-                                </div>
-                            </div>
-                            <div class="account-card">
-                                <div class="account-icon icon-surface--success"><i class="fas fa-money-bill-wave"></i></div>
-                                <div class="account-info">
-                                    <span class="account-label">Efectivo Físico</span>
-                                    <span class="account-amount" id="saldoEfectivo">$0</span>
-                                </div>
-                            </div>
-                            <div class="account-card">
-                                <div class="account-icon icon-surface--credit"><i class="fas fa-mobile-alt"></i></div>
-                                <div class="account-info">
-                                    <span class="account-label">Billetera Digital</span>
-                                    <span class="account-amount" id="saldoNequi">$0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </details>
 
-                    <div class="bento-stats">
-                        <h3 class="card-title card-title--muted">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
-                        <div class="stats-grid">
+                    <details class="card collapsible-card grid-span-12" open>
+                        <summary class="collapsible-card__summary">
+                            <h3 class="card-title card-title--muted">Flujo y Rendimiento (<span id="lblPeriodoResumen">Mes Actual</span>)</h3>
+                        </summary>
+                        <div class="stats-grid collapsible-card__content">
                             <!-- Ingresos -->
                             <div class="mini-stat">
                                 <div class="mini-header">
@@ -111,8 +119,25 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </details>
                 </div>
+
+                <details class="card collapsible-card" data-force-collapsed="true">
+                    <summary class="collapsible-card__summary">
+                        <h3 class="card-title section-title"><i class="fas fa-bell section-title-icon"></i> Alertas / recordatorios</h3>
+                    </summary>
+                    <!-- IMPORTANTE: estos IDs se mantienen porque updateFamilySummary/updatePaymentReminders los actualizan directamente. -->
+                    <div class="collapsible-card__content">
+                        <div id="budgetAlert" class="budget-alert hidden">
+                            <div class="budget-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="budget-alert-text">
+                                <div class="budget-alert-title">¡Alerta de Presupuesto!</div>
+                                <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
+                            </div>
+                        </div>
+                        <div id="remindersContainer"></div>
+                    </div>
+                </details>
 
                 <div class="family-summary" id="familySummary">
                     <div class="member-card skeleton member-card-skeleton"></div>
@@ -123,32 +148,35 @@
 
                 <div class="dashboard-grid">
                     <!-- Tope Diario -->
-                    <div class="card grid-span-12" id="dailyCapCard">
-                        <div class="section-header">
-                            <h3 class="section-title"><i class="fas fa-calendar-day section-title-icon"></i> Tope de Gasto Diario</h3>
-                            <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
-                        </div>
-
-                        <div class="daily-cap-grid">
-                            <div>
-                                <div class="daily-cap-label">Límite hoy</div>
-                                <div class="daily-cap-value" id="dailyCapValue">$0</div>
+                    <details class="card collapsible-card grid-span-12" id="dailyCapCard" open>
+                        <summary class="collapsible-card__summary">
+                            <div class="section-header">
+                                <h3 class="section-title"><i class="fas fa-calendar-day section-title-icon"></i> Capacidad diaria</h3>
+                                <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
                             </div>
-                            <div>
-                                <div class="daily-cap-label">Gastado hoy</div>
-                                <div class="daily-cap-value text-danger" id="dailySpendValue">$0</div>
+                        </summary>
+                        <div class="collapsible-card__content">
+                            <div class="daily-cap-grid">
+                                <div>
+                                    <div class="daily-cap-label">Límite hoy</div>
+                                    <div class="daily-cap-value" id="dailyCapValue">$0</div>
+                                </div>
+                                <div>
+                                    <div class="daily-cap-label">Gastado hoy</div>
+                                    <div class="daily-cap-value text-danger" id="dailySpendValue">$0</div>
+                                </div>
+                                <div>
+                                    <div class="daily-cap-label">Promedio Mes</div>
+                                    <div class="daily-cap-value" id="avgDailySpend">$0</div>
+                                </div>
                             </div>
-                            <div>
-                                <div class="daily-cap-label">Promedio Mes</div>
-                                <div class="daily-cap-value" id="avgDailySpend">$0</div>
+                            <!-- IMPORTANTE: el width inline se actualiza desde JS para el tope diario responsive. -->
+                            <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success" style="width: 0%;"></div></div>
+                            <div class="daily-cap-note">
+                                * El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.
                             </div>
                         </div>
-                        <!-- IMPORTANTE: el width inline se actualiza desde JS para el tope diario responsive. -->
-                        <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success" style="width: 0%;"></div></div>
-                        <div class="daily-cap-note">
-                            * El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.
-                        </div>
-                    </div>
+                    </details>
                 </div>
 
                 <div class="card">

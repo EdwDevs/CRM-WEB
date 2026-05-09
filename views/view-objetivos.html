@@ -1,13 +1,23 @@
 <div id="view-objetivos" class="tab-content view-stack">
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 class="card-title" style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos de Ahorro</h3>
-                        <button onclick="openGoalModal()" class="btn btn--primary btn--sm"><i class="fas fa-plus"></i> Nuevo</button>
+                <details class="card collapsible-card" open>
+                    <summary class="collapsible-card__summary">
+                        <h3 class="card-title" style="margin:0;"><i class="fas fa-bullseye"></i> Objetivos activos</h3>
+                    </summary>
+                    <!-- IMPORTANTE: renderGoals() usa estos IDs para pintar objetivos y estado vacío. -->
+                    <div class="collapsible-card__content">
+                        <div id="goalsContainer">
+                            <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
+                            <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
+                        </div>
+                        <div id="goalsEmptyState" class="section-empty-state hidden"><strong>Aún no tienes objetivos creados.</strong> Abre “Acciones de creación” para definir una meta con monto y fecha.</div>
                     </div>
-                    <div id="goalsContainer">
-                        <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
-                        <div class="skeleton" style="height: 100px; margin-bottom: 15px;"></div>
+                </details>
+                <details class="card collapsible-card" data-force-collapsed="true">
+                    <summary class="collapsible-card__summary">
+                        <h3 class="card-title" style="margin:0;"><i class="fas fa-plus-circle"></i> Acciones de creación</h3>
+                    </summary>
+                    <div class="collapsible-card__content">
+                        <button onclick="openGoalModal()" class="btn btn--primary btn--sm"><i class="fas fa-plus"></i> Nuevo objetivo</button>
                     </div>
-                    <div id="goalsEmptyState" class="section-empty-state hidden"><strong>Aún no tienes objetivos creados.</strong> Presiona “Nuevo” para definir una meta con monto y fecha.</div>
-                </div>
+                </details>
             </div>
