@@ -303,6 +303,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="js/finance-engine.js"></script>
     <script src="js/store.js"></script>
+    <!-- IMPORTANTE: módulos extraídos cargan antes del script legado y exponen funciones en window por compatibilidad con HTML inline. -->
+    <script src="js/ui/charts.js"></script>
+    <script src="js/ui/visual.js"></script>
+    <script src="js/ui/transactions.js"></script>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
@@ -385,18 +389,6 @@
         function logEvent(type,payload={}){ const entry={type,payload,at:new Date().toISOString()}; console.info('[crm-web:event]',entry); debugState.lastEvents=[entry,...debugState.lastEvents].slice(0,12); renderDebugPanel(); return entry; }
         function registerDebugError(scope,error){ const entry={scope,message:error?.message||String(error),at:new Date().toISOString()}; debugState.lastErrors=[entry,...debugState.lastErrors].slice(0,8); renderDebugPanel(); }
         function toggleDebugPanel(){ debugState.expanded=!debugState.expanded; renderDebugPanel(); }
-        function renderDebugPanel(){
-            if(!debugState.enabled)return;
-            let panel=document.getElementById('debugPanel');
-            if(!panel){ panel=document.createElement('section'); panel.id='debugPanel'; document.body.appendChild(panel); }
-            const recentErrorCount=debugState.lastErrors.length;
-            panel.className=`debug-panel${debugState.expanded?'':' debug-panel--collapsed'}`;
-            // IMPORTANTE: el panel debug debe iniciar colapsado y no ser intrusivo para QA visual.
-            panel.innerHTML=debugState.expanded
-                ? `<div class="debug-panel__head"><button class="debug-panel-toggle" type="button" aria-expanded="true" title="Colapsar debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span><span>Debug local</span></button><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div class="debug-section-title"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div class="debug-section-title"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`
-                : `<button class="debug-panel-toggle" type="button" aria-expanded="false" title="Abrir debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span></button>`;
-            panel.querySelector('.debug-panel-toggle')?.addEventListener('click',toggleDebugPanel);
-        }
         let syncCardIdMap=null;
         const confirmActionState = { onConfirm: null };
         let isSyncingOfflineQueue = false;
@@ -430,31 +422,6 @@
         async function preloadViews(){
             // IMPORTANTE: cargamos todas las vistas al inicio para preservar IDs y compatibilidad con lógica existente.
             await Promise.all(Object.keys(VIEW_CONFIG).map(loadView));
-        }
-        function initCollapsibleCards(){
-            const cards=document.querySelectorAll('.collapsible-card');
-            cards.forEach(card=>{
-                if(card.dataset.bound==='1')return;
-                card.dataset.bound='1';
-                // IMPORTANTE: las secciones secundarias marcadas por vista arrancan cerradas aunque el HTML sea reutilizado.
-                if(card.dataset.forceCollapsed==='true')card.open=false;
-                // IMPORTANTE: al expandir, forzar resize evita charts cortados tras abrir panel plegado.
-                card.addEventListener('toggle',()=>{
-                    if(!card.open)return;
-                    setTimeout(()=>{
-                        if(card.querySelector('#chartTendencias, #chartIngresosGastos')){
-                            renderTrendChart();
-                        }
-                        if(card.querySelector('#chartCategorias, #chartTopCategorias')){
-                            renderCharts();
-                        }
-                        if(chartInstance)chartInstance.resize();
-                        if(trendChartInstance)trendChartInstance.resize();
-                        if(trendBarChartInstance)trendBarChartInstance.resize();
-                        if(topCategoriesChartInstance)topCategoriesChartInstance.resize();
-                    },120);
-                });
-            });
         }
 
         function toggleTheme(){const d=document.documentElement;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();} // IMPORTANTE: persistencia manual del tema híbrido
@@ -1495,100 +1462,6 @@
         function checkBudgetAlerts(){const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const budgets={};transactions.filter(t=>{const[ty,tm]=t.fecha.split('-').map(Number);return(t.tipo==='gasto'||t.tipo==='credito')&&(tm-1)===vm&&ty===vy;}).forEach(t=>{budgets[t.categoria]=(budgets[t.categoria]||0)+parseFloat(t.monto);});
         let exceeded=null;Object.keys(budgets).forEach(cat=>{if(budgets[cat]>1000000&&!exceeded){exceeded=cat;}});const alertDiv=document.getElementById('budgetAlert');if(exceeded){alertDiv.classList.remove('hidden');document.getElementById('budgetAlertDesc').textContent=`Has excedido $1,000,000 en ${exceeded.toUpperCase().replace(/_/g,' ')}`;}else{alertDiv.classList.add('hidden');}}
         
-        function renderReminders(){
-            const cont=document.getElementById('remindersContainer');
-            if(!cont)return;
-            const today=new Date();
-            today.setHours(0,0,0,0);
-            
-            const reminders=[];
-            
-            Object.keys(globalDeudaPorTarjeta).forEach(card=>{
-                if(globalDeudaPorTarjeta[card]>0){
-                    const cardData=cardsList.find(c=>c.name===card);
-                    const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
-                    
-                    // Lógica corregida: Buscar fecha real basada en los créditos
-                    const cardCredits = transactions.filter(t => 
-                        t.tipo === 'credito' && 
-                        t.esCredito && 
-                        resolveCreditCardName(t) === card && 
-                        (t.cuotasPagadas || 0) < (t.cuotas || 1)
-                    );
-
-                    let nextPaymentDate = null;
-
-                    if (cardCredits.length > 0) {
-                        // Obtener todas las próximas fechas de pago
-                        const dates = cardCredits.map(cred => {
-                            if (cred.proximaFechaPago) {
-                                const parts = cred.proximaFechaPago.split('-');
-                                return new Date(parts[0], parts[1] - 1, parts[2]);
-                            } else {
-                                // Si no hay fecha guardada, usar el default de este mes
-                                let d = new Date(today.getFullYear(), today.getMonth(), paymentDay);
-                                // Si hoy ya pasó el día de pago y no se ha pagado (no tiene proximaFechaPago), 
-                                // técnicamente está vencido o es hoy, así que dejamos esa fecha para que salga alerta.
-                                return d;
-                            }
-                        });
-                        // Ordenar y tomar la más antigua (la deuda más próxima)
-                        dates.sort((a,b) => a - b);
-                        nextPaymentDate = dates[0];
-                    }
-
-                    // Fallback si algo falla
-                    if (!nextPaymentDate) {
-                        nextPaymentDate = new Date(today.getFullYear(), today.getMonth(), paymentDay);
-                        if(nextPaymentDate < today){
-                            nextPaymentDate = new Date(today.getFullYear(), today.getMonth()+1, paymentDay);
-                        }
-                    }
-
-                    const daysUntilPayment=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));
-                    
-                    reminders.push({
-                        title:`Pago ${card}`,
-                        cardName:card,
-                        debtLabel:formatMoney(globalDeudaPorTarjeta[card]),
-                        desc:`Deuda actual: ${formatMoney(globalDeudaPorTarjeta[card])}`,
-                        date:nextPaymentDate,
-                        daysUntil:daysUntilPayment
-                    });
-                }
-            });
-
-            // IMPORTANTE: mantener visible solo información urgente; no mostrar pagos a más de 1 día.
-            const urgentReminders=reminders.filter(r=>r.daysUntil<2);
-            if(urgentReminders.length===0){cont.innerHTML='';cont.classList.add('hidden');return;}
-            cont.classList.remove('hidden');
-            
-            const getReminderStatus=r=>r.daysUntil<0?'vencido':(r.daysUntil===0?'hoy':'mañana');
-            const resumen=urgentReminders.map(r=>`${r.title}: ${r.daysUntil<0?`vencido ${Math.abs(r.daysUntil)}d`:getReminderStatus(r)}`).join(' · ');
-            const chipTone=urgentReminders.some(r=>r.daysUntil<=0)?'reminder-bell-chip--danger':'reminder-bell-chip--warning';
-            const detailItems=urgentReminders.map(r=>{
-                const status=getReminderStatus(r);
-                const dateLabel=r.date.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'});
-                return `<div class="reminder-popover__item reminder-popover__item--${status}">
-                    <div class="reminder-popover__header">
-                        <strong>${escapeHtml(r.cardName)}</strong>
-                        <span class="reminder-popover__status">${escapeHtml(status)}</span>
-                    </div>
-                    <div class="reminder-popover__meta"><i class="fas fa-calendar-day"></i> ${escapeHtml(dateLabel)}</div>
-                    <div class="reminder-popover__meta"><i class="fas fa-credit-card"></i> Deuda actual: ${escapeHtml(r.debtLabel)}</div>
-                </div>`;
-            }).join('');
-            // IMPORTANTE: details mantiene la campanita compacta y revela únicamente el detalle urgente al tocarla.
-            cont.innerHTML=`<details class="reminder-bell-chip ${chipTone}">
-                    <summary title="${escapeHtml(resumen)}" aria-label="Recordatorios de pago urgentes">
-                        <i class="fas fa-bell"></i>
-                        <span>${urgentReminders.length}</span>
-                    </summary>
-                    <div class="reminder-popover" role="list" aria-label="Detalle de pagos urgentes">
-                        ${detailItems}
-                    </div>
-                 </details>`;
-        }
         
         let tempPagoCuotaData=null;
         function buildPaymentDate(year,monthIndex,day){
@@ -1890,99 +1763,6 @@
             return Boolean(parentDetails&&!parentDetails.open);
         }
 
-        function renderTrendChart(){
-            const trendCanvas=document.getElementById('chartTendencias');
-            const barCanvas=document.getElementById('chartIngresosGastos');
-            const canRenderTrend=trendCanvas&&!isCanvasInsideClosedCollapsible(trendCanvas);
-            const canRenderBar=barCanvas&&!isCanvasInsideClosedCollapsible(barCanvas);
-            if(!canRenderTrend&&!canRenderBar)return;
-
-            const trend=FinanceEngine.computeTrend6M(transactions,currentViewDate);
-            const l=trend.map(t=>t.label);
-            const i=trend.map(t=>t.income);
-            const g=trend.map(t=>t.expense);
-
-            // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
-            if(canRenderTrend){
-                if(trendChartInstance)trendChartInstance.destroy();
-                trendChartInstance=new Chart(trendCanvas,{type:'line',data:{labels:l,datasets:[{label:'Ing',data:i,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true},{label:'Gas',data:g,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}});
-            }
-            // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
-            if(canRenderBar){
-                if(trendBarChartInstance)trendBarChartInstance.destroy();
-                trendBarChartInstance=new Chart(barCanvas,{type:'bar',data:{labels:l,datasets:[{label:'Ingresos',data:i,backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1},{label:'Gastos',data:g,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}});
-            }
-        }
-        function renderCharts(){const c=document.getElementById('chartCategorias'); const canRenderCategory=c&&!isCanvasInsideClosedCollapsible(c); const ct={},vm=currentViewDate.getMonth(),vy=currentViewDate.getFullYear(); const monthly=FinanceEngine.computeMonthlyMetrics(transactions,currentViewDate); let monthlyIncome=monthly.income; let monthlyExpenses=monthly.expenses; const daysInMonth=new Date(vy, vm+1, 0).getDate(); monthly.monthTransactions.forEach(t=>{ const m=parseFloat(t.monto); if(t.tipo==='gasto'||t.tipo==='credito'){ const n=t.categoria||'Otros';ct[n]=(ct[n]||0)+m;}});
-            const hasMonthlyTransactions=monthly.monthTransactions.length>0;
-            const hasCategoryData=Object.keys(ct).length>0;
-            const categoryFallback=document.getElementById('fallbackCategoryChart');
-            const statsEmptyState=document.getElementById('statsEmptyState');
-            // IMPORTANTE: el estado vacío principal evita que Estadísticas muestre un canvas en blanco cuando no hay movimientos del mes.
-            if(statsEmptyState) statsEmptyState.classList.toggle('hidden', hasMonthlyTransactions);
-            if(c)c.classList.toggle('hidden', !hasCategoryData);
-            if(categoryFallback)categoryFallback.classList.toggle('hidden', !hasMonthlyTransactions || hasCategoryData);
-            if(!hasCategoryData&&chartInstance){chartInstance.destroy();chartInstance=null;}
-            // IMPORTANTE: Chart.js necesita canvas visible y datos reales para medir correctamente; no inicializar si el details está cerrado.
-            if(canRenderCategory&&hasCategoryData){ if(chartInstance)chartInstance.destroy(); chartInstance=new Chart(c,{type:'doughnut',data:{labels:Object.keys(ct),datasets:[{data:Object.values(ct),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}}); }
-            const avgDaily=daysInMonth>0?monthlyExpenses/daysInMonth:0;
-            const savingsRate=monthlyIncome===0?0:((monthlyIncome-monthlyExpenses)/monthlyIncome)*100;
-            const balance=monthlyIncome-monthlyExpenses;
-            const prevDate=new Date(vy, vm-1, 1);
-            const prevTotals=calculateMonthlyTotals(prevDate);
-            const prevBalance=prevTotals.income-prevTotals.expenses;
-            const variation=balance-prevBalance;
-            const variationPercent=prevBalance===0?(balance===0?0:null):Math.abs((variation/prevBalance)*100);
-            const variationLabel=variation===0?'→':(variation>0?'▲':'▼');
-            const variationSign=variation>0?'+':'-';
-            const variationValue=document.getElementById('kpiMonthlyVariation');
-            const variationDetail=document.getElementById('kpiMonthlyVariationDetail');
-            const dailyAverageEl=document.getElementById('kpiDailyAverage');
-            const savingsRateEl=document.getElementById('kpiSavingsRate');
-            if(dailyAverageEl)dailyAverageEl.textContent=formatMoney(avgDaily);
-            if(savingsRateEl)savingsRateEl.textContent=`${savingsRate.toFixed(1)}%`;
-            if(variationValue)variationValue.textContent=`${variationLabel} ${variation===0?'':variationSign}${formatMoney(Math.abs(variation))}`;
-            if(variationDetail){
-                const percentText=variationPercent===null?'N/A':`${variationPercent.toFixed(1)}%`;
-                variationDetail.textContent=`${percentText} vs mes anterior`;
-                variationDetail.style.color=variation===0?'var(--text-muted)':(variation>0?'var(--success)':'var(--danger)');
-            }
-
-            const topList=document.getElementById('topCategoriasList');
-            const topCanvas=document.getElementById('chartTopCategorias');
-            const sortedEntries=Object.entries(ct).sort(([,a],[,b])=>b-a);
-            if(topList){
-                if(sortedEntries.length===0){
-                    // IMPORTANTE: el ranking de categorías también entrega una acción cuando no hay gastos para evitar un bloque dinámico vacío.
-                    topList.innerHTML=renderEmptyState({icon:'fas fa-ranking-star',title:'Sin categorías para mostrar.',message:'Crea una transacción de gasto para construir el ranking del mes.',actionLabel:'Crear transacción',actionOnclick:'goToAddTransaction()'});
-                }else{
-                    const totalExpenses=monthlyExpenses||1;
-                    topList.innerHTML=sortedEntries.slice(0,5).map(([name,value])=>`
-                        <div class="top-category-item">
-                            <span>${name}</span>
-                            <span class="top-category-amount">${formatMoney(value)} · ${((value/totalExpenses)*100).toFixed(1)}%</span>
-                        </div>`).join('');
-                }
-            }
-            const topFallback=document.getElementById('fallbackTopChart');
-            const canRenderTop=topCanvas&&!isCanvasInsideClosedCollapsible(topCanvas);
-            if(topCanvas&&sortedEntries.length){
-                topCanvas.classList.remove('hidden');
-                if(topFallback)topFallback.classList.add('hidden');
-                // IMPORTANTE: Chart.js necesita canvas visible para medir correctamente; no inicializar si el details está cerrado.
-                if(canRenderTop){
-                    if(topCategoriesChartInstance)topCategoriesChartInstance.destroy();
-                    const topLabels=sortedEntries.slice(0,5).map(([name])=>name);
-                    const topValues=sortedEntries.slice(0,5).map(([,value])=>value);
-                    topCategoriesChartInstance=new Chart(topCanvas,{type:'bar',data:{labels:topLabels,datasets:[{label:'Gasto',data:topValues,backgroundColor:'rgba(79,70,229,0.6)',borderColor:'#4f46e5',borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
-                }
-            }else if(topCanvas){
-                topCanvas.classList.add('hidden');
-                if(topFallback)topFallback.classList.remove('hidden');
-                if(topCategoriesChartInstance){topCategoriesChartInstance.destroy(); topCategoriesChartInstance=null;}
-            }
-            logEvent('renderCharts',{target:'estadisticas',categories:sortedEntries.length,hasCategoryData});
-        }
         
         async function loadCards(){
             try{
@@ -2072,43 +1852,6 @@
             dateInput.value=getDefaultCreditPaymentDate(cardId, txDate);
         }
 
-        function handleTipoChange(){
-            // IMPORTANTE: la vista de transacciones es lazy-load; validar nodos evita romper scripts globales.
-            if(!document.getElementById('tipo')||!document.getElementById('categoria'))return;
-            const t=document.getElementById('tipo').value;
-            const cc=document.getElementById('creditConfig');
-            const pc=document.getElementById('divPagoTarjeta');
-            const mp=document.getElementById('metodoPagoDiv');
-            const md=document.getElementById('metodoDestinoDiv');
-            const cat=document.getElementById('categoria');
-            const categoryContext=document.getElementById('categoriaContextDiv');
-            cc.classList.add('hidden');
-            pc.classList.add('hidden');
-            mp.classList.remove('hidden');
-            md.classList.add('hidden');
-            if(categoryContext)categoryContext.classList.remove('hidden');
-            if(t==='credito'){
-                cc.classList.remove('hidden');
-                mp.classList.add('hidden');
-                syncCreditPaymentDateField(true);
-            }else if(t==='pago_tarjeta'){
-                pc.classList.remove('hidden');
-                if(categoryContext)categoryContext.classList.add('hidden');
-            }else if(t==='transferencia'){
-                md.classList.remove('hidden');
-                if(categoryContext)categoryContext.classList.add('hidden');
-            }
-            cat.innerHTML='<option value="">Seleccione...</option>';
-            document.getElementById('subcategoriaDiv').classList.add('hidden');
-            if(t==='pago_tarjeta')cat.add(new Option('Abono Tarjeta','pago_tc'));
-            else if(t==='transferencia')cat.add(new Option('Transferencia','transferencia'));
-            else{
-                const g=t==='credito'?'gasto':t;
-                if(categorias[g]){
-                    Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});
-                }
-            }
-        }
         function initTransactionFormBindings(){
             const category=document.getElementById('categoria');
             const creditCard=document.getElementById('tarjetaCredito');
@@ -2122,108 +1865,7 @@
             handleTipoChange();
             logEvent('switchView',{view:'transacciones-bindings-ready'});
         }
-        function preSubmit(){
-            const t=document.getElementById('tipo').value;
-            const m=parseCurrencyInput(document.getElementById('monto').value);
-            if(!Number.isFinite(m)||m<=0){alert('Monto inválido');return;}
-            const d={tipo:t,monto:m,categoria:document.getElementById('categoria').value,subcategoria:document.getElementById('subcategoria').value||'',miembro:document.getElementById('miembro').value,descripcion:document.getElementById('descripcion').value,fecha:document.getElementById('fecha').value,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
-            if(t==='credito'){
-                const tc=document.getElementById('tarjetaCredito').value;
-                const c=parseInt(document.getElementById('cuotas').value);
-                const pagadasRaw=parseInt(document.getElementById('cuotasPagadas').value);
-                const valorCuotaManualStr=document.getElementById('valorCuotaManual').value;
-                const valorCuotaManual=parseCurrencyInput(valorCuotaManualStr);
-                const cardData=findCardById(tc);
-                const cardName=cardData?.name||'';
-                if(!c||c<=0){showToast('Completa cuotas válidas','error');alert('Completa cuotas válidas');return;}
-                const manualPaymentDate=document.getElementById('creditoFechaPago').value;
-                const resolvedPaymentDate=manualPaymentDate||getDefaultCreditPaymentDate(tc, d.fecha);
-                if(!resolvedPaymentDate){
-                    showToast('Define una fecha de pago válida','error');
-                    return;
-                }
-                d.cardId=tc;
-                d.cardName=cardName;
-                d.esCredito=true;
-                d.cuotas=c;
-                d.totalDeuda=m;
-                if(!Number.isNaN(valorCuotaManual) && valorCuotaManual > 0){
-                    d.valorCuotaManual=valorCuotaManual;
-                }
-                d.fechaPrimerPago=resolvedPaymentDate;
-                d.proximaFechaPago=resolvedPaymentDate;
-                const pagadas=Number.isNaN(pagadasRaw)?0:Math.min(Math.max(pagadasRaw,0),c);
-                d.cuotasPagadas=pagadas;
-                tempTransactionData=d;
-                document.getElementById('modalTarjeta').textContent=cardName;
-                document.getElementById('modalCuotas').textContent=c;
-                document.getElementById('modalTotalDeuda').textContent=formatMoney(m);
-                const cuotaCalculada = (d.valorCuotaManual !== undefined) ? d.valorCuotaManual : (m/c);
-                document.getElementById('modalValorCuota').textContent=formatMoney(cuotaCalculada) + (d.valorCuotaManual !== undefined ? ' (Manual)' : ' (Automática)');
-                document.getElementById('creditModal').style.display='flex';
-            }else{
-                if(t==='pago_tarjeta'){
-                    d.metodoPago=document.getElementById('metodoPago').value;
-                    d.tarjetaDestino=document.getElementById('tarjetaDestinoPago').value;
-                }else{
-                    d.metodoPago=document.getElementById('metodoPago').value;
-                    if(t==='transferencia')d.metodoDestino=document.getElementById('metodoDestino').value;
-                }
-                saveTransaction(d);
-            }
-        }
         function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
-        async function saveTransaction(d){
-            const monto=Number(d?.monto);
-            if(!isValidPositiveAmount(monto)){
-                showToast('Monto inválido','error');
-                return;
-            }
-            d.monto=monto;
-            const btn=document.getElementById('btnSubmitText');
-            const shouldReturnToQuota = returnToQuotaModal;
-            const wasEditing = Boolean(editingTransactionId);
-            if(btn)btn.classList.add('is-loading');
-            try{
-                let result=null;
-                if(editingTransactionId){
-                    result=await enqueueOrExecute({
-                        entity: 'transactions',
-                        action: 'update',
-                        payload: { id: editingTransactionId, data: d }
-                    });
-                } else {
-                    result=await enqueueOrExecute({
-                        entity: 'transactions',
-                        action: 'add',
-                        payload: { data: d }
-                    });
-                }
-                cancelEdit();
-                // IMPORTANTE: si la persistencia ya fue aceptada (online u offline), un fallo de refresco no debe marcar "Error al guardar".
-                try{
-                    await loadTransactions();
-                }catch(refreshError){
-                    console.error('Refresh post-save failed:', refreshError);
-                    registerDebugError('saveTransaction:refresh', refreshError);
-                    showToast('Guardado, pero no se pudo refrescar la vista de inmediato.', 'warning');
-                }
-                if(!result?.queued){
-                    showToast(wasEditing?'Actualizado':'Guardado','success');
-                }
-            }catch(e){
-                console.error(e);
-                registerDebugError('saveTransaction:enqueueOrExecute', e);
-                showToast('Error al guardar. Verifica tu conexión.', 'error');
-            }finally{
-                if(btn)btn.classList.remove('is-loading');
-                if(shouldReturnToQuota){
-                    returnToQuotaModal=false;
-                    openQuotaModal();
-                }
-            }
-        }
-        function cancelEdit(){editingTransactionId=null; returnToQuotaModal=false; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
         window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;document.getElementById('creditoFechaPago').value=t.proximaFechaPago||getDefaultCreditPaymentDate(resolveCreditCardId(t), t.fecha);}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         async function performDeleteTransaction(id,{skipConfirm=false}={}){
             if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
@@ -3001,29 +2643,6 @@
             });
         }
         function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
-        async function switchView(id){
-            if(!VIEW_CONFIG[id])return;
-            logEvent('switchView',{view:id});
-            await loadView(id);
-            document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
-            const targetView=document.getElementById('view-'+id);
-            if(targetView)targetView.classList.add('active');
-            const f=document.getElementById('headerDateFilter');
-            if(f)f.style.display=id==='dashboard'?'flex':'none';
-            document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
-            const s=document.querySelectorAll('.sidebar .nav-item');
-            const m=document.querySelectorAll('.mobile-nav .mob-link');
-            // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG aunque los nombres visuales estén agrupados.
-            if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
-            if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
-            if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
-            if(id==='estadisticas'){s[3].classList.add('active');}
-            if(id==='objetivos'){s[4].classList.add('active');}
-            if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
-            // IMPORTANTE: ejecutar hooks de render de la vista activa (documentación funcional en VIEW_CONFIG).
-            requestAnimationFrame(()=>{(VIEW_CONFIG[id].onActivate||[]).forEach(fn=>fn());});
-            closeSidebar();
-        }
         function goToAddTransaction(){switchView('transacciones');}
 
         handleTipoChange();
