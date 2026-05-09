@@ -38,6 +38,22 @@
     align-items: center;
 }
 
+/* IMPORTANTE: utilidades solicitadas para reemplazar inline styles de espaciado y layout sin duplicar reglas por vista. */
+.flex-between {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.flex-center {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.gap-sm { gap: 8px !important; }
+.gap-md { gap: 16px !important; }
+
 .text-primary { color: var(--primary) !important; }
 .text-secondary { color: var(--text-secondary) !important; }
 .text-muted { color: var(--text-muted) !important; }

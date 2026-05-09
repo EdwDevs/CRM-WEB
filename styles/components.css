@@ -776,6 +776,11 @@
             letter-spacing: 0.01em;
         }
 
+        .stats-title-icon {
+            /* IMPORTANTE: espaciado de iconos en títulos de estadísticas; reemplaza margin-right inline. */
+            margin-right: 8px;
+        }
+
         .stats-chart-wrap {
             border: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
             border-radius: var(--radius-md);
@@ -808,6 +813,9 @@
             border-radius: var(--radius-full);
             transition: width 0.5s ease-out;
         }
+
+        .stat-progress-fill--empty { width: 0%; }
+        .stat-progress-fill--half { width: 50%; }
 
         .top-category-grid {
             display: grid;
@@ -4246,14 +4254,17 @@
     margin-top: 16px;
 }
 
+.panel-credit,
 .transaction-panel--credit,
 .transaction-panel--transfer,
+.panel-payment,
 .transaction-panel--payment {
     /* IMPORTANTE: variantes contextuales de transacciones; handleTipoChange() solo alterna .hidden. */
     position: relative;
     overflow: hidden;
 }
 
+.panel-credit,
 .transaction-panel--credit {
     border-color: color-mix(in srgb, var(--danger) 42%, var(--border-light));
     background: linear-gradient(135deg, color-mix(in srgb, var(--danger-light) 24%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 78%, transparent) 100%);
@@ -4264,13 +4275,16 @@
     background: linear-gradient(135deg, color-mix(in srgb, var(--info-light) 24%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 78%, transparent) 100%);
 }
 
+.panel-payment,
 .transaction-panel--payment {
     border-color: color-mix(in srgb, var(--success) 42%, var(--border-light));
     background: linear-gradient(135deg, color-mix(in srgb, var(--success-light) 24%, var(--bg-surface)) 0%, color-mix(in srgb, var(--bg-elevated) 78%, transparent) 100%);
 }
 
+.panel-credit::before,
 .transaction-panel--credit::before,
 .transaction-panel--transfer::before,
+.panel-payment::before,
 .transaction-panel--payment::before {
     content: '';
     position: absolute;
@@ -4279,8 +4293,10 @@
     border-radius: var(--radius-full);
 }
 
+.panel-credit::before,
 .transaction-panel--credit::before { background: var(--danger); }
 .transaction-panel--transfer::before { background: var(--info); }
+.panel-payment::before,
 .transaction-panel--payment::before { background: var(--success); }
 
 @media (max-width: 720px) {
@@ -4289,3 +4305,19 @@
         align-items: stretch;
     }
 }
+
+/* IMPORTANTE: placeholders de objetivos; reemplazan height/margin inline conservando la carga visual inicial. */
+.skeleton-goal-hero {
+    height: 180px;
+    margin-bottom: 15px;
+}
+
+.skeleton-goal-list {
+    height: 120px;
+    margin-bottom: 15px;
+}
+
+/* IMPORTANTE: componentes de color para iconos; centralizan colores inline de vistas y templates JS. */
+.icon-primary { color: var(--primary) !important; }
+.icon-success { color: var(--success) !important; }
+.icon-danger { color: var(--danger) !important; }

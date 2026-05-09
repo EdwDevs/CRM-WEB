@@ -271,8 +271,8 @@
             <div class="payment-summary">
                 <div id="pagoCuotaInfo" class="payment-quota-info"></div>
             </div>
-            <!-- IMPORTANTE: display inline inicia oculto el calendario legado hasta que JS lo active. -->
-            <div class="calendar-container" style="display:none;">
+            <!-- IMPORTANTE: .hidden inicia oculto el calendario legado; si JS lo reactiva debe alternar esta clase. -->
+            <div class="calendar-container hidden">
                 <div class="calendar-header">
                     <button class="calendar-nav-btn" onclick="cambiarMesCalendario(-1)">&#8249;</button>
                     <span id="calendarMonthYear" class="calendar-month-year"></span>
@@ -1712,8 +1712,8 @@
                     </div>
                     <div class="goal-percent">${visual.pct}%</div>
                 </div>
-                <!-- IMPORTANTE: el width inline representa el porcentaje calculado en getGoalVisualState() para cada objetivo. -->
-                <div class="goal-progress"><div class="goal-progress-bar" style="width:${visual.pct}%"></div></div>
+                <!-- IMPORTANTE: data-goal-progress representa el porcentaje calculado en getGoalVisualState(); applyGoalProgressStyles() lo traduce a width dinámico. -->
+                <div class="goal-progress"><div class="goal-progress-bar" data-goal-progress="${visual.pct}"></div></div>
                 <div class="goal-stats">
                     <span><strong>${formatMoney(Number(goal.saved)||0)}</strong><small>Ahorrado</small></span>
                     <span><strong>${formatMoney(Number(goal.target)||0)}</strong><small>Meta</small></span>
@@ -1726,6 +1726,14 @@
             </article>`;
         }
 
+        function applyGoalProgressStyles(scope){
+            // IMPORTANTE: el ancho depende de datos JS por objetivo; se aplica tras renderizar para evitar atributos de estilo inline dentro del template.
+            scope.querySelectorAll('[data-goal-progress]').forEach(bar=>{
+                const pct=Number(bar.dataset.goalProgress)||0;
+                bar.style.width=`${Math.min(100,Math.max(0,pct))}%`;
+            });
+        }
+
         function renderGoals(){const cont=document.getElementById('goalsContainer');const goalsEmptyState=document.getElementById('goalsEmptyState');if(!cont)return;if(goals.length===0){cont.innerHTML='';if(goalsEmptyState)goalsEmptyState.classList.remove('hidden');return;}if(goalsEmptyState)goalsEmptyState.classList.add('hidden');
             const mappedGoals=goals.map((goal,index)=>({goal,index,visual:getGoalVisualState(goal)}));
             const upcomingGoals=mappedGoals.filter(item=>item.visual.pct<100&&item.visual.daysLeft!==null&&item.visual.daysLeft>=0).sort((a,b)=>a.visual.daysLeft-b.visual.daysLeft||b.visual.pct-a.visual.pct);
@@ -1734,6 +1742,7 @@
             const remainingGoals=mappedGoals.filter(item=>item.index!==featured.index);
             const remainingHtml=remainingGoals.length?remainingGoals.map(item=>renderGoalCard(item.goal,item.visual)).join(''):`<div class="section-empty-state goals-rest-empty"><strong>Solo tienes una meta activa.</strong> Crea otro objetivo para comparar prioridades del hogar.</div>`;
             cont.innerHTML=`<div class="goals-featured-wrap"><div class="goals-section-kicker">Objetivo destacado</div>${renderGoalCard(featured.goal,featured.visual,true)}</div><div class="goals-rest-section"><div class="goals-section-header"><div><span class="goals-section-kicker">Resto de metas</span><h2>Seguimiento general</h2></div><span>${remainingGoals.length} objetivo${remainingGoals.length===1?'':'s'}</span></div><div class="goals-grid">${remainingHtml}</div></div>`;
+            applyGoalProgressStyles(cont);
         }
         
         function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);AppStore.setGoals(goals);}else{AppStore.setGoals([]);}}

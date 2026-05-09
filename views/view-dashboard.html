@@ -48,8 +48,8 @@
                     <!-- IMPORTANTE: savingsRate es consumido por updateDashboard(); conservar el ID para evitar romper KPIs. -->
                     <div class="mini-value" id="savingsRate">0%</div>
                     <div class="mini-footer mini-footer--compact">
-                        <!-- IMPORTANTE: savingsProgressBar recibe width inline desde JS para animar la tasa de ahorro. -->
-                        <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill stat-progress-fill--info" style="width: 0%;"></div></div>
+                        <!-- IMPORTANTE: savingsProgressBar recibe width dinámico desde JS para animar la tasa de ahorro. -->
+                        <div class="stat-progress-bg"><div id="savingsProgressBar" class="stat-progress-fill stat-progress-fill--info stat-progress-fill--empty"></div></div>
                     </div>
                 </article>
             </div>
@@ -129,8 +129,8 @@
                     <!-- IMPORTANTE: balanceMes es consumido por updateDashboard(); conservar ID. -->
                     <div class="mini-value" id="balanceMes">$0</div>
                     <div class="mini-footer mini-footer--compact">
-                        <!-- IMPORTANTE: balanceProgressBar recibe width inline desde JS para animar el progreso del KPI. -->
-                        <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill stat-progress-fill--secondary" style="width: 50%;"></div></div>
+                        <!-- IMPORTANTE: balanceProgressBar recibe width dinámico desde JS para animar el progreso del KPI. -->
+                        <div class="stat-progress-bg"><div id="balanceProgressBar" class="stat-progress-fill stat-progress-fill--secondary stat-progress-fill--half"></div></div>
                     </div>
                 </div>
                 <div class="mini-stat">
@@ -150,8 +150,8 @@
                     <!-- IMPORTANTE: creditUtilization es consumido por updateDashboard(); conservar ID. -->
                     <div class="mini-value" id="creditUtilization">0%</div>
                     <div class="mini-footer mini-footer--compact">
-                        <!-- IMPORTANTE: creditUtilizationBar recibe width inline desde JS para reflejar uso de cupos TC. -->
-                        <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill stat-progress-fill--warning" style="width: 0%;"></div></div>
+                        <!-- IMPORTANTE: creditUtilizationBar recibe width dinámico desde JS para reflejar uso de cupos TC. -->
+                        <div class="stat-progress-bg"><div id="creditUtilizationBar" class="stat-progress-fill stat-progress-fill--warning stat-progress-fill--empty"></div></div>
                     </div>
                 </div>
             </div>
@@ -183,8 +183,8 @@
                     <div><div class="daily-cap-label">Gastado hoy</div><div class="daily-cap-value text-danger" id="dailySpendValue">$0</div></div>
                     <div><div class="daily-cap-label">Promedio Mes</div><div class="daily-cap-value" id="avgDailySpend">$0</div></div>
                 </div>
-                <!-- IMPORTANTE: dailySpendProgressBar recibe width inline desde JS para el tope diario responsive. -->
-                <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success" style="width: 0%;"></div></div>
+                <!-- IMPORTANTE: dailySpendProgressBar recibe width dinámico desde JS para el tope diario responsive y puede sobrescribir el ancho inicial de CSS. -->
+                <div class="stat-progress-bg stat-progress-bg--daily"><div id="dailySpendProgressBar" class="stat-progress-fill stat-progress-fill--success stat-progress-fill--empty"></div></div>
                 <div class="daily-cap-note">* El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.</div>
             </div>
         </details>
