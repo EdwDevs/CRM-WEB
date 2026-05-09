@@ -1017,6 +1017,7 @@
         }
 
         function formatMoney(n){return '$ '+parseFloat(n).toLocaleString('es-CO',{maximumFractionDigits:0});}
+        function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
         function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
         function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
         function isValidPositiveAmount(m){return Number.isFinite(m)&&m>0;}
@@ -1529,6 +1530,8 @@
                     
                     reminders.push({
                         title:`Pago ${card}`,
+                        cardName:card,
+                        debtLabel:formatMoney(globalDeudaPorTarjeta[card]),
                         desc:`Deuda actual: ${formatMoney(globalDeudaPorTarjeta[card])}`,
                         date:nextPaymentDate,
                         daysUntil:daysUntilPayment
@@ -1536,18 +1539,36 @@
                 }
             });
 
-            // IMPORTANTE: ocultar panel completo y mostrar solo campanita cuando falten menos de 2 días para pago.
+            // IMPORTANTE: mantener visible solo información urgente; no mostrar pagos a más de 1 día.
             const urgentReminders=reminders.filter(r=>r.daysUntil<2);
             if(urgentReminders.length===0){cont.innerHTML='';cont.classList.add('hidden');return;}
             cont.classList.remove('hidden');
             
-            let html='';
-            const resumen=urgentReminders.map(r=>`${r.title}: ${r.daysUntil<0?`vencido ${Math.abs(r.daysUntil)}d`:(r.daysUntil===0?'hoy':'mañana')}`).join(' · ');
-            html=`<button class="reminder-bell-chip" title="${resumen}" aria-label="Recordatorios de pago urgentes">
-                    <i class="fas fa-bell"></i>
-                    <span>${urgentReminders.length}</span>
-                 </button>`;
-            cont.innerHTML=html;
+            const getReminderStatus=r=>r.daysUntil<0?'vencido':(r.daysUntil===0?'hoy':'mañana');
+            const resumen=urgentReminders.map(r=>`${r.title}: ${r.daysUntil<0?`vencido ${Math.abs(r.daysUntil)}d`:getReminderStatus(r)}`).join(' · ');
+            const chipTone=urgentReminders.some(r=>r.daysUntil<=0)?'reminder-bell-chip--danger':'reminder-bell-chip--warning';
+            const detailItems=urgentReminders.map(r=>{
+                const status=getReminderStatus(r);
+                const dateLabel=r.date.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'});
+                return `<div class="reminder-popover__item reminder-popover__item--${status}">
+                    <div class="reminder-popover__header">
+                        <strong>${escapeHtml(r.cardName)}</strong>
+                        <span class="reminder-popover__status">${escapeHtml(status)}</span>
+                    </div>
+                    <div class="reminder-popover__meta"><i class="fas fa-calendar-day"></i> ${escapeHtml(dateLabel)}</div>
+                    <div class="reminder-popover__meta"><i class="fas fa-credit-card"></i> Deuda actual: ${escapeHtml(r.debtLabel)}</div>
+                </div>`;
+            }).join('');
+            // IMPORTANTE: details mantiene la campanita compacta y revela únicamente el detalle urgente al tocarla.
+            cont.innerHTML=`<details class="reminder-bell-chip ${chipTone}">
+                    <summary title="${escapeHtml(resumen)}" aria-label="Recordatorios de pago urgentes">
+                        <i class="fas fa-bell"></i>
+                        <span>${urgentReminders.length}</span>
+                    </summary>
+                    <div class="reminder-popover" role="list" aria-label="Detalle de pagos urgentes">
+                        ${detailItems}
+                    </div>
+                 </details>`;
         }
         
         let tempPagoCuotaData=null;
