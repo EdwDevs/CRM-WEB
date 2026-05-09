@@ -326,7 +326,7 @@
         }
 
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[]}, currentQuotaTab='cards', returnToQuotaModal=false;
-        const debugState={enabled:isLocalDebugEnvironment(),lastEvents:[],lastErrors:[]};
+        const debugState={enabled:isLocalDebugEnvironment(),expanded:false,lastEvents:[],lastErrors:[]};
         // IMPORTANTE: aliases locales para compatibilidad con funciones existentes, sincronizados por suscripción del store.
         function syncLocalStateFromStore(){
             const state=AppStore.getState();
@@ -348,7 +348,19 @@
         // IMPORTANTE: registrar acciones críticas en un único formato simplifica depuración y seguimiento.
         function logEvent(type,payload={}){ const entry={type,payload,at:new Date().toISOString()}; console.info('[crm-web:event]',entry); debugState.lastEvents=[entry,...debugState.lastEvents].slice(0,12); renderDebugPanel(); return entry; }
         function registerDebugError(scope,error){ const entry={scope,message:error?.message||String(error),at:new Date().toISOString()}; debugState.lastErrors=[entry,...debugState.lastErrors].slice(0,8); renderDebugPanel(); }
-        function renderDebugPanel(){ if(!debugState.enabled)return; let panel=document.getElementById('debugPanel'); if(!panel){ panel=document.createElement('section'); panel.id='debugPanel'; panel.className='debug-panel'; document.body.appendChild(panel);} panel.innerHTML=`<div class="debug-panel__head"><strong>Debug local</strong><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div class="debug-section-title"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div class="debug-section-title"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`; }
+        function toggleDebugPanel(){ debugState.expanded=!debugState.expanded; renderDebugPanel(); }
+        function renderDebugPanel(){
+            if(!debugState.enabled)return;
+            let panel=document.getElementById('debugPanel');
+            if(!panel){ panel=document.createElement('section'); panel.id='debugPanel'; document.body.appendChild(panel); }
+            const recentErrorCount=debugState.lastErrors.length;
+            panel.className=`debug-panel${debugState.expanded?'':' debug-panel--collapsed'}`;
+            // IMPORTANTE: el panel debug debe iniciar colapsado y no ser intrusivo para QA visual.
+            panel.innerHTML=debugState.expanded
+                ? `<div class="debug-panel__head"><button class="debug-panel-toggle" type="button" aria-expanded="true" title="Colapsar debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span><span>Debug local</span></button><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div class="debug-section-title"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div class="debug-section-title"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`
+                : `<button class="debug-panel-toggle" type="button" aria-expanded="false" title="Abrir debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span></button>`;
+            panel.querySelector('.debug-panel-toggle')?.addEventListener('click',toggleDebugPanel);
+        }
         let syncCardIdMap=null;
         const confirmActionState = { onConfirm: null };
         let isSyncingOfflineQueue = false;
