@@ -7,7 +7,7 @@
                     <div class="view-header__actions" aria-hidden="true"></div>
                 </header>
 
-                <details class="card collapsible-card view-primary-card" open>
+                <details class="card collapsible-card view-primary-card transaction-wizard-card" open>
                     <summary class="collapsible-card__summary">
                         <h2 class="card-title" id="formTitle">Formulario de nueva transacción</h2>
                     </summary>
@@ -17,10 +17,15 @@
                         <!-- IMPORTANTE: editingId es consumido por flujos de edición; mantener el ID aunque no sea visible. -->
                         <input type="hidden" id="editingId" value="">
 
-                        <section class="transaction-type-selector" aria-labelledby="transactionTypeTitle">
-                            <div>
-                                <h3 class="transaction-section-title" id="transactionTypeTitle">Tipo de movimiento</h3>
-                                <p class="transaction-section-copy">Elige el contexto para mostrar solo los campos necesarios.</p>
+                        <!-- IMPORTANTE: bloque 1 contiene #tipo, leído por handleTipoChange(); conservar ID, required y onchange. -->
+                        <section class="transaction-step transaction-type-selector" aria-labelledby="transactionTypeTitle">
+                            <div class="transaction-step__header">
+                                <span class="transaction-step__number" aria-hidden="true">1</span>
+                                <div>
+                                    <p class="transaction-step__eyebrow">Paso inicial</p>
+                                    <h3 class="transaction-section-title" id="transactionTypeTitle">Tipo de movimiento</h3>
+                                    <p class="transaction-section-copy">Elige el contexto para mostrar solo los campos necesarios.</p>
+                                </div>
                             </div>
                             <div class="form-group transaction-type-selector__control">
                                 <!-- IMPORTANTE: #tipo dispara handleTipoChange(); no cambiar ID, required ni onchange. -->
@@ -35,16 +40,21 @@
                             </div>
                         </section>
 
-                        <section class="transaction-panel" aria-labelledby="transactionBaseTitle">
-                            <div class="transaction-panel__header">
-                                <h3 class="transaction-section-title" id="transactionBaseTitle">Datos base</h3>
-                                <p class="transaction-section-copy">Información mínima para registrar el movimiento.</p>
+                        <!-- IMPORTANTE: bloque 2 contiene #monto, #fecha, #miembro y #descripcion usados por preSubmit()/saveTransaction(). -->
+                        <section class="transaction-step transaction-panel" aria-labelledby="transactionBaseTitle">
+                            <div class="transaction-panel__header transaction-step__header">
+                                <span class="transaction-step__number" aria-hidden="true">2</span>
+                                <div>
+                                    <p class="transaction-step__eyebrow">Datos obligatorios</p>
+                                    <h3 class="transaction-section-title" id="transactionBaseTitle">Datos base</h3>
+                                    <p class="transaction-section-copy">Información mínima para registrar el movimiento.</p>
+                                </div>
                             </div>
-                            <div class="form-grid">
+                            <div class="form-grid transaction-guided-grid">
                                 <div class="form-group">
                                     <!-- IMPORTANTE: #monto es leído por preSubmit(); conservar formato monetario y required. -->
                                     <label for="monto">Monto</label>
-                                    <input type="text" id="monto" class="form-control--money" required inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)">
+                                    <input type="text" id="monto" class="form-control--money" required inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$0">
                                 </div>
                                 <div class="form-group">
                                     <!-- IMPORTANTE: #fecha sincroniza crédito y es requerida por preSubmit()/saveTransaction(). -->
@@ -64,17 +74,22 @@
                                 <div class="form-group full-width">
                                     <!-- IMPORTANTE: #descripcion es requerida por preSubmit() y usada en listados/exportación. -->
                                     <label for="descripcion">Descripción</label>
-                                    <input type="text" id="descripcion" required>
+                                    <input type="text" id="descripcion" required placeholder="Ej. Mercado semanal, salario, pago de cuota...">
                                 </div>
                             </div>
                         </section>
 
-                        <section id="categoriaContextDiv" class="transaction-panel" aria-labelledby="transactionCategoryTitle">
-                            <div class="transaction-panel__header">
-                                <h3 class="transaction-section-title" id="transactionCategoryTitle">Clasificación</h3>
-                                <p class="transaction-section-copy">Categoriza ingresos, gastos y créditos para alimentar presupuestos y reportes.</p>
+                        <!-- IMPORTANTE: bloque 3 contiene #categoria y #subcategoria; handleTipoChange() y el listener de categoría dependen de estos IDs. -->
+                        <section id="categoriaContextDiv" class="transaction-step transaction-panel" aria-labelledby="transactionCategoryTitle">
+                            <div class="transaction-panel__header transaction-step__header">
+                                <span class="transaction-step__number" aria-hidden="true">3</span>
+                                <div>
+                                    <p class="transaction-step__eyebrow">Clasificación</p>
+                                    <h3 class="transaction-section-title" id="transactionCategoryTitle">Categoría y subcategoría</h3>
+                                    <p class="transaction-section-copy">Categoriza ingresos, gastos y créditos para alimentar presupuestos y reportes.</p>
+                                </div>
                             </div>
-                            <div class="form-grid">
+                            <div class="form-grid transaction-guided-grid">
                                 <div class="form-group">
                                     <!-- IMPORTANTE: #categoria es obligatorio para preSubmit(), handleTipoChange() y gráficos; no cambiar ID. -->
                                     <label for="categoria">Categoría</label>
@@ -82,18 +97,24 @@
                                 </div>
                                 <!-- IMPORTANTE: #subcategoriaDiv es mostrado/ocultado por el listener de categoría; conservar ID. -->
                                 <div class="form-group hidden" id="subcategoriaDiv">
+                                    <!-- IMPORTANTE: #subcategoria es leído por preSubmit(); conservar ID aunque sea opcional. -->
                                     <label for="subcategoria">Subcategoría</label>
                                     <select id="subcategoria"></select>
                                 </div>
                             </div>
                         </section>
 
-                        <section class="transaction-panel" aria-labelledby="transactionMethodTitle">
-                            <div class="transaction-panel__header">
-                                <h3 class="transaction-section-title" id="transactionMethodTitle">Método y contexto</h3>
-                                <p class="transaction-section-copy">Los paneles especiales aparecen según el tipo de movimiento seleccionado.</p>
+                        <!-- IMPORTANTE: bloque 4 agrupa #metodoPago, #tarjetaCredito, #cuotas, #cuotasPagadas, #valorCuotaManual, #creditoFechaPago, #tarjetaDestinoPago y #metodoDestino sin cambiar lógica JS. -->
+                        <section class="transaction-step transaction-panel" aria-labelledby="transactionMethodTitle">
+                            <div class="transaction-panel__header transaction-step__header">
+                                <span class="transaction-step__number" aria-hidden="true">4</span>
+                                <div>
+                                    <p class="transaction-step__eyebrow">Contexto dinámico</p>
+                                    <h3 class="transaction-section-title" id="transactionMethodTitle">Método y detalles especiales</h3>
+                                    <p class="transaction-section-copy">Los paneles especiales aparecen según el tipo de movimiento seleccionado.</p>
+                                </div>
                             </div>
-                            <div class="form-grid">
+                            <div class="form-grid transaction-guided-grid">
                                 <div class="form-group" id="metodoPagoDiv">
                                     <!-- IMPORTANTE: #metodoPagoDiv y #metodoPago son alternados por handleTipoChange() y leídos por preSubmit(). -->
                                     <label id="lblMetodoPago" for="metodoPago">Método</label>
@@ -104,7 +125,7 @@
                                     </select>
                                 </div>
 
-                                <details id="creditConfig" class="transaction-panel panel-credit full-width hidden" open>
+                                <details id="creditConfig" class="transaction-panel panel-credit transaction-subpanel full-width hidden" open>
                                     <!-- IMPORTANTE: #creditConfig es mostrado/ocultado por handleTipoChange(); conservar estructura e IDs internos. -->
                                     <summary class="transaction-panel__summary">
                                         <span class="transaction-section-title">Configuración de crédito</span>
@@ -118,7 +139,7 @@
                                         <div class="form-group">
                                             <!-- IMPORTANTE: #cuotas es validado por preSubmit(); mantener input numérico. -->
                                             <label for="cuotas">Cuotas</label>
-                                            <input type="number" id="cuotas" value="1">
+                                            <input type="number" id="cuotas" value="1" min="1">
                                         </div>
                                         <div class="form-group">
                                             <!-- IMPORTANTE: #cuotasPagadas es leído al editar créditos existentes. -->
@@ -138,7 +159,7 @@
                                     </div>
                                 </details>
 
-                                <details id="divPagoTarjeta" class="transaction-panel panel-payment full-width hidden" open>
+                                <details id="divPagoTarjeta" class="transaction-panel panel-payment transaction-subpanel full-width hidden" open>
                                     <!-- IMPORTANTE: #divPagoTarjeta es mostrado por handleTipoChange() para abonos de tarjeta. -->
                                     <summary class="transaction-panel__summary">
                                         <span class="transaction-section-title">Pago tarjeta</span>
@@ -150,12 +171,13 @@
                                     </div>
                                 </details>
 
-                                <details class="transaction-panel transaction-panel--transfer full-width hidden" id="metodoDestinoDiv" open>
+                                <details class="transaction-panel transaction-panel--transfer transaction-subpanel full-width hidden" id="metodoDestinoDiv" open>
                                     <!-- IMPORTANTE: #metodoDestinoDiv y #metodoDestino son requeridos por transferencias en handleTipoChange()/preSubmit(). -->
                                     <summary class="transaction-panel__summary">
                                         <span class="transaction-section-title">Transferencia</span>
                                     </summary>
                                     <div class="form-group transaction-panel__content">
+                                        <!-- IMPORTANTE: #metodoDestino es leído por preSubmit() cuando el tipo es transferencia. -->
                                         <label for="metodoDestino">Destino</label>
                                         <select id="metodoDestino">
                                             <option value="debito">Débito</option>
@@ -167,9 +189,16 @@
                             </div>
                         </section>
 
-                        <div class="form-actions sticky-mobile-action">
-                            <button type="button" onclick="preSubmit()" class="btn btn--primary btn--lg" id="btnSubmitText">Guardar</button>
-                            <button type="button" id="btnCancelar" class="btn btn--ghost btn--lg hidden" onclick="cancelEdit()">Cancelar</button>
+                        <!-- IMPORTANTE: bloque 5 conserva #btnSubmitText, #btnCancelar y onclick necesarios para preSubmit()/cancelEdit(); .sticky-mobile-action gobierna móvil. -->
+                        <div class="form-actions transaction-actions sticky-mobile-action" aria-label="Acciones del formulario de transacciones">
+                            <div class="transaction-actions__copy">
+                                <strong>¿Todo listo?</strong>
+                                <span>Guarda la transacción o cancela la edición actual.</span>
+                            </div>
+                            <div class="transaction-actions__buttons">
+                                <button type="button" onclick="preSubmit()" class="btn btn--primary btn--lg" id="btnSubmitText">Guardar</button>
+                                <button type="button" id="btnCancelar" class="btn btn--ghost btn--lg hidden" onclick="cancelEdit()">Cancelar</button>
+                            </div>
                         </div>
                     </form>
                 </details>
