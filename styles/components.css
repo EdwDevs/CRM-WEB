@@ -316,12 +316,24 @@
         .dashboard-hero__metric--danger::after { background: var(--danger); }
         .dashboard-hero__metric--info::after { background: var(--info); }
 
+        .dashboard-summary-card__body {
+            /* IMPORTANTE: El resumen principal agrupa hero y saldos sin duplicar padding fuera de .card-body. */
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .dashboard-actions-card,
+        .dashboard-alerts-card {
+            /* IMPORTANTE: Cards explícitas para el orden Dashboard: resumen, acciones, alertas y análisis secundario. */
+            margin-bottom: 0;
+        }
+
         .dashboard-alert-strip {
-            /* IMPORTANTE: Franja inmediatamente bajo el hero para señales críticas actualizadas por JS. */
+            /* IMPORTANTE: Franja de señales críticas actualizadas por JS dentro del bloque de alertas inteligentes. */
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin-top: -12px;
         }
 
         .dashboard-alert-strip:empty {
@@ -398,6 +410,10 @@
         }
 
         @media (max-width: 760px) {
+            .dashboard-summary-card__body {
+                gap: 14px;
+            }
+
             .dashboard-grid {
                 gap: 18px;
                 margin-bottom: 24px;
