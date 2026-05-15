@@ -4252,6 +4252,11 @@
     }
 }
 
+.transaction-wizard-card {
+    /* IMPORTANTE: contenedor visual del flujo guiado; no afecta los IDs que consume JavaScript. */
+    overflow: visible;
+}
+
 .transaction-form {
     /* IMPORTANTE: formulario transaccional por secciones; los IDs internos siguen conectados con index.html. */
     display: flex;
@@ -4271,6 +4276,61 @@
     background: linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 82%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 54%, transparent) 100%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-sm);
     padding: clamp(16px, 2.4vw, 22px);
+}
+
+.transaction-step {
+    /* IMPORTANTE: capa de guía numerada; no reemplaza ni renombra controles usados por handleTipoChange()/preSubmit(). */
+    position: relative;
+    isolation: isolate;
+}
+
+.transaction-step::after {
+    /* IMPORTANTE: acento lateral para orientar el recorrido del formulario sin depender de JS. */
+    content: '';
+    position: absolute;
+    inset: 18px auto 18px 0;
+    width: 3px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 18%, transparent));
+    opacity: 0.65;
+}
+
+.transaction-step__header {
+    /* IMPORTANTE: encabezado común de cada paso; mantiene las secciones legibles en desktop y móvil. */
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+}
+
+.transaction-step__number {
+    /* IMPORTANTE: numeración visual del flujo guiado, independiente del orden de los campos para JavaScript. */
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary-light) 26%, var(--bg-surface));
+    border: 1px solid color-mix(in srgb, var(--primary) 42%, var(--border-light));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 24px -18px var(--primary);
+    font-weight: 800;
+}
+
+.transaction-step__eyebrow {
+    /* IMPORTANTE: microcopy de guía; no contiene datos persistidos. */
+    margin: 0 0 4px;
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.transaction-guided-grid {
+    /* IMPORTANTE: grid específico del flujo; conserva la clase .form-grid usada globalmente. */
+    align-items: stretch;
 }
 
 .transaction-type-selector {
@@ -4335,6 +4395,48 @@
     margin-top: 16px;
 }
 
+.transaction-subpanel {
+    /* IMPORTANTE: subpaneles dinámicos que handleTipoChange() muestra/oculta con .hidden. */
+    padding: clamp(14px, 2vw, 18px);
+}
+
+.transaction-actions {
+    /* IMPORTANTE: bloque de acciones compatible con .sticky-mobile-action y botones inline existentes. */
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border-light));
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--bg-surface) 90%, transparent) 0%, color-mix(in srgb, var(--primary-light) 13%, var(--bg-elevated)) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-sm);
+}
+
+.transaction-actions__copy {
+    /* IMPORTANTE: ayuda visual solamente; #btnSubmitText y #btnCancelar siguen siendo los controles leídos por JS. */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+.transaction-actions__copy strong {
+    color: var(--text-primary);
+    font-size: 0.98rem;
+}
+
+.transaction-actions__buttons {
+    /* IMPORTANTE: agrupación visual de botones sin cambiar onclick ni IDs existentes. */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .panel-credit,
 .transaction-panel--credit,
 .transaction-panel--transfer,
@@ -4384,6 +4486,17 @@
     .transaction-type-selector {
         grid-template-columns: 1fr;
         align-items: stretch;
+    }
+
+    .transaction-actions {
+        /* IMPORTANTE: en tablets el CTA baja como bloque claro antes del modo sticky de teléfonos. */
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .transaction-actions__buttons,
+    .transaction-actions__buttons .btn {
+        width: 100%;
     }
 }
 
@@ -4456,6 +4569,28 @@
         bottom: calc(env(safe-area-inset-bottom) + 88px);
         z-index: 80;
         box-shadow: var(--shadow-md);
+    }
+
+    .transaction-actions.sticky-mobile-action {
+        /* IMPORTANTE: CTA inferior alineado con .sticky-mobile-action y safe-area móvil. */
+        margin: 6px calc(-1 * clamp(10px, 3vw, 16px)) 0;
+        padding: 12px clamp(12px, 4vw, 18px) calc(12px + env(safe-area-inset-bottom));
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        backdrop-filter: blur(16px);
+    }
+
+    .transaction-actions__copy {
+        /* IMPORTANTE: se oculta copy auxiliar en pantallas chicas para priorizar el botón primario. */
+        display: none;
+    }
+
+    .transaction-actions__buttons {
+        width: 100%;
+    }
+
+    .transaction-actions__buttons .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
