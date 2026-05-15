@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="styles/utilities.css">
 </head>
-<body>
+<body class="is-data-loading">
 
     <nav class="sidebar">
         <div class="brand"><i class="fas fa-wallet"></i> CRM <span>Prime</span></div>
@@ -65,7 +65,7 @@
         <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>IA</span></button>
     </nav>
 
-    <div class="sync-indicator offline" id="syncIndicator">
+    <div class="sync-indicator offline sync-pulse" id="syncIndicator">
         <div class="sync-indicator__header">
             <div class="sync-indicator__status">
                 <i class="fas fa-wifi" id="syncIcon"></i>
@@ -466,6 +466,11 @@
         
         function initTheme(){const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);updateThemeIcon();} // IMPORTANTE: priorizamos dark premium en primera carga
         function formatLocalDate(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
+        function setDataLoadingState(isLoading){
+            // IMPORTANTE: esta clase global activa skeletons iniciales sin cambiar IDs consumidos por Firebase, Chart.js y renderizadores.
+            document.body.classList.toggle('is-data-loading', Boolean(isLoading));
+        }
+
 
         function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
         function closeSidebar(){document.body.classList.remove('sidebar-open');}
@@ -1831,6 +1836,8 @@
         }
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){
+            // IMPORTANTE: loadTransactions controla el fin de los skeletons iniciales porque historial, dashboard y charts dependen de estos datos.
+            setDataLoadingState(true);
             let fetchedTransactions=[];
             try{
                 const transactionsRef = await getUserTransactionsCollection();
@@ -1843,21 +1850,23 @@
                 if(cachedTransactions.length>0){
                     fetchedTransactions=cachedTransactions;
                 }
-            }
-            const mergedTransactions=mergeOfflineQueueIntoTransactions(fetchedTransactions);
-            const normalizedTransactions=mergedTransactions.map(t=>{
-                if(t.tipo==='credito'){
-                    const legacyName=t.cardName||t.metodoPago;
-                    const cardId=t.cardId||cardsList.find(c=>c.name===legacyName)?.id||'';
-                    const cardName=cardId?(findCardById(cardId)?.name||legacyName):legacyName||'';
-                    return {...t,cardId,cardName};
+            }finally{
+                const mergedTransactions=mergeOfflineQueueIntoTransactions(fetchedTransactions);
+                const normalizedTransactions=mergedTransactions.map(t=>{
+                    if(t.tipo==='credito'){
+                        const legacyName=t.cardName||t.metodoPago;
+                        const cardId=t.cardId||cardsList.find(c=>c.name===legacyName)?.id||'';
+                        const cardName=cardId?(findCardById(cardId)?.name||legacyName):legacyName||'';
+                        return {...t,cardId,cardName};
+                    }
+                    return t;
+                }).sort((a,b)=>a.fecha<b.fecha?1:-1);
+                AppStore.setTransactions(normalizedTransactions);
+                const quotaModal=document.getElementById('quotaModal');
+                if(quotaModal&&quotaModal.style.display==='flex'){
+                    openQuotaModal();
                 }
-                return t;
-            }).sort((a,b)=>a.fecha<b.fecha?1:-1);
-            AppStore.setTransactions(normalizedTransactions);
-            const quotaModal=document.getElementById('quotaModal');
-            if(quotaModal&&quotaModal.style.display==='flex'){
-                openQuotaModal();
+                setDataLoadingState(false);
             }
         }
         function getDefaultCreditPaymentDate(cardId, baseDateValue=''){

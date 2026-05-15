@@ -86,3 +86,41 @@
     color: var(--text-muted);
     padding: 16px;
 }
+
+
+/* IMPORTANTE: utilidades de transición reutilizables; el bloque global prefers-reduced-motion en styles/tokens.css neutraliza estas animaciones cuando el usuario lo pide. */
+.fade-in {
+    animation: fadeIn var(--transition-slow) both;
+}
+
+.view-transition {
+    animation: fadeIn var(--transition-base) both;
+    will-change: opacity, transform;
+}
+
+.sync-pulse {
+    position: relative;
+}
+
+.sync-pulse::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 1px solid color-mix(in srgb, var(--primary) 34%, transparent);
+    opacity: 0;
+    animation: syncPulse 1.8s ease-out infinite;
+    pointer-events: none;
+}
+
+@keyframes syncPulse {
+    0% {
+        transform: scale(0.98);
+        opacity: 0.46;
+    }
+    70%,
+    100% {
+        transform: scale(1.03);
+        opacity: 0;
+    }
+}
