@@ -1111,10 +1111,24 @@
             font-weight: 600;
         }
 
-        #view-historial .table-container td:nth-child(6) {
+        #view-historial .table-container td:nth-child(7) {
             background: rgba(255, 255, 255, 0.05);
             color: var(--text-primary);
             font-weight: 700;
+        }
+
+
+        #view-historial .history-date-group {
+            /* IMPORTANTE: renderHistory() inyecta estos separadores para agrupar cards en móvil sin alterar la tabla desktop. */
+            display: none;
+        }
+
+        #view-historial .history-date-group td {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
         }
 
         #view-historial .type-badge {
@@ -4801,6 +4815,33 @@
         border-bottom: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
         white-space: normal;
         word-break: break-word;
+    }
+
+
+    #view-historial .history-date-group {
+        /* IMPORTANTE: en móvil estos separadores son los encabezados visuales de cada grupo de cards por fecha. */
+        display: block;
+        margin: 4px 0 -4px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    #view-historial .history-date-group td {
+        display: block;
+        padding: 0 4px;
+        border: 0;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    #view-historial .history-date-group td::before {
+        content: none;
     }
 
     .mobile-card-list .responsive-table-card td:last-child {
