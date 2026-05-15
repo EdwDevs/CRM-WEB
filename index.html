@@ -24,22 +24,32 @@
             <span id="themeText">Modo Oscuro</span>
         </button>
         <div class="nav-links">
-            <div class="nav-section-label">Operación</div>
-            <!-- IMPORTANTE: El nombre visual "Inicio" mantiene el id interno "dashboard" para no romper switchView() ni VIEW_CONFIG. -->
-            <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Inicio</span></div>
-            <!-- IMPORTANTE: El nombre visual "Movimientos" mantiene el id interno "transacciones" para no romper switchView() ni VIEW_CONFIG. -->
-            <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Movimientos</span></div>
-            <div class="nav-section-label">Finanzas</div>
-            <!-- IMPORTANTE: El nombre visual "Historial" mantiene el id interno "historial" para no romper switchView() ni VIEW_CONFIG. -->
-            <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Historial</span></div>
-            <div class="nav-section-label">Análisis</div>
-            <!-- IMPORTANTE: El nombre visual "Análisis" mantiene el id interno "estadisticas" para no romper switchView() ni VIEW_CONFIG. -->
-            <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Análisis</span></div>
-            <div class="nav-section-label">Control</div>
-            <!-- IMPORTANTE: El nombre visual "Metas" mantiene el id interno "objetivos" para no romper switchView() ni VIEW_CONFIG. -->
-            <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Metas</span></div>
-            <!-- IMPORTANTE: El nombre visual "Asesor / Control" mantiene el id interno "asistente" para no romper switchView() ni VIEW_CONFIG. -->
-            <div class="nav-item ai-nav" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor / Control</span></div>
+            <div class="nav-group nav-group--primary">
+                <div class="nav-section-label">Resumen</div>
+                <!-- IMPORTANTE: El nombre visual "Panel" mantiene el id interno "dashboard" para no romper switchView() ni VIEW_CONFIG. -->
+                <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Panel</span></div>
+            </div>
+            <div class="nav-group">
+                <div class="nav-section-label">Movimientos</div>
+                <!-- IMPORTANTE: El nombre visual "Registrar" mantiene el id interno "transacciones" para no romper switchView() ni VIEW_CONFIG. -->
+                <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Registrar</span></div>
+                <!-- IMPORTANTE: El nombre visual "Historial" mantiene el id interno "historial" para no romper switchView() ni VIEW_CONFIG. -->
+                <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Historial</span></div>
+                <!-- IMPORTANTE: "Tarjetas" abre el modal existente de cupos; no agrega id nuevo a VIEW_CONFIG ni altera el orden de .nav-item. -->
+                <button class="nav-action" type="button" onclick="openCardsNavigation()"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></button>
+            </div>
+            <div class="nav-group">
+                <div class="nav-section-label">Planificación</div>
+                <!-- IMPORTANTE: El nombre visual "Insights" mantiene el id interno "estadisticas" para no romper switchView() ni VIEW_CONFIG. -->
+                <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Insights</span></div>
+                <!-- IMPORTANTE: El nombre visual "Metas" mantiene el id interno "objetivos" para no romper switchView() ni VIEW_CONFIG. -->
+                <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Metas</span></div>
+            </div>
+            <div class="nav-group nav-group--ai">
+                <div class="nav-section-label">Control</div>
+                <!-- IMPORTANTE: El nombre visual "Asesor IA" mantiene el id interno "asistente" para no romper switchView() ni VIEW_CONFIG. -->
+                <div class="nav-item ai-nav" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor IA</span></div>
+            </div>
         </div>
         <div class="sidebar-footer">Hogar & Finanzas © 2026</div>
     </nav>
@@ -48,11 +58,11 @@
 
     <nav class="mobile-nav">
         <!-- IMPORTANTE: Navegación móvil usa nombres visuales cortos pero conserva ids internos compatibles con switchView() y VIEW_CONFIG. -->
-        <button class="mob-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Inicio</span></button>
-        <button class="mob-link" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Mov.</span></button>
+        <button class="mob-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Panel</span></button>
+        <button class="mob-link" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Reg.</span></button>
         <button class="mob-link mob-fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
         <button class="mob-link" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Hist.</span></button>
-        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Control</span></button>
+        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>IA</span></button>
     </nav>
 
     <div class="sync-indicator offline" id="syncIndicator">
@@ -2675,7 +2685,7 @@
             document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
             const s=document.querySelectorAll('.sidebar .nav-item');
             const m=document.querySelectorAll('.mobile-nav .mob-link');
-            // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG aunque los nombres visuales estén agrupados.
+            // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG; Tarjetas usa .nav-action para no desplazar índices legacy.
             if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
             if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
             if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
@@ -2687,6 +2697,11 @@
             closeSidebar();
         }
         function goToAddTransaction(){switchView('transacciones');}
+        function openCardsNavigation(){
+            // IMPORTANTE: Tarjetas reutiliza el modal existente de cupos y no registra una ruta nueva en VIEW_CONFIG.
+            currentQuotaTab='cards';
+            openQuotaModal();
+        }
 
         handleTipoChange();
 

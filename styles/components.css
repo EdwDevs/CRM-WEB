@@ -1820,6 +1820,8 @@
             height: 80px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             z-index: 90;
+            /* IMPORTANTE: cinco columnas fijas mantienen máximo cinco acciones visibles en la barra inferior. */
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             justify-content: space-around;
             align-items: center;
             padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
@@ -2207,10 +2209,15 @@
 
             .nav-links {
                 padding: 20px 16px;
-                align-items: flex-start;
+                align-items: stretch;
             }
 
-            .nav-item {
+            .nav-group {
+                width: 100%;
+            }
+
+            .nav-item,
+            .nav-action {
                 justify-content: flex-start;
                 gap: 12px;
                 font-size: 0.9rem;
@@ -2218,11 +2225,13 @@
                 width: 100%;
             }
 
-            .nav-item span {
+            .nav-item span,
+            .nav-action span {
                 display: inline;
             }
 
-            .nav-item i {
+            .nav-item i,
+            .nav-action i {
                 font-size: 1.2rem;
             }
 
@@ -2257,7 +2266,8 @@
 
         @media (max-width: 768px) {
             .mobile-nav {
-                display: flex;
+                /* IMPORTANTE: grid conserva las 5 acciones actuales sin añadir Tarjetas al mobile. */
+                display: grid;
                 z-index: 100;
             }
 

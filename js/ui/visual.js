@@ -149,7 +149,7 @@ async function switchView(id){
     document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
     const s=document.querySelectorAll('.sidebar .nav-item');
     const m=document.querySelectorAll('.mobile-nav .mob-link');
-    // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG aunque los nombres visuales estén agrupados.
+    // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG; Tarjetas usa .nav-action para no desplazar índices legacy.
     if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
     if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
     if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
