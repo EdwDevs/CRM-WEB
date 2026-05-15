@@ -728,6 +728,132 @@
             white-space: nowrap;
         }
 
+
+        .stats-insights-panel {
+            /* IMPORTANTE: sección superior generada desde datos en memoria; debe preceder a los gráficos secundarios. */
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 18px;
+            border: 1px solid color-mix(in srgb, var(--border-light) 64%, transparent);
+            border-radius: var(--radius-xl);
+            background:
+                radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 13%, transparent), transparent 34%),
+                color-mix(in srgb, var(--bg-surface) 94%, var(--bg-elevated));
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stats-insights-panel__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .stats-insights-panel__header h2 {
+            margin: 4px 0 0;
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.1rem, 2vw, 1.45rem);
+            letter-spacing: -0.03em;
+        }
+
+        .stats-insights-panel__eyebrow,
+        .stats-insights-panel__note {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .stats-insights-panel__note {
+            padding: 6px 10px;
+            border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+            border-radius: var(--radius-full);
+            background: color-mix(in srgb, var(--primary) 9%, transparent);
+            white-space: nowrap;
+        }
+
+        .stats-insights-grid {
+            /* IMPORTANTE: renderCharts() inyecta aquí cuatro insights; minmax evita desbordes con montos largos. */
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .stats-insight-card {
+            min-width: 0;
+            display: flex;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid color-mix(in srgb, var(--border-light) 54%, transparent);
+            border-radius: var(--radius-lg);
+            background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .stats-insight-card__icon {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            background: color-mix(in srgb, var(--primary) 12%, transparent);
+        }
+
+        .stats-insight-card__body {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stats-insight-card__label {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .stats-insight-card__value {
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1rem, 1.6vw, 1.25rem);
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stats-insight-card p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
+        .stats-insight-card--positive .stats-insight-card__icon { color: var(--success); background: var(--success-light); }
+        .stats-insight-card--warning .stats-insight-card__icon { color: var(--warning); background: var(--warning-light); }
+        .stats-insight-card--danger .stats-insight-card__icon { color: var(--danger); background: var(--danger-light); }
+
+        .stats-insights-empty {
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px dashed color-mix(in srgb, var(--border-light) 70%, transparent);
+            border-radius: var(--radius-md);
+            background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+        }
+
         #view-estadisticas {
             display: flex;
             flex-direction: column;
@@ -916,6 +1042,11 @@
             .stats-summary-strip {
                 /* IMPORTANTE: mantener los 3 KPIs legibles cuando el ancho se reduce. */
                 grid-template-columns: 1fr;
+            }
+
+            .stats-insights-grid {
+                /* IMPORTANTE: los insights pasan a dos columnas antes de comprimirse a móvil. */
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
@@ -4553,6 +4684,16 @@
         /* IMPORTANTE: densidad mobile segura sin sacrificar targets táctiles ni legibilidad. */
         min-width: 0;
         padding: 14px;
+    }
+
+    .stats-insights-panel__header {
+        /* IMPORTANTE: header apilado evita que la píldora de origen de datos desborde en móvil. */
+        flex-direction: column;
+    }
+
+    .stats-insights-grid {
+        /* IMPORTANTE: una columna mantiene los insights renderizados por JS legibles en teléfonos. */
+        grid-template-columns: 1fr;
     }
 
     .stats-chart-wrap--sm,

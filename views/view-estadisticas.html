@@ -23,6 +23,21 @@
                     </div>
                 </div>
 
+                <section class="stats-insights-panel" aria-labelledby="statsInsightsTitle">
+                    <div class="stats-insights-panel__header">
+                        <div>
+                            <span class="stats-insights-panel__eyebrow">Insights automáticos</span>
+                            <h2 id="statsInsightsTitle">Lecturas rápidas del mes</h2>
+                        </div>
+                        <span class="stats-insights-panel__note">Datos ya cargados</span>
+                    </div>
+                    <!-- IMPORTANTE: #statsInsightsGrid es renderizado por JavaScript con datos existentes de transactions, cardsList y goals; no agregar consultas Firebase aquí. -->
+                    <div id="statsInsightsGrid" class="stats-insights-grid" role="list"></div>
+                    <!-- IMPORTANTE: #statsInsightsEmpty es controlado por renderCharts() para cubrir estados sin transacciones, tarjetas ni objetivos. -->
+                    <div id="statsInsightsEmpty" class="stats-insights-empty hidden" role="status">Agrega movimientos, tarjetas u objetivos para generar insights automáticos.</div>
+                </section>
+
+
                 <div class="view-secondary-stack">
                     <!-- IMPORTANTE: Orden visual 1. Este bloque debe aparecer antes que los plegables porque renderCharts() usa #chartCategorias. -->
                     <section class="card view-primary-card stats-mobile-chart-card skeleton-card loading-state" data-loading-label="Cargando gráfico">
