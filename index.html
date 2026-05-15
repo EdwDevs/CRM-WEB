@@ -864,10 +864,30 @@
                 </div>`;
         }
 
+        function getHistoryTransactionsSource() {
+            // IMPORTANTE: renderHistory() usa datos fusionados para reflejar altas/ediciones/eliminaciones pendientes offline sin esperar sincronización.
+            return mergeOfflineQueueIntoTransactions(transactions)
+                .map(t => t.tipo === 'credito' ? {...t, cardName: resolveCreditCardName(t)} : t)
+                .sort((a, b) => (a.fecha || '') < (b.fecha || '') ? 1 : -1);
+        }
+
+        function getMemberLabel(memberKey) {
+            const memberMap = {papa: 'Papá', mama: 'Mamá', hijo1: 'Hijo/a', compartido: 'Compartido'};
+            return memberMap[memberKey] || memberKey || 'Compartido';
+        }
+
+        function formatHistoryDateLabel(dateValue) {
+            if (!dateValue) return 'Sin fecha';
+            const [year, month, day] = dateValue.split('-').map(Number);
+            const date = new Date(year, (month || 1) - 1, day || 1);
+            return date.toLocaleDateString('es-CO', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
+        }
+
         function getFilteredHistoryData() {
             const filters = getHistoryFilterState();
             let inc = 0, exp = 0;
-            const filtered = transactions.filter(t => {
+            const sourceTransactions = getHistoryTransactionsSource();
+            const filtered = sourceTransactions.filter(t => {
                 if (filters.start && t.fecha < filters.start) return false;
                 if (filters.end && t.fecha > filters.end) return false;
                 if (filters.type !== 'all' && t.tipo !== filters.type) return false;
@@ -888,7 +908,7 @@
                 if (t.tipo === 'gasto' || t.tipo === 'credito') exp += m;
                 return true;
             });
-            return { filtered, filters, inc, exp };
+            return { filtered, filters, inc, exp, sourceTransactions };
         }
 
         function setHistoryEmptyState({ hasTransactions, hasResults, hasFilters }) {
@@ -902,9 +922,8 @@
         function renderHistory() {
             // IMPORTANTE: transactionList es el ID de tbody definido en view-historial.html; no cambiar sin actualizar esta función.
             const tbody = document.getElementById('transactionList');
-            tbody.innerHTML = '';
-            const { filtered, filters, inc, exp } = getFilteredHistoryData();
-            const hasTransactions = transactions.length > 0;
+            const { filtered, filters, inc, exp, sourceTransactions } = getFilteredHistoryData();
+            const hasTransactions = sourceTransactions.length > 0;
             const hasResults = filtered.length > 0;
             const hasFilters = hasActiveHistoryFilters(filters);
             document.getElementById('valFilteredInc').textContent = formatMoney(inc);
@@ -914,8 +933,13 @@
             if (balanceEl) balanceEl.textContent = formatMoney(inc - exp);
             if (countEl) countEl.textContent = filtered.length.toString();
             setHistoryEmptyState({ hasTransactions, hasResults, hasFilters });
-            if (!hasResults) return;
-            filtered.forEach(t => {
+            if (!hasResults) {
+                // IMPORTANTE: renderHistory() reemplaza el contenido dinámico para que los estados vacíos sean los únicos visibles.
+                tbody.innerHTML = '';
+                return;
+            }
+            let currentDateGroup = '';
+            const rowsHtml = filtered.map(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
                 let met=t.metodoPago;
@@ -928,10 +952,11 @@
                     : t.pendingDelete
                         ? '<span class="pending-label pending-delete-label">Pendiente de eliminación</span>'
                         : '';
+                const safeId = escapeHtml(t.id);
                 const actionButtons=t.pendingSync || t.pendingDelete
                     ? `<span class="pending-badge ${t.pendingDelete?'text-danger':'text-warning'}">Pendiente</span>`
-                    : `<button onclick="editTransaction('${t.id}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteTransaction('${t.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button>`;
+                    : `<button onclick="editTransaction('${safeId}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteTransaction('${safeId}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button>`;
                 const typeClassMap={
                     ingreso:'row-income',
                     gasto:'row-expense',
@@ -940,19 +965,27 @@
                     pago_tarjeta:'row-transfer'
                 };
                 const rowClass=[typeClassMap[t.tipo], t.pendingDelete?'pending-delete-row':''].filter(Boolean).join(' ');
-                tbody.innerHTML += `<tr class="${rowClass}">
-                    <!-- IMPORTANTE: data-label permite que .responsive-table-card convierta la tabla en cards legibles en móvil. -->
-                    <td data-label="Fecha">${t.fecha}</td>
-                    <td data-label="Tipo"><span class="type-badge type-${t.tipo}">${t.tipo.replace('_',' ')}</span></td>
-                    <td data-label="Método" class="history-method">${met}</td>
-                    <td data-label="Categoría">${t.categoria||'-'}</td>
-                    <td data-label="Descripción">${t.descripcion} ${pendingLabel}</td>
+                const dateGroup = t.fecha || 'Sin fecha';
+                const groupHeader = dateGroup !== currentDateGroup
+                    ? `<tr class="history-date-group"><td colspan="8">${escapeHtml(formatHistoryDateLabel(t.fecha))}</td></tr>`
+                    : '';
+                currentDateGroup = dateGroup;
+                return `${groupHeader}<tr class="${rowClass}">
+                    <!-- IMPORTANTE: data-label permite que .responsive-table-card convierta la tabla en cards legibles agrupadas por fecha en móvil. -->
+                    <td data-label="Fecha">${escapeHtml(t.fecha || '-')}</td>
+                    <td data-label="Tipo"><span class="type-badge type-${escapeHtml(t.tipo)}">${escapeHtml((t.tipo || '').replace('_',' '))}</span></td>
+                    <td data-label="Método" class="history-method">${escapeHtml(met || '-')}</td>
+                    <td data-label="Miembro">${escapeHtml(getMemberLabel(t.miembro))}</td>
+                    <td data-label="Categoría">${escapeHtml(t.categoria || '-')}</td>
+                    <td data-label="Descripción">${escapeHtml(t.descripcion || '-')} ${pendingLabel}</td>
                     <td data-label="Monto" class="${color} text-bold">${symbol} ${formatMoney(t.monto)}</td>
                     <td data-label="Acciones" class="text-right">
                         ${actionButtons}
                     </td>
                 </tr>`;
-            });
+            }).join('');
+            // IMPORTANTE: renderHistory() reemplaza aquí todo el tbody con filas de tabla desktop y separadores usados como grupos de cards en móvil.
+            tbody.innerHTML = rowsHtml;
         }
 
         function generateLocalAnalysis(){
