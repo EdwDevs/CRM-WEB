@@ -313,67 +313,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="js/finance-engine.js"></script>
     <script src="js/store.js"></script>
+    <script src="js/firebase-service.js"></script>
     <!-- IMPORTANTE: módulos extraídos cargan antes del script legado y exponen funciones en window por compatibilidad con HTML inline. -->
     <script src="js/ui/charts.js"></script>
     <script src="js/ui/visual.js"></script>
     <script src="js/ui/transactions.js"></script>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAP8f9ldzgyKAg74Da2yYL9u_urRLtf8nY", authDomain: "crm-financiero.firebaseapp.com", projectId: "crm-financiero", storageBucket: "crm-financiero.firebasestorage.app", messagingSenderId: "442754442943", appId: "1:442754442943:web:914d5a8ef619d77407880a", measurementId: "G-5EBSSNG8P9" };
-        if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        let authReadyPromise = null;
-
-        async function getCurrentUserUid() {
-            if (auth.currentUser?.uid) return auth.currentUser.uid;
-            if (!authReadyPromise) {
-                authReadyPromise = new Promise((resolve, reject) => {
-                    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-                        if (user?.uid) {
-                            unsubscribe();
-                            resolve(user.uid);
-                            return;
-                        }
-                        try {
-                            const credential = await auth.signInAnonymously();
-                            unsubscribe();
-                            resolve(credential.user.uid);
-                        } catch (error) {
-                            unsubscribe();
-                            reject(error);
-                        }
-                    }, (error) => {
-                        unsubscribe();
-                        reject(error);
-                    });
-                });
-            }
-            return authReadyPromise;
-        }
-
-        async function getUserCardsCollection() {
-            await getCurrentUserUid();
-            return db.collection('cards');
-        }
-
-        async function getUserTransactionsCollection() {
-            await getCurrentUserUid();
-            return db.collection('transactions');
-        }
-
-        async function runFirestoreHealthCheck() {
-            try {
-                const cardsRef = await getUserCardsCollection();
-                await cardsRef.limit(1).get();
-                updateSyncIndicator();
-                return true;
-            } catch (error) {
-                console.error('Firestore health check failed:', error);
-                updateSyncIndicator('offline');
-                return false;
-            }
-        }
+        // IMPORTANTE: FirebaseService mantiene helpers y aliases globales temporales para compatibilidad con funciones legacy en este archivo.
 
         let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[], lastRunAt:null}, currentQuotaTab='cards', returnToQuotaModal=false;
         const debugState={enabled:isLocalDebugEnvironment(),expanded:false,lastEvents:[],lastErrors:[]};
