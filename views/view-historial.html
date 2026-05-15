@@ -1,4 +1,4 @@
-<div id="view-historial" class="tab-content view-stack">
+<div id="view-historial" class="tab-content view-stack view-transition fade-in">
                 <header class="view-header">
                     <div>
                         <h1 class="view-header__title">Historial</h1>
@@ -10,7 +10,7 @@
                 </header>
 
                 <!-- IMPORTANTE: estos IDs de resumen los actualiza renderHistory() con el resultado filtrado actual. -->
-                <section class="history-summary-grid" aria-label="Totales filtrados del historial">
+                <section class="history-summary-grid skeleton-card loading-state" data-loading-label="Cargando historial" aria-label="Totales filtrados del historial">
                     <article class="summary-pill inc">
                         <i class="fas fa-arrow-down"></i>
                         <span>Ingresos</span>
@@ -88,7 +88,7 @@
                     </div>
                 </details>
 
-                <section class="card view-primary-card history-table-card">
+                <section class="card view-primary-card history-table-card skeleton-card loading-state" data-loading-label="Sincronizando movimientos">
                     <div class="card-header mb-md">
                         <h3 class="card-title"><i class="fas fa-table text-primary"></i> Tabla de historial</h3>
                         <div class="card-actions export-btns">
@@ -111,8 +111,27 @@
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <!-- IMPORTANTE: el ID transactionList se mantiene porque renderHistory() inyecta aquí las filas. -->
-                            <tbody id="transactionList"></tbody>
+                            <!-- IMPORTANTE: transactionList es reemplazado dinámicamente por renderHistory() después de loadTransactions(); mantener este ID exacto para la tabla y las cards móviles. -->
+                            <tbody id="transactionList">
+                                <tr class="skeleton-table-row" aria-hidden="true">
+                                    <td><span class="skeleton skeleton-line skeleton-line--md"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--sm"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--md"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--md"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--lg"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--sm"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--sm"></span></td>
+                                </tr>
+                                <tr class="skeleton-table-row" aria-hidden="true">
+                                    <td><span class="skeleton skeleton-line skeleton-line--md"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--sm"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--md"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--md"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--lg"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--sm"></span></td>
+                                    <td><span class="skeleton skeleton-line skeleton-line--sm"></span></td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                     <!-- IMPORTANTE: estos estados evitan que renderHistory() deje una tabla vacía sin orientación. -->

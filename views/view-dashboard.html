@@ -1,5 +1,5 @@
 <!-- IMPORTANTE: view-dashboard es el ID interno que switchView() y VIEW_CONFIG usan para montar esta vista. -->
-<div id="view-dashboard" class="tab-content active view-stack">
+<div id="view-dashboard" class="tab-content active view-stack view-transition fade-in">
     <!-- IMPORTANTE: .view-header debe permanecer como primer bloque visible según docs/ui-layout-guidelines.md. -->
     <header class="view-header">
         <div>
@@ -9,7 +9,7 @@
     </header>
 
     <!-- IMPORTANTE: Bloque 1/4 - resumen principal; concentra KPIs consumidos por updateDashboard() sin cambiar IDs. -->
-    <section class="card view-primary-card dashboard-summary-card" aria-labelledby="dashboard-summary-title">
+    <section class="card view-primary-card dashboard-summary-card skeleton-card loading-state" data-loading-label="Sincronizando dashboard" aria-labelledby="dashboard-summary-title">
         <div class="card-header">
             <div>
                 <h2 id="dashboard-summary-title" class="card-title"><i class="fas fa-gauge-high" aria-hidden="true"></i> Resumen principal</h2>
@@ -131,7 +131,7 @@
     </section>
 
     <!-- IMPORTANTE: Bloque 3/4 - alertas inteligentes; renderReminders() inyecta recordatorios en el contenedor estable. -->
-    <section class="card dashboard-alerts-card" aria-labelledby="dashboard-alerts-title">
+    <section class="card dashboard-alerts-card skeleton-card loading-state" data-loading-label="Preparando alertas" aria-labelledby="dashboard-alerts-title">
         <div class="card-header">
             <div>
                 <h2 id="dashboard-alerts-title" class="card-title"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> Alertas inteligentes</h2>
@@ -148,8 +148,13 @@
                     <div class="budget-alert-desc" id="budgetAlertDesc">Has excedido el 90% de tu presupuesto en alguna categoría.</div>
                 </div>
             </div>
-            <!-- IMPORTANTE: remindersContainer es llenado dinámicamente por renderReminders(); no cambiar este ID. -->
-            <div id="remindersContainer"></div>
+            <!-- IMPORTANTE: remindersContainer es llenado y reemplazado dinámicamente por renderReminders(); no cambiar este ID ni envolverlo con otro contenedor. -->
+            <div id="remindersContainer">
+                <div class="skeleton-lines" aria-hidden="true">
+                    <span class="skeleton skeleton-line skeleton-line--lg"></span>
+                    <span class="skeleton skeleton-line skeleton-line--md"></span>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -204,11 +209,11 @@
             </div>
         </details>
 
-        <details class="card collapsible-card" data-force-collapsed="true" data-secondary-section="true">
+        <details class="card collapsible-card skeleton-card loading-state" data-loading-label="Sincronizando familia" data-force-collapsed="true" data-secondary-section="true">
             <summary class="collapsible-card__summary card-header">
                 <h2 class="card-title"><i class="fas fa-users section-title-icon" aria-hidden="true"></i> Resumen familiar</h2>
             </summary>
-            <!-- IMPORTANTE: familySummary es poblado por updateFamilySummary(); conservar ID. -->
+            <!-- IMPORTANTE: familySummary es reemplazado dinámicamente por updateFamilySummary(); conservar ID para no romper el render familiar. -->
             <div class="card-body family-summary collapsible-card__content" id="familySummary">
                 <div class="member-card skeleton member-card-skeleton"></div>
                 <div class="member-card skeleton member-card-skeleton"></div>
@@ -250,7 +255,7 @@
             </div>
         </details>
 
-        <details class="card collapsible-card" data-force-collapsed="true" data-secondary-section="true">
+        <details class="card collapsible-card skeleton-card loading-state" data-loading-label="Cargando tarjetas" data-force-collapsed="true" data-secondary-section="true">
             <summary class="collapsible-card__summary card-header">
                 <h2 class="card-title"><i class="fas fa-credit-card text-primary" aria-hidden="true"></i> Deudas Tarjetas</h2>
                 <div class="card-actions">
@@ -260,8 +265,14 @@
             <div class="card-body collapsible-card__content">
                 <!-- IMPORTANTE: deudaTotalTC es consumido por updateDashboard(); conservar ID. -->
                 <div class="hero-amount debt-total" id="deudaTotalTC">$0</div>
-                <!-- IMPORTANTE: cardsBreakdown es actualizado por updateDashboard(); conservar ID. -->
-                <div id="cardsBreakdown"><div class="loading"><div class="spinner"></div></div></div>
+                <!-- IMPORTANTE: cardsBreakdown es reemplazado dinámicamente por updateDashboard() después de loadCards()/loadTransactions(); conservar ID. -->
+                <div id="cardsBreakdown">
+                    <div class="skeleton-lines" aria-hidden="true">
+                        <span class="skeleton skeleton-line skeleton-line--lg"></span>
+                        <span class="skeleton skeleton-line skeleton-line--md"></span>
+                        <span class="skeleton skeleton-line skeleton-line--sm"></span>
+                    </div>
+                </div>
                 <!-- IMPORTANTE: cardsEmptyState es actualizado por updateDashboard(); conservar ID. -->
                 <div id="cardsEmptyState" class="empty-state hidden" role="status">
                     <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-credit-card"></i></span>

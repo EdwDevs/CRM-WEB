@@ -1,4 +1,4 @@
-<div id="view-estadisticas" class="tab-content view-stack">
+<div id="view-estadisticas" class="tab-content view-stack view-transition fade-in">
                 <header class="view-header">
                     <div>
                         <h1 class="view-header__title">Estadísticas</h1>
@@ -8,7 +8,7 @@
                 </header>
 
                 <!-- IMPORTANTE: Franja compacta de KPIs; conserva los IDs usados por renderCharts(). -->
-                <div id="statsKpiCard" class="stats-summary-strip view-summary" aria-label="KPIs rápidos del mes">
+                <div id="statsKpiCard" class="stats-summary-strip view-summary skeleton-card loading-state" data-loading-label="Calculando KPIs" aria-label="KPIs rápidos del mes">
                     <div class="stats-summary-strip__item">
                         <span class="stats-summary-strip__label"><i class="fas fa-calendar-day"></i> Promedio diario</span>
                         <strong class="stats-summary-strip__value" id="kpiDailyAverage">$0</strong>
@@ -25,12 +25,14 @@
 
                 <div class="view-secondary-stack">
                     <!-- IMPORTANTE: Orden visual 1. Este bloque debe aparecer antes que los plegables porque renderCharts() usa #chartCategorias. -->
-                    <section class="card view-primary-card stats-mobile-chart-card">
+                    <section class="card view-primary-card stats-mobile-chart-card skeleton-card loading-state" data-loading-label="Cargando gráfico">
                         <div class="card-header">
                             <h3 class="card-title"><i class="fas fa-chart-pie text-primary"></i> Distribución de Gastos</h3>
                         </div>
                         <div class="stats-chart-wrap stats-chart-wrap--md">
+                            <!-- IMPORTANTE: chartCategorias es reemplazado por renderCharts() con Chart.js; mantener canvas e ID para no romper la instancia. -->
                             <canvas id="chartCategorias"></canvas>
+                            <div class="chart-loading-shell" aria-hidden="true"></div>
                             <div id="fallbackCategoryChart" class="chart-fallback hidden">Sin datos suficientes para distribución de gastos.</div>
                         </div>
                         <!-- IMPORTANTE: este estado evita que renderCharts() deje la tarjeta principal en blanco cuando aún no hay movimientos del mes. -->
@@ -43,14 +45,23 @@
                     </section>
 
                     <!-- IMPORTANTE: Orden visual 2. Mantener #chartTopCategorias y #topCategoriasList visibles para renderCharts(). -->
-                    <section class="card stats-mobile-chart-card">
+                    <section class="card stats-mobile-chart-card skeleton-card loading-state" data-loading-label="Cargando categorías">
                         <div class="card-header">
                             <h3 class="card-title"><i class="fas fa-ranking-star text-primary"></i> Top categorías del mes</h3>
                         </div>
                         <div class="top-category-grid">
-                            <div class="top-category-list" id="topCategoriasList"></div>
+                            <!-- IMPORTANTE: topCategoriasList es reemplazado dinámicamente por renderCharts(); conservar ID. -->
+                            <div class="top-category-list" id="topCategoriasList">
+                                <div class="skeleton-lines" aria-hidden="true">
+                                    <span class="skeleton skeleton-line skeleton-line--lg"></span>
+                                    <span class="skeleton skeleton-line skeleton-line--md"></span>
+                                    <span class="skeleton skeleton-line skeleton-line--sm"></span>
+                                </div>
+                            </div>
                             <div class="stats-chart-wrap stats-chart-wrap--sm">
+                                <!-- IMPORTANTE: chartTopCategorias es renderizado por Chart.js; mantener canvas e ID exactos. -->
                                 <canvas id="chartTopCategorias"></canvas>
+                                <div class="chart-loading-shell" aria-hidden="true"></div>
                                 <div id="fallbackTopChart" class="chart-fallback hidden">Sin datos suficientes para ranking de categorías.</div>
                             </div>
                         </div>
@@ -58,23 +69,27 @@
                     </section>
 
                     <!-- IMPORTANTE: Orden visual secundario. #chartTendencias queda en details cerrado; JS debe renderizar al abrir. -->
-                    <details class="card collapsible-card stats-mobile-chart-card" data-force-collapsed="true">
+                    <details class="card collapsible-card stats-mobile-chart-card skeleton-card loading-state" data-loading-label="Cargando tendencia" data-force-collapsed="true">
                         <summary class="collapsible-card__summary card-header">
                             <h3 class="card-title"><i class="fas fa-wave-square text-primary"></i> Tendencia (6 Meses)</h3>
                         </summary>
                         <div class="stats-chart-wrap stats-chart-wrap--sm collapsible-card__content">
+                            <!-- IMPORTANTE: chartTendencias es renderizado al abrir el plegable; mantener canvas e ID exactos. -->
                             <canvas id="chartTendencias"></canvas>
+                            <div class="chart-loading-shell" aria-hidden="true"></div>
                             <div id="fallbackTrendChart" class="chart-fallback hidden">Sin datos suficientes para proyección de tendencia.</div>
                         </div>
                     </details>
 
                     <!-- IMPORTANTE: Orden visual secundario. #chartIngresosGastos queda en details cerrado; JS debe renderizar al abrir. -->
-                    <details class="card collapsible-card stats-mobile-chart-card" data-force-collapsed="true">
+                    <details class="card collapsible-card stats-mobile-chart-card skeleton-card loading-state" data-loading-label="Cargando comparativo" data-force-collapsed="true">
                         <summary class="collapsible-card__summary card-header">
                             <h3 class="card-title"><i class="fas fa-chart-column text-primary"></i> Ingresos vs Gastos (6 Meses)</h3>
                         </summary>
                         <div class="stats-chart-wrap stats-chart-wrap--md collapsible-card__content">
+                            <!-- IMPORTANTE: chartIngresosGastos es renderizado por renderTrendChart(); mantener canvas e ID exactos. -->
                             <canvas id="chartIngresosGastos"></canvas>
+                            <div class="chart-loading-shell" aria-hidden="true"></div>
                             <div id="fallbackIncomeExpenseChart" class="chart-fallback hidden">Sin datos suficientes para comparar ingresos y gastos.</div>
                         </div>
                     </details>

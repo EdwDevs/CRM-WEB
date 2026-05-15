@@ -4695,3 +4695,126 @@
         max-height: 240px;
     }
 }
+
+/* IMPORTANTE: estados reutilizables para carga inicial de datos; los IDs internos permanecen intactos para Firebase/renderizadores. */
+.loading-state {
+    position: relative;
+    isolation: isolate;
+}
+
+.loading-state::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--bg-surface) 34%, transparent) 0%,
+        color-mix(in srgb, var(--primary) 10%, transparent) 50%,
+        color-mix(in srgb, var(--bg-surface) 34%, transparent) 100%);
+    background-size: 220% 100%;
+    animation: shimmer 1.45s ease-in-out infinite;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading-state > * {
+    position: relative;
+    z-index: 0;
+}
+
+.skeleton-card {
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--primary) 20%, var(--border-light));
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 84%, transparent), color-mix(in srgb, var(--bg-elevated) 50%, transparent)),
+        var(--card-bg);
+}
+
+body.is-data-loading .skeleton-card .mini-value,
+body.is-data-loading .skeleton-card .account-amount,
+body.is-data-loading .skeleton-card .dashboard-hero__amount,
+body.is-data-loading .skeleton-card .stats-summary-strip__value,
+body.is-data-loading .skeleton-card .daily-cap-value,
+body.is-data-loading .skeleton-card .debt-total {
+    border-radius: var(--radius-sm);
+    color: transparent !important;
+    text-shadow: none !important;
+    -webkit-text-fill-color: transparent;
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--border-light) 42%, transparent) 25%,
+        color-mix(in srgb, var(--primary) 18%, transparent) 50%,
+        color-mix(in srgb, var(--border-light) 42%, transparent) 75%);
+    background-size: 220% 100%;
+    animation: shimmer 1.45s ease-in-out infinite;
+}
+
+body.is-data-loading .skeleton-card .stat-progress-fill {
+    width: 52% !important;
+    background: color-mix(in srgb, var(--primary) 34%, var(--border-light)) !important;
+}
+
+.skeleton-lines {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+}
+
+.skeleton-line {
+    display: block;
+    min-height: 14px;
+    border-radius: var(--radius-full);
+}
+
+.skeleton-line--sm { width: 42%; }
+.skeleton-line--md { width: 68%; }
+.skeleton-line--lg { width: 92%; }
+
+.skeleton-table-row td {
+    padding: 14px 12px;
+}
+
+.skeleton-table-row .skeleton-line {
+    min-width: 74px;
+}
+
+.chart-loading-shell {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+}
+
+.chart-loading-shell::after {
+    content: '';
+    width: min(64%, 280px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 14px solid color-mix(in srgb, var(--primary) 12%, transparent);
+    border-top-color: color-mix(in srgb, var(--primary) 42%, transparent);
+    animation: spin 1.2s linear infinite;
+}
+
+.loading-state[data-loading-label]::after {
+    content: attr(data-loading-label);
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    z-index: 2;
+    transform: translateX(-50%);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+body:not(.is-data-loading) .loading-state::before,
+body:not(.is-data-loading) .loading-state[data-loading-label]::after {
+    content: none;
+    animation: none;
+}
+
+
+body:not(.is-data-loading) .chart-loading-shell {
+    display: none;
+}
