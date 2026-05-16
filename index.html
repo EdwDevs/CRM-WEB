@@ -1260,7 +1260,22 @@
             };
         }
 
-        function updateDashboard(){let d=0,e=0,n=0,i=0,g=0; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
+        function updateDashboard(){let e=0,n=0,i=0,g=0; const debitBalances={edward:0,eliana:0,legacy:0,total:0}; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
+        const normalizeDebitAccount=(method)=>{
+            const normalizedMethod=String(method||'').trim().toLowerCase().replace(/[\s-]+/g,'_');
+            if(['debito_edward','debit_edward','edward'].includes(normalizedMethod))return 'edward';
+            if(['debito_eliana','debit_eliana','eliana'].includes(normalizedMethod))return 'eliana';
+            if(normalizedMethod==='debito')return 'legacy';
+            return null;
+        };
+        const applyAccountMovement=(method,amount,direction)=>{
+            const signedAmount=amount*direction;
+            const debitAccount=normalizeDebitAccount(method);
+            // IMPORTANTE: los débitos antiguos guardados como `debito` se preservan en legacy y también suman al total general.
+            if(debitAccount){debitBalances[debitAccount]+=signedAmount;debitBalances.total+=signedAmount;return;}
+            if(method==='efectivo')e+=signedAmount;
+            if(method==='nequi')n+=signedAmount;
+        };
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
         if(t.tipo==='pago_tarjeta'){if(isDebitMethod(t.metodoPago))d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
         else if(!t.esCredito){if(t.tipo==='ingreso'){if(isDebitMethod(t.metodoPago))d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(isDebitMethod(t.metodoPago))d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(isDebitMethod(t.metodoPago))d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(isDebitMethod(t.metodoDestino))d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{if(iv)g+=m;}});
@@ -1307,7 +1322,14 @@
             creditUtilizationBar.style.background = creditUtilizationPercent > 80 ? 'var(--danger)' : (creditUtilizationPercent > 50 ? 'var(--warning)' : 'var(--success)');
         }
 
-        globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(d); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(d+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
+        globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(debitBalances.total); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(debitBalances.total+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
+        const saldoDebitoEdwardEl=document.getElementById('saldoDebitoEdward');
+        const saldoDebitoElianaEl=document.getElementById('saldoDebitoEliana');
+        const saldoDebitoLegacyEl=document.getElementById('saldoDebitoLegacy');
+        // IMPORTANTE: estos IDs nuevos son opcionales para no romper vistas antiguas cargadas desde caché.
+        if(saldoDebitoEdwardEl)saldoDebitoEdwardEl.textContent=formatMoney(debitBalances.edward);
+        if(saldoDebitoElianaEl)saldoDebitoElianaEl.textContent=formatMoney(debitBalances.eliana);
+        if(saldoDebitoLegacyEl)saldoDebitoLegacyEl.textContent=formatMoney(debitBalances.legacy);
 
         const netCashFlowEl=document.getElementById('netCashFlow');
         if(netCashFlowEl) netCashFlowEl.textContent=formatMoney(i-g);
