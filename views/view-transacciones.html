@@ -119,7 +119,10 @@
                                     <!-- IMPORTANTE: #metodoPagoDiv y #metodoPago son alternados por handleTipoChange() y leídos por preSubmit(). -->
                                     <label id="lblMetodoPago" for="metodoPago">Método</label>
                                     <select id="metodoPago">
-                                        <option value="debito">Débito</option>
+                                        <!-- IMPORTANTE: estas opciones son el fallback HTML; js/payment-methods.js las re-sincroniza al iniciar la vista. -->
+                                        <option value="debito_edward">Débito Edward</option>
+                                        <option value="debito_eliana">Débito Eliana</option>
+                                        <option value="debito">Débito general / histórico</option>
                                         <option value="efectivo">Efectivo</option>
                                         <option value="nequi">Nequi</option>
                                     </select>
@@ -180,7 +183,10 @@
                                         <!-- IMPORTANTE: #metodoDestino es leído por preSubmit() cuando el tipo es transferencia. -->
                                         <label for="metodoDestino">Destino</label>
                                         <select id="metodoDestino">
-                                            <option value="debito">Débito</option>
+                                            <!-- IMPORTANTE: estas opciones son el fallback HTML; js/payment-methods.js las re-sincroniza al iniciar la vista. -->
+                                            <option value="debito_edward">Débito Edward</option>
+                                            <option value="debito_eliana">Débito Eliana</option>
+                                            <option value="debito">Débito general / histórico</option>
                                             <option value="efectivo">Efectivo</option>
                                             <option value="nequi">Nequi</option>
                                         </select>
