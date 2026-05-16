@@ -75,9 +75,33 @@
                 <article class="account-card account-card--compact">
                     <div class="account-icon icon-surface--info"><i class="fas fa-university" aria-hidden="true"></i></div>
                     <div class="account-info">
-                        <span class="account-label">Débito / Bancos</span>
-                        <!-- IMPORTANTE: saldoDebito es consumido por updateDashboard(); conservar ID. -->
+                        <span class="account-label">Débito total</span>
+                        <!-- IMPORTANTE: saldoDebito se mantiene como total general para conservar compatibilidad con lógica existente. -->
                         <span class="account-amount" id="saldoDebito">$0</span>
+                    </div>
+                </article>
+                <article class="account-card account-card--compact">
+                    <div class="account-icon icon-surface--info"><i class="fas fa-building-columns" aria-hidden="true"></i></div>
+                    <div class="account-info">
+                        <span class="account-label">Débito Edward</span>
+                        <!-- IMPORTANTE: saldoDebitoEdward separa movimientos nuevos asignados a la cuenta de Edward. -->
+                        <span class="account-amount" id="saldoDebitoEdward">$0</span>
+                    </div>
+                </article>
+                <article class="account-card account-card--compact">
+                    <div class="account-icon icon-surface--info"><i class="fas fa-building-columns" aria-hidden="true"></i></div>
+                    <div class="account-info">
+                        <span class="account-label">Débito Eliana</span>
+                        <!-- IMPORTANTE: saldoDebitoEliana separa movimientos nuevos asignados a la cuenta de Eliana. -->
+                        <span class="account-amount" id="saldoDebitoEliana">$0</span>
+                    </div>
+                </article>
+                <article class="account-card account-card--compact">
+                    <div class="account-icon icon-surface--info"><i class="fas fa-landmark" aria-hidden="true"></i></div>
+                    <div class="account-info">
+                        <span class="account-label">Débito sin asignar</span>
+                        <!-- IMPORTANTE: saldoDebitoLegacy muestra movimientos antiguos guardados solo como debito. -->
+                        <span class="account-amount" id="saldoDebitoLegacy">$0</span>
                     </div>
                 </article>
                 <article class="account-card account-card--compact">
