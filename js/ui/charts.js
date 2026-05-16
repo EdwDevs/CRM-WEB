@@ -33,7 +33,8 @@ function resolveInsightCardName(tx,cards){
         const card=cards.find(item=>item.id===tx.cardId);
         if(card)return card.name;
     }
-    return tx?.cardName||tx?.metodoPago||'';
+    // IMPORTANTE: las vistas de detalle deben mostrar `debito` como cuenta general/histórica, no como valor técnico.
+    return tx?.cardName||getPaymentMethodLabel(tx?.metodoPago)||'';
 }
 
 function calculateInsightDebtByCard(dataTransactions,cards){

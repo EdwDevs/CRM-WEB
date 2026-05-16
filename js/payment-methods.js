@@ -16,17 +16,39 @@ const PAYMENT_METHOD_OPTIONS = Object.freeze(PAYMENT_METHOD_ORDER.map(value => O
     value,
     label: PAYMENT_METHODS[value].label
 })));
+// IMPORTANTE: `debito` representa saldos históricos/sin asignar y debe viajar junto a las cuentas nuevas en totales agregados.
+const DEBIT_METHOD_VALUES = Object.freeze(PAYMENT_METHOD_ORDER.filter(value => PAYMENT_METHODS[value].type === 'debit'));
+const DEBIT_TOTAL_FILTER_VALUE = 'debito_total';
+
+function normalizePaymentMethodKey(method){
+    return String(method || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+}
 
 function isDebitMethod(method){
-    return PAYMENT_METHODS[method]?.type === 'debit';
+    return PAYMENT_METHODS[normalizePaymentMethodKey(method)]?.type === 'debit';
 }
 
 function getPaymentMethodLabel(method){
-    return PAYMENT_METHODS[method]?.label || method || '';
+    return PAYMENT_METHODS[normalizePaymentMethodKey(method)]?.label || method || '';
 }
 
 function getDebitOwner(method){
-    return isDebitMethod(method) ? PAYMENT_METHODS[method].owner : null;
+    const normalizedMethod = normalizePaymentMethodKey(method);
+    return isDebitMethod(normalizedMethod) ? PAYMENT_METHODS[normalizedMethod].owner : null;
+}
+
+function isDebitTotalFilter(method){
+    return method === DEBIT_TOTAL_FILTER_VALUE;
+}
+
+function matchesPaymentMethodFilter(method, filterValue){
+    if(!filterValue || filterValue === 'all')return true;
+    const normalizedMethod = normalizePaymentMethodKey(method);
+    if(isDebitTotalFilter(filterValue)){
+        // IMPORTANTE: el filtro "Débito total" incluye la cuenta histórica `debito` y las cuentas asignadas nuevas.
+        return DEBIT_METHOD_VALUES.includes(normalizedMethod);
+    }
+    return normalizedMethod === filterValue;
 }
 
 function populatePaymentMethodSelect(select){
@@ -39,8 +61,13 @@ function populatePaymentMethodSelect(select){
 window.PAYMENT_METHODS = PAYMENT_METHODS;
 window.PAYMENT_METHOD_ORDER = PAYMENT_METHOD_ORDER;
 window.PAYMENT_METHOD_OPTIONS = PAYMENT_METHOD_OPTIONS;
+window.DEBIT_METHOD_VALUES = DEBIT_METHOD_VALUES;
+window.DEBIT_TOTAL_FILTER_VALUE = DEBIT_TOTAL_FILTER_VALUE;
+window.normalizePaymentMethodKey = normalizePaymentMethodKey;
 window.isDebitMethod = isDebitMethod;
 window.getPaymentMethodLabel = getPaymentMethodLabel;
 window.getDebitOwner = getDebitOwner;
+window.isDebitTotalFilter = isDebitTotalFilter;
+window.matchesPaymentMethodFilter = matchesPaymentMethodFilter;
 window.populatePaymentMethodSelect = populatePaymentMethodSelect;
 })();
