@@ -311,6 +311,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/payment-methods.js"></script>
     <script src="js/finance-engine.js"></script>
     <script src="js/store.js"></script>
     <script src="js/firebase-service.js"></script>
@@ -834,7 +835,7 @@
             // IMPORTANTE: filterMethod debe conservarse porque renderHistory() y clearFilters() dependen de este ID exacto.
             const sel = document.getElementById('filterMethod');
             sel.innerHTML = '<option value="all">Cualquiera</option>';
-            ['debito', 'efectivo', 'nequi'].forEach(m => sel.add(new Option(m.charAt(0).toUpperCase() + m.slice(1), m)));
+            PAYMENT_METHOD_OPTIONS.forEach(({ value, label }) => sel.add(new Option(label, value)));
             cardsList.forEach(c => sel.add(new Option('💳 ' + c.name, c.name)));
         }
 
@@ -942,11 +943,11 @@
             const rowsHtml = filtered.map(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
-                let met=t.metodoPago;
+                let met=getPaymentMethodLabel(t.metodoPago);
                 if(t.tipo==='credito'){
                     const creditName=resolveCreditCardName(t);
                     met=`${creditName} (${t.cuotas}x)`;
-                } else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${t.metodoPago} ➔ ${t.tarjetaDestino||t.metodoDestino}`;
+                } else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${getPaymentMethodLabel(t.metodoPago)} ➔ ${t.tarjetaDestino||getPaymentMethodLabel(t.metodoDestino)}`;
                 const pendingLabel=t.pendingSync
                     ? '<span class="pending-label">Pendiente</span>'
                     : t.pendingDelete
@@ -1177,23 +1178,23 @@
             transactions.forEach(t=>{
                 const m=parseFloat(t.monto);
                 if(t.tipo==='pago_tarjeta'){
-                    if(t.metodoPago==='debito')d-=m;
+                    if(isDebitMethod(t.metodoPago))d-=m;
                     if(t.metodoPago==='efectivo')e-=m;
                     if(t.metodoPago==='nequi')n-=m;
                 }else if(!t.esCredito){
                     if(t.tipo==='ingreso'){
-                        if(t.metodoPago==='debito')d+=m;
+                        if(isDebitMethod(t.metodoPago))d+=m;
                         if(t.metodoPago==='efectivo')e+=m;
                         if(t.metodoPago==='nequi')n+=m;
                     }else if(t.tipo==='gasto'){
-                        if(t.metodoPago==='debito')d-=m;
+                        if(isDebitMethod(t.metodoPago))d-=m;
                         if(t.metodoPago==='efectivo')e-=m;
                         if(t.metodoPago==='nequi')n-=m;
                     }else if(t.tipo==='transferencia'){
-                        if(t.metodoPago==='debito')d-=m;
+                        if(isDebitMethod(t.metodoPago))d-=m;
                         if(t.metodoPago==='efectivo')e-=m;
                         if(t.metodoPago==='nequi')n-=m;
-                        if(t.metodoDestino==='debito')d+=m;
+                        if(isDebitMethod(t.metodoDestino))d+=m;
                         if(t.metodoDestino==='efectivo')e+=m;
                         if(t.metodoDestino==='nequi')n+=m;
                     }
@@ -1276,8 +1277,8 @@
             if(method==='nequi')n+=signedAmount;
         };
         transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
-        if(t.tipo==='pago_tarjeta'){applyAccountMovement(t.metodoPago,m,-1);}
-        else if(!t.esCredito){if(t.tipo==='ingreso'){applyAccountMovement(t.metodoPago,m,1);if(iv)i+=m;}else if(t.tipo==='gasto'){applyAccountMovement(t.metodoPago,m,-1);if(iv)g+=m;}else if(t.tipo==='transferencia'){applyAccountMovement(t.metodoPago,m,-1);applyAccountMovement(t.metodoDestino,m,1);}}else{if(iv)g+=m;}});
+        if(t.tipo==='pago_tarjeta'){if(isDebitMethod(t.metodoPago))d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;}
+        else if(!t.esCredito){if(t.tipo==='ingreso'){if(isDebitMethod(t.metodoPago))d+=m;if(t.metodoPago==='efectivo')e+=m;if(t.metodoPago==='nequi')n+=m;if(iv)i+=m;}else if(t.tipo==='gasto'){if(isDebitMethod(t.metodoPago))d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(iv)g+=m;}else if(t.tipo==='transferencia'){if(isDebitMethod(t.metodoPago))d-=m;if(t.metodoPago==='efectivo')e-=m;if(t.metodoPago==='nequi')n-=m;if(isDebitMethod(t.metodoDestino))d+=m;if(t.metodoDestino==='efectivo')e+=m;if(t.metodoDestino==='nequi')n+=m;}}else{if(iv)g+=m;}});
         const daysInMonth=new Date(vy, vm+1, 0).getDate();
         const avgDailySpend=daysInMonth>0?g/daysInMonth:0;
         const savingsRatePercent=i===0?0:((i-g)/i)*100;
@@ -1682,7 +1683,7 @@
         function openGoalModal(){document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalSaved').value='';document.getElementById('goalModal').style.display='flex';}
 
         function escapeCSVValue(value){return `"${String(value ?? '').replace(/"/g,'""')}"`;}
-        function exportToCSV(){const { filtered }=getFilteredHistoryData();let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';filtered.forEach(t=>{const m=t.monto;const metodo=t.tipo==='credito'?resolveCreditCardName(t):t.metodoPago;csv+=`${escapeCSVValue(t.fecha)},${escapeCSVValue(t.tipo)},${escapeCSVValue(metodo)},${escapeCSVValue(t.categoria||'')},${escapeCSVValue(t.subcategoria||'')},${escapeCSVValue(t.miembro||'')},${escapeCSVValue(t.descripcion)},${escapeCSVValue(m)}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero_filtrado.csv';a.click();URL.revokeObjectURL(url);showToast(`CSV exportado (${filtered.length} movimientos)`,'success');}
+        function exportToCSV(){const { filtered }=getFilteredHistoryData();let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';filtered.forEach(t=>{const m=t.monto;const metodo=t.tipo==='credito'?resolveCreditCardName(t):getPaymentMethodLabel(t.metodoPago);csv+=`${escapeCSVValue(t.fecha)},${escapeCSVValue(t.tipo)},${escapeCSVValue(metodo)},${escapeCSVValue(t.categoria||'')},${escapeCSVValue(t.subcategoria||'')},${escapeCSVValue(t.miembro||'')},${escapeCSVValue(t.descripcion)},${escapeCSVValue(m)}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero_filtrado.csv';a.click();URL.revokeObjectURL(url);showToast(`CSV exportado (${filtered.length} movimientos)`,'success');}
         function exportToPDF(){window.print();showToast('Usa Ctrl+P para guardar como PDF','info');}
 
         function toggleVoiceSearch(){const btn=document.getElementById('voiceSearchBtn');if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Búsqueda por voz no soportada','error');return;}
@@ -1696,23 +1697,23 @@
             transactions.forEach(t => {
                 const m = parseFloat(t.monto);
                 if (t.tipo === 'pago_tarjeta') {
-                    if (t.metodoPago === 'debito') d -= m;
+                    if (isDebitMethod(t.metodoPago)) d -= m;
                     if (t.metodoPago === 'efectivo') e -= m;
                     if (t.metodoPago === 'nequi') n -= m;
                 } else if (!t.esCredito) {
                     if (t.tipo === 'ingreso') {
-                        if (t.metodoPago === 'debito') d += m;
+                        if (isDebitMethod(t.metodoPago)) d += m;
                         if (t.metodoPago === 'efectivo') e += m;
                         if (t.metodoPago === 'nequi') n += m;
                     } else if (t.tipo === 'gasto') {
-                        if (t.metodoPago === 'debito') d -= m;
+                        if (isDebitMethod(t.metodoPago)) d -= m;
                         if (t.metodoPago === 'efectivo') e -= m;
                         if (t.metodoPago === 'nequi') n -= m;
                     } else if (t.tipo === 'transferencia') {
-                        if (t.metodoPago === 'debito') d -= m;
+                        if (isDebitMethod(t.metodoPago)) d -= m;
                         if (t.metodoPago === 'efectivo') e -= m;
                         if (t.metodoPago === 'nequi') n -= m;
-                        if (t.metodoDestino === 'debito') d += m;
+                        if (isDebitMethod(t.metodoDestino)) d += m;
                         if (t.metodoDestino === 'efectivo') e += m;
                         if (t.metodoDestino === 'nequi') n += m;
                     }
@@ -1897,6 +1898,9 @@
             const creditCard=document.getElementById('tarjetaCredito');
             const dateInput=document.getElementById('fecha');
             if(!category||!creditCard||!dateInput)return;
+            // IMPORTANTE: los métodos de pago se pintan desde js/payment-methods.js para mantener origen/destino alineados con filtros y reportes.
+            populatePaymentMethodSelect(document.getElementById('metodoPago'));
+            populatePaymentMethodSelect(document.getElementById('metodoDestino'));
             if(category.dataset.bound==='1')return;
             category.dataset.bound='1';
             category.addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
