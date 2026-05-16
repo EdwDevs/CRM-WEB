@@ -893,6 +893,31 @@
             return date.toLocaleDateString('es-CO', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
         }
 
+        function matchesHistoryMethodFilter(t, selectedMethod) {
+            if (selectedMethod === 'all') return true;
+            const transactionMethods = [t.metodoPago, t.metodoDestino, t.tarjetaDestino].filter(Boolean);
+            if (selectedMethod === 'family:debito') {
+                // IMPORTANTE: el filtro de familia débito incluye cuentas individuales y el método histórico `debito`.
+                return transactionMethods.some(method => isDebitMethod(method));
+            }
+            if (t.tipo === 'credito' && resolveCreditCardName(t) === selectedMethod) return true;
+            return transactionMethods.includes(selectedMethod);
+        }
+
+        function getHistoryMethodLabel(t) {
+            if (t.tipo === 'credito') {
+                const creditName = resolveCreditCardName(t);
+                return t.cuotas ? `${creditName} (${t.cuotas}x)` : creditName;
+            }
+            if (t.tipo === 'pago_tarjeta' || t.tipo === 'transferencia') {
+                const sourceLabel = getPaymentMethodLabel(t.metodoPago);
+                const destinationLabel = t.tarjetaDestino || getPaymentMethodLabel(t.metodoDestino);
+                // IMPORTANTE: origen y destino se exportan/renderizan legibles para no exponer valores internos como debito_edward.
+                return `${sourceLabel || '-'} ➔ ${destinationLabel || '-'}`;
+            }
+            return getPaymentMethodLabel(t.metodoPago);
+        }
+
         function getFilteredHistoryData() {
             const filters = getHistoryFilterState();
             let inc = 0, exp = 0;
@@ -953,11 +978,7 @@
             const rowsHtml = filtered.map(t => {
                 let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
                 let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
-                let met=getPaymentMethodLabel(t.metodoPago);
-                if(t.tipo==='credito'){
-                    const creditName=resolveCreditCardName(t);
-                    met=`${creditName} (${t.cuotas}x)`;
-                } else if(t.tipo==='pago_tarjeta'||t.tipo==='transferencia') met=`${getPaymentMethodLabel(t.metodoPago)} ➔ ${t.tarjetaDestino||getPaymentMethodLabel(t.metodoDestino)}`;
+                const met=getHistoryMethodLabel(t);
                 const pendingLabel=t.pendingSync
                     ? '<span class="pending-label">Pendiente</span>'
                     : t.pendingDelete
@@ -1694,7 +1715,7 @@
         function openGoalModal(){document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalSaved').value='';document.getElementById('goalModal').style.display='flex';}
 
         function escapeCSVValue(value){return `"${String(value ?? '').replace(/"/g,'""')}"`;}
-        function exportToCSV(){const { filtered }=getFilteredHistoryData();let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';filtered.forEach(t=>{const m=t.monto;const metodo=t.tipo==='credito'?resolveCreditCardName(t):getPaymentMethodLabel(t.metodoPago);csv+=`${escapeCSVValue(t.fecha)},${escapeCSVValue(t.tipo)},${escapeCSVValue(metodo)},${escapeCSVValue(t.categoria||'')},${escapeCSVValue(t.subcategoria||'')},${escapeCSVValue(t.miembro||'')},${escapeCSVValue(t.descripcion)},${escapeCSVValue(m)}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero_filtrado.csv';a.click();URL.revokeObjectURL(url);showToast(`CSV exportado (${filtered.length} movimientos)`,'success');}
+        function exportToCSV(){const { filtered }=getFilteredHistoryData();let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';filtered.forEach(t=>{const m=t.monto;const metodo=getHistoryMethodLabel(t);csv+=`${escapeCSVValue(t.fecha)},${escapeCSVValue(t.tipo)},${escapeCSVValue(metodo)},${escapeCSVValue(t.categoria||'')},${escapeCSVValue(t.subcategoria||'')},${escapeCSVValue(t.miembro||'')},${escapeCSVValue(t.descripcion)},${escapeCSVValue(m)}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero_filtrado.csv';a.click();URL.revokeObjectURL(url);showToast(`CSV exportado (${filtered.length} movimientos)`,'success');}
         function exportToPDF(){window.print();showToast('Usa Ctrl+P para guardar como PDF','info');}
 
         function toggleVoiceSearch(){const btn=document.getElementById('voiceSearchBtn');if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Búsqueda por voz no soportada','error');return;}
