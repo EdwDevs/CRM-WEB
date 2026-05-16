@@ -248,9 +248,16 @@
             </p>
             <form id="arqueoForm" onsubmit="event.preventDefault(); submitArqueo();">
                 <div class="form-group">
-                    <label>Débito / Bancos (Saldo actual: <span id="arqueoCurrentDebito"></span>)</label>
-                    <input type="text" id="arqueoRealDebito" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
+                    <label>Débito Edward (Saldo actual: <span id="arqueoCurrentDebitoEdward"></span>)</label>
+                    <input type="text" id="arqueoRealDebitoEdward" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
+                <div class="form-group">
+                    <label>Débito Eliana (Saldo actual: <span id="arqueoCurrentDebitoEliana"></span>)</label>
+                    <input type="text" id="arqueoRealDebitoEliana" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
+                </div>
+                <p class="modal-help-text">
+                    Total débito general: <strong><span id="arqueoCurrentDebito"></span></strong>
+                </p>
                 <div class="form-group">
                     <label>Efectivo Físico (Saldo actual: <span id="arqueoCurrentEfectivo"></span>)</label>
                     <input type="text" id="arqueoRealEfectivo" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
@@ -1693,41 +1700,52 @@
         document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
 
         function openArqueoModal() {
-            let d = 0, e = 0, n = 0;
+            let debitoEdward = 0, debitoEliana = 0, debitoLegacy = 0, e = 0, n = 0;
+            const applyDebitMovement = (method, amount) => {
+                // IMPORTANTE: separar las cuentas de débito evita que el arqueo de una persona ajuste el saldo de la otra.
+                if (method === 'debito_edward') debitoEdward += amount;
+                else if (method === 'debito_eliana') debitoEliana += amount;
+                else if (method === 'debito') debitoLegacy += amount;
+            };
+
             transactions.forEach(t => {
                 const m = parseFloat(t.monto);
                 if (t.tipo === 'pago_tarjeta') {
-                    if (isDebitMethod(t.metodoPago)) d -= m;
+                    applyDebitMovement(t.metodoPago, -m);
                     if (t.metodoPago === 'efectivo') e -= m;
                     if (t.metodoPago === 'nequi') n -= m;
                 } else if (!t.esCredito) {
                     if (t.tipo === 'ingreso') {
-                        if (isDebitMethod(t.metodoPago)) d += m;
+                        applyDebitMovement(t.metodoPago, m);
                         if (t.metodoPago === 'efectivo') e += m;
                         if (t.metodoPago === 'nequi') n += m;
                     } else if (t.tipo === 'gasto') {
-                        if (isDebitMethod(t.metodoPago)) d -= m;
+                        applyDebitMovement(t.metodoPago, -m);
                         if (t.metodoPago === 'efectivo') e -= m;
                         if (t.metodoPago === 'nequi') n -= m;
                     } else if (t.tipo === 'transferencia') {
-                        if (isDebitMethod(t.metodoPago)) d -= m;
+                        applyDebitMovement(t.metodoPago, -m);
                         if (t.metodoPago === 'efectivo') e -= m;
                         if (t.metodoPago === 'nequi') n -= m;
-                        if (isDebitMethod(t.metodoDestino)) d += m;
+                        applyDebitMovement(t.metodoDestino, m);
                         if (t.metodoDestino === 'efectivo') e += m;
                         if (t.metodoDestino === 'nequi') n += m;
                     }
                 }
             });
 
-            document.getElementById('arqueoCurrentDebito').textContent = formatMoney(d);
+            const debitoTotal = debitoEdward + debitoEliana + debitoLegacy;
+            document.getElementById('arqueoCurrentDebitoEdward').textContent = formatMoney(debitoEdward);
+            document.getElementById('arqueoCurrentDebitoEliana').textContent = formatMoney(debitoEliana);
+            document.getElementById('arqueoCurrentDebito').textContent = formatMoney(debitoTotal);
             document.getElementById('arqueoCurrentEfectivo').textContent = formatMoney(e);
             document.getElementById('arqueoCurrentNequi').textContent = formatMoney(n);
 
-            // Store original values globally to compare later
-            window.currentArqueoBalances = { debito: d, efectivo: e, nequi: n };
+            // IMPORTANTE: debitoLegacy conserva movimientos históricos en "debito" sin generar ajustes nuevos sobre esa cuenta.
+            window.currentArqueoBalances = { debitoEdward, debitoEliana, debitoLegacy, efectivo: e, nequi: n };
 
-            document.getElementById('arqueoRealDebito').value = '';
+            document.getElementById('arqueoRealDebitoEdward').value = '';
+            document.getElementById('arqueoRealDebitoEliana').value = '';
             document.getElementById('arqueoRealEfectivo').value = '';
             document.getElementById('arqueoRealNequi').value = '';
 
@@ -1735,57 +1753,47 @@
         }
 
         async function submitArqueo() {
-            const valDebito = document.getElementById('arqueoRealDebito').value.trim();
+            const valDebitoEdward = document.getElementById('arqueoRealDebitoEdward').value.trim();
+            const valDebitoEliana = document.getElementById('arqueoRealDebitoEliana').value.trim();
             const valEfectivo = document.getElementById('arqueoRealEfectivo').value.trim();
             const valNequi = document.getElementById('arqueoRealNequi').value.trim();
 
             const curr = window.currentArqueoBalances;
 
-            const realDebito = valDebito === '' ? curr.debito : parseCurrencyInput(valDebito);
+            const realDebitoEdward = valDebitoEdward === '' ? curr.debitoEdward : parseCurrencyInput(valDebitoEdward);
+            const realDebitoEliana = valDebitoEliana === '' ? curr.debitoEliana : parseCurrencyInput(valDebitoEliana);
             const realEfectivo = valEfectivo === '' ? curr.efectivo : parseCurrencyInput(valEfectivo);
             const realNequi = valNequi === '' ? curr.nequi : parseCurrencyInput(valNequi);
 
-            const diffDebito = realDebito - curr.debito;
+            const diffDebitoEdward = realDebitoEdward - curr.debitoEdward;
+            const diffDebitoEliana = realDebitoEliana - curr.debitoEliana;
             const diffEfectivo = realEfectivo - curr.efectivo;
             const diffNequi = realNequi - curr.nequi;
 
             const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0'); const dd=String(t.getDate()).padStart(2,'0');
             const fechaArqueo = `${yyyy}-${mm}-${dd}`;
 
+            const createArqueoAdjustment = async (diff, metodoPago, label) => {
+                if (Math.abs(diff) <= 0.01) return;
+
+                // IMPORTANTE: cada ajuste usa el método exacto para mantener trazabilidad por cuenta en reportes y filtros.
+                await saveTransaction({
+                    tipo: diff > 0 ? 'ingreso' : 'gasto',
+                    monto: Math.abs(diff),
+                    categoria: 'ajuste_de_arqueo',
+                    metodoPago,
+                    descripcion: diff > 0 ? `Ajuste positivo por arqueo - ${label}` : `Ajuste negativo por arqueo - ${label}`,
+                    fecha: fechaArqueo,
+                    miembro: 'compartido'
+                });
+            };
+
             try {
-                if (Math.abs(diffDebito) > 0.01) {
-                    await saveTransaction({
-                        tipo: diffDebito > 0 ? 'ingreso' : 'gasto',
-                        monto: Math.abs(diffDebito),
-                        categoria: 'ajuste_de_arqueo',
-                        metodoPago: 'debito',
-                        descripcion: diffDebito > 0 ? 'Ajuste positivo por arqueo' : 'Ajuste negativo por arqueo',
-                        fecha: fechaArqueo,
-                        miembro: 'compartido'
-                    });
-                }
-                if (Math.abs(diffEfectivo) > 0.01) {
-                    await saveTransaction({
-                        tipo: diffEfectivo > 0 ? 'ingreso' : 'gasto',
-                        monto: Math.abs(diffEfectivo),
-                        categoria: 'ajuste_de_arqueo',
-                        metodoPago: 'efectivo',
-                        descripcion: diffEfectivo > 0 ? 'Ajuste positivo por arqueo' : 'Ajuste negativo por arqueo',
-                        fecha: fechaArqueo,
-                        miembro: 'compartido'
-                    });
-                }
-                if (Math.abs(diffNequi) > 0.01) {
-                    await saveTransaction({
-                        tipo: diffNequi > 0 ? 'ingreso' : 'gasto',
-                        monto: Math.abs(diffNequi),
-                        categoria: 'ajuste_de_arqueo',
-                        metodoPago: 'nequi',
-                        descripcion: diffNequi > 0 ? 'Ajuste positivo por arqueo' : 'Ajuste negativo por arqueo',
-                        fecha: fechaArqueo,
-                        miembro: 'compartido'
-                    });
-                }
+                await createArqueoAdjustment(diffDebitoEdward, 'debito_edward', 'Débito Edward');
+                await createArqueoAdjustment(diffDebitoEliana, 'debito_eliana', 'Débito Eliana');
+                await createArqueoAdjustment(diffEfectivo, 'efectivo', 'Efectivo');
+                await createArqueoAdjustment(diffNequi, 'nequi', 'Nequi');
+
                 closeModal('arqueoModal');
                 showToast('Arqueo completado exitosamente', 'success');
             } catch (error) {
