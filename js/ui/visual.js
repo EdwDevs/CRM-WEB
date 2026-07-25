@@ -137,33 +137,8 @@ function renderReminders(){
          </details>`;
 }
 
-async function switchView(id){
-    if(!VIEW_CONFIG[id])return;
-    logEvent('switchView',{view:id});
-    await loadView(id);
-    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
-    const targetView=document.getElementById('view-'+id);
-    if(targetView)targetView.classList.add('active');
-    const f=document.getElementById('headerDateFilter');
-    if(f)f.style.display=id==='dashboard'?'flex':'none';
-    document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
-    const s=document.querySelectorAll('.sidebar .nav-item');
-    const m=document.querySelectorAll('.mobile-nav .mob-link');
-    // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG; Tarjetas usa .nav-action para no desplazar índices legacy.
-    if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
-    if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
-    if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
-    if(id==='estadisticas'){s[3].classList.add('active');}
-    if(id==='objetivos'){s[4].classList.add('active');}
-    if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
-    // IMPORTANTE: ejecutar hooks de render de la vista activa (documentación funcional en VIEW_CONFIG).
-    requestAnimationFrame(()=>{(VIEW_CONFIG[id].onActivate||[]).forEach(fn=>fn());});
-    closeSidebar();
-}
-
 // IMPORTANTE: compatibilidad temporal con HTML inline y VIEW_CONFIG hasta eliminar handlers globales.
 window.renderDebugPanel=renderDebugPanel;
 window.initCollapsibleCards=initCollapsibleCards;
 window.renderReminders=renderReminders;
-window.switchView=switchView;
 })();
