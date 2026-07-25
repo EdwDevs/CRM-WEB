@@ -1,12 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-
+    // Parche de seguridad (Opcion 1): solo usuarios autenticados (la app
+    // firma anonimamente en segundo plano). Bloquea acceso publico sin token.
+    // Pendiente: migrar a families/{familyId}/... con auth real.
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
   }
 }
