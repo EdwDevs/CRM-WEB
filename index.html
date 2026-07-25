@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <link rel="stylesheet" href="styles/tokens.css">
     <link rel="stylesheet" href="styles/layout.css">
@@ -294,18 +293,6 @@
             <div class="payment-summary">
                 <div id="pagoCuotaInfo" class="payment-quota-info"></div>
             </div>
-            <!-- IMPORTANTE: .hidden inicia oculto el calendario legado; si JS lo reactiva debe alternar esta clase. -->
-            <div class="calendar-container hidden">
-                <div class="calendar-header">
-                    <button class="calendar-nav-btn" onclick="cambiarMesCalendario(-1)">&#8249;</button>
-                    <span id="calendarMonthYear" class="calendar-month-year"></span>
-                    <button class="calendar-nav-btn" onclick="cambiarMesCalendario(1)">&#8250;</button>
-                </div>
-                <div class="calendar-weekdays">
-                    <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
-                </div>
-                <div id="calendarDays" class="calendar-days"></div>
-            </div>
             <div class="modal-actions modal-actions--wide-gap">
                 <button class="btn btn--ghost btn--lg btn--full" onclick="closeModal('pagoCuotaModal')">Cancelar</button>
                 <button class="btn btn--primary btn--lg btn--full" onclick="confirmarPagoCuota()" id="btnConfirmarPagoCuota">💰 Confirmar Pago</button>
@@ -529,8 +516,6 @@
                     notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
                 }else if(!navigator.onLine && pendingItems.length){
                     notice.textContent='Guardado local. Se sincronizará al reconectar.';
-                }else if(failedItems.length){
-                    notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
                 }else if(isSyncingOfflineQueue){
                     notice.textContent='Aplicando cambios en la nube...';
                 }else{
@@ -1025,8 +1010,8 @@
             btn.disabled=true;loader.style.display='flex';result.style.display='none';
             setTimeout(()=>{
                 const d=prepareFinancialContext();
-                let score=100; if(d.cashFlow<0)score-=30; if((d.cashFlow/d.income)<0.1)score-=10; if(d.totalDebt>d.income)score-=20;
-                let debtHTML=d.totalDebt===0?`<div class="insight-item"><div class="insight-val text-success">Sin Deuda</div></div>`:`<div class="insight-grid"><div class="insight-item"><div class="insight-label">Deuda</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div><div class="insight-item"><div class="insight-label">Ratio</div><div class="insight-val">${((d.totalDebt/d.income)*100).toFixed(0)}%</div></div></div>`;
+                let score=100; if(d.cashFlow<0)score-=30; if(d.income>0&&(d.cashFlow/d.income)<0.1)score-=10; if(d.totalDebt>d.income)score-=20;
+                let debtHTML=d.totalDebt===0?`<div class="insight-item"><div class="insight-val text-success">Sin Deuda</div></div>`:`<div class="insight-grid"><div class="insight-item"><div class="insight-label">Deuda</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div><div class="insight-item"><div class="insight-label">Ratio</div><div class="insight-val">${(d.income>0?(d.totalDebt/d.income)*100:0).toFixed(0)}%</div></div></div>`;
                 const html=`<div class="report-section"><h4><i class="fas fa-heartbeat report-icon--danger"></i> Diagnóstico</h4><div class="insight-grid"><div class="insight-item"><div class="insight-label">Ingresos</div><div class="insight-val text-success">${formatMoney(d.income)}</div></div><div class="insight-item"><div class="insight-label">Gastos</div><div class="insight-val text-danger">${formatMoney(d.expenses)}</div></div><div class="insight-item"><div class="insight-label">Flujo</div><div class="insight-val">${formatMoney(d.cashFlow)}</div></div></div></div><div class="report-section"><h4><i class="fas fa-shield-alt report-icon--warning"></i> Deudas</h4>${debtHTML}</div><div class="report-section"><h4><i class="fas fa-lightbulb report-icon--amber"></i> Recomendaciones</h4><ul class="ai-list">${generateRecommendations(d)}</ul></div>`;
                 document.getElementById('aiContentBody').innerHTML=html; document.getElementById('aiScoreBadge').textContent=`SCORE: ${score}/100`;
                 predictNextMonthExpenses();
@@ -1034,12 +1019,12 @@
             },1000);
         }
 
-        function generateRecommendations(d){let rec=[];if(d.cashFlow<0)rec.push('Tu flujo de efectivo es negativo. Considera reducir gastos no esenciales.');if(d.totalDebt>0)rec.push('Tienes deudas activas. Prioriza pagar las de mayor interés primero.');if((d.cashFlow/d.income)<0.1&&d.cashFlow>0)rec.push('Tu tasa de ahorro es baja. Intenta aumentarla al 10% de tus ingresos.');if(d.expenses> d.income * 0.8)rec.push('Estás gastando más del 80% de tus ingresos. Revisa tus categorías más altas.');if(rec.length===0)rec.push('¡Excelente! Tu situación financiera está equilibrada.');return rec.map(r=>`<li>${r}</li>`).join('');}
+        function generateRecommendations(d){let rec=[];if(d.cashFlow<0)rec.push('Tu flujo de efectivo es negativo. Considera reducir gastos no esenciales.');if(d.totalDebt>0)rec.push('Tienes deudas activas. Prioriza pagar las de mayor interés primero.');if(d.income>0&&(d.cashFlow/d.income)<0.1&&d.cashFlow>0)rec.push('Tu tasa de ahorro es baja. Intenta aumentarla al 10% de tus ingresos.');if(d.expenses> d.income * 0.8)rec.push('Estás gastando más del 80% de tus ingresos. Revisa tus categorías más altas.');if(rec.length===0)rec.push('¡Excelente! Tu situación financiera está equilibrada.');return rec.map(r=>`<li>${r}</li>`).join('');}
         
-        function predictNextMonthExpenses(){const months={};transactions.filter(t=>t.tipo==='gasto'||t.tipo==='credito').forEach(t=>{const k=t.fecha.substring(0,7);if(!months[k])months[k]=0;months[k]+=parseFloat(t.monto);});const vals=Object.values(months);if(vals.length<2){document.getElementById('predictedExpenses').textContent='Datos insuficientes';return;}const avg=vals.reduce((a,b)=>a+b,0)/vals.length;const trend=vals.length>=2?vals[vals.length-1]-vals[vals.length-2]:0;const prediction=Math.round(avg+trend);document.getElementById('predictedExpenses').textContent=formatMoney(Math.max(0,prediction));}
+        function predictNextMonthExpenses(){const months={};transactions.filter(t=>t.tipo==='gasto'||t.tipo==='credito').forEach(t=>{const k=t.fecha.substring(0,7);if(!months[k])months[k]=0;months[k]+=parseFloat(t.monto);});const vals=Object.keys(months).sort().map(k=>months[k]);if(vals.length<2){document.getElementById('predictedExpenses').textContent='Datos insuficientes';return;}const avg=vals.reduce((a,b)=>a+b,0)/vals.length;const trend=vals.length>=2?vals[vals.length-1]-vals[vals.length-2]:0;const prediction=Math.round(avg+trend);document.getElementById('predictedExpenses').textContent=formatMoney(Math.max(0,prediction));}
 
         function prepareFinancialContext(){
-            let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0;const t=new Date();const p=new Date();p.setDate(t.getDate()-30);const rt=transactions.filter(x=>new Date(x.fecha)>=p);
+            let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0;const t=new Date();const p=new Date();p.setDate(t.getDate()-30);const rt=transactions.filter(x=>{const fx=FinanceEngine.parseTxDate(x);return !!fx&&fx>=p;});
             rt.forEach(x=>{const m=parseFloat(x.monto);if(x.tipo==='ingreso')i+=m;if(x.tipo==='gasto'||x.tipo==='credito')e+=m;});
             Object.values(dt).forEach(x=>td+=x); let cm={}; rt.filter(x=>x.tipo==='gasto').forEach(x=>{cm[x.categoria]=(cm[x.categoria]||0)+parseFloat(x.monto);});
             const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>({category:k,amount:v}));
@@ -1152,7 +1137,7 @@
                     totalDebt+=saldoPendiente;
                     detailBody.innerHTML+=`<tr>
                         <td>${formatDate(cred.fecha)}</td>
-                        <td>${cred.descripcion||'Compra crédito'}</td>
+                        <td>${escapeHtml(cred.descripcion||'Compra crédito')}</td>
                         <td>${formatMoney(total)}</td>
                         <td>${cuotas}</td>
                         <td>${pagadas}</td>
@@ -1465,9 +1450,9 @@
                 const fechaSiguiente=fechaSiguientePorTarjeta[k];
                 const cuotaLabel=cuotaSiguiente>0?formatMoney(cuotaSiguiente):'Sin cuotas pendientes';
                 const fechaLabel=cuotaSiguiente>0&&fechaSiguiente?`Fecha estimada: ${fechaSiguiente.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}`:'';
-                const safeCardName=k.replace(/'/g,"\\'");
+                const safeCardName=escapeHtml(k.replace(/'/g,"\\'"));
                 dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
-            <div class="credit-summary-header"><span class="credit-card-name">💳 ${k}</span><div class="inline-actions">
+            <div class="credit-summary-header"><span class="credit-card-name">💳 ${escapeHtml(k)}</span><div class="inline-actions">
                 <button class="btn btn--ghost btn--sm" onclick="openCardDetail('${safeCardName}')"><i class="fas fa-eye"></i> Detalle</button>
                 <span class="credit-card-debt">${formatMoney(dm[k])}</span></div></div>
             <div class="next-installment-section">
@@ -1493,6 +1478,7 @@
             creditos.forEach((cred,idx)=>{const cuotaTotal=cred.cuotas||1;const pagadas=cred.cuotasPagadas||0;const siguienteCuota=pagadas+1;
                 if(siguienteCuota>cuotaTotal)return; // Skip if all paid
                 const montoPorCuota=(cred.totalDeuda||cred.monto)/cuotaTotal;
+                const safeCardNameBtn=escapeHtml(cardName.replace(/'/g,"\\'"));
                 
                 // --- CORRECCIÓN DE FECHA ---
                 const nextPaymentDate=resolveNextPaymentDate(cred, paymentDay, today);
@@ -1503,13 +1489,13 @@
                 
                 container.innerHTML+=`<div class="installment-card">
                     <div class="section-header mb-sm">
-                        <div><span class="installment-desc">${cred.descripcion||'Crédito'}</span>
+                        <div><span class="installment-desc">${escapeHtml(cred.descripcion||'Crédito')}</span>
                         <div class="installment-meta">Cuota ${siguienteCuota} de ${cuotaTotal}</div></div>
                         <div class="text-right"><span class="installment-amount">${formatMoney(montoPorCuota)}</span>
                         <div class="installment-date ${isVencida?'text-danger':'text-success'}">${isVencida?'Vencida':'Pago: '+nextPaymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</div></div>
                     </div>
                     <div class="inline-actions inline-actions--sm">
-                        <button class="btn-cuota-pagar btn--full" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${cardName}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Pago</button>
+                        <button class="btn-cuota-pagar btn--full" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${safeCardNameBtn}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Pago</button>
                         <button class="btn btn--secondary btn--full btn-cuota-edit" onclick="editTransaction('${cred.id}')"><i class="fas fa-edit"></i> Editar</button>
                     </div>
                 </div>`;
@@ -1566,7 +1552,7 @@
             tempPagoCuotaData = { creditId, cuotaNum, monto, cardName, paymentDay: resolvedPaymentDay, paymentDate };
             
             const infoDiv = document.getElementById('pagoCuotaInfo');
-            infoDiv.innerHTML = `Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${cardName}<br>Fecha de pago automática: <strong>${paymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}</strong>`;
+            infoDiv.innerHTML = `Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${escapeHtml(cardName)}<br>Fecha de pago automática: <strong>${paymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}</strong>`;
             
             document.getElementById('pagoCuotaModal').style.display = 'flex';
         }
@@ -2360,9 +2346,9 @@
                        <button onclick="requestCreditDelete('${tx.id}')" class="btn-icon-action btn-icon-action--danger" title="Eliminar crédito" aria-label="Eliminar crédito"><i class="fas fa-trash"></i></button>`;
                 return `
                     <tr class="row-credit">
-                        <td>${cardName}</td>
+                        <td>${escapeHtml(cardName)}</td>
                         <td>${formatDate(tx.fecha)}</td>
-                        <td>${tx.descripcion || 'Compra crédito'}</td>
+                        <td>${escapeHtml(tx.descripcion || 'Compra crédito')}</td>
                         <td>${cuotasLabel}</td>
                         <td class="text-danger text-strong">${formatMoney(total)}</td>
                         <td>${formatMoney(saldoPendiente)}</td>
@@ -2390,9 +2376,9 @@
             return `
                 <p>¿Deseas eliminar este crédito? Esta acción no se puede deshacer.</p>
                 <div class="modal-details modal-details--flush">
-                    <div class="modal-row"><span>Tarjeta:</span><strong>${cardName}</strong></div>
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${escapeHtml(cardName)}</strong></div>
                     <div class="modal-row"><span>Fecha:</span><span>${formatDate(tx.fecha)}</span></div>
-                    <div class="modal-row"><span>Descripción:</span><span>${tx.descripcion || 'Compra crédito'}</span></div>
+                    <div class="modal-row"><span>Descripción:</span><span>${escapeHtml(tx.descripcion || 'Compra crédito')}</span></div>
                     <div class="modal-row"><span>Monto:</span><span>${formatMoney(total)}</span></div>
                     <div class="modal-row total"><span>Saldo pendiente:</span><span>${formatMoney(saldoPendiente)}</span></div>
                 </div>
@@ -2425,8 +2411,8 @@
             const body = `
                 <p>Selecciona la fecha de pago para este crédito. Se usará como próxima fecha de pago.</p>
                 <div class="modal-details modal-details--flush">
-                    <div class="modal-row"><span>Tarjeta:</span><strong>${cardName}</strong></div>
-                    <div class="modal-row"><span>Crédito:</span><span>${tx.descripcion || 'Compra crédito'}</span></div>
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${escapeHtml(cardName)}</strong></div>
+                    <div class="modal-row"><span>Crédito:</span><span>${escapeHtml(tx.descripcion || 'Compra crédito')}</span></div>
                 </div>
                 <div class="form-group mt-sm">
                     <label for="adjustPaymentDateInput">Nueva fecha de pago</label>
@@ -2468,10 +2454,10 @@
             cardsList.forEach(c=>{
                 const db=globalDeudaPorTarjeta[c.name]||0;
                 const av=calculateAvailableQuota(c);
-                const safeName=c.name.replace(/'/g,"\\'");
+                const safeName=escapeHtml(c.name.replace(/'/g,"\\'"));
                 const el=document.createElement('div');
                 el.className='quota-card';
-                el.innerHTML=`<div class="quota-header"><span>${c.name}</span><div><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span class="text-danger">Deuda a la fecha: ${formatMoney(db)}</span><span class="text-success">Cupo disponible: ${formatMoney(av)}</span></div>`;
+                el.innerHTML=`<div class="quota-header"><span>${escapeHtml(c.name)}</span><div><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span class="text-danger">Deuda a la fecha: ${formatMoney(db)}</span><span class="text-success">Cupo disponible: ${formatMoney(av)}</span></div>`;
                 d.appendChild(el);
             });
             document.getElementById('cardNameInput').value='';
@@ -2668,9 +2654,9 @@
             const relatedTransactions=transactions.filter(t=>t.cardId===id||resolveCreditCardName(t)===cardName||t.metodoPago===cardName||t.tarjetaDestino===cardName);
             const txCount=relatedTransactions.length;
             const confirmBody = `
-                <p>${txCount ? `Esta tarjeta tiene <strong>${txCount}</strong> transacción(es) asociada(s). Se desvincularán y quedarán marcadas como tarjeta eliminada.` : `Se eliminará la tarjeta "<strong>${cardName || 'Sin nombre'}</strong>".`}</p>
+                <p>${txCount ? `Esta tarjeta tiene <strong>${txCount}</strong> transacción(es) asociada(s). Se desvincularán y quedarán marcadas como tarjeta eliminada.` : `Se eliminará la tarjeta "<strong>${escapeHtml(cardName || 'Sin nombre')}</strong>".`}</p>
                 <div class="modal-details modal-details--flush">
-                    <div class="modal-row"><span>Tarjeta:</span><strong>${cardName || 'Sin nombre'}</strong></div>
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${escapeHtml(cardName || 'Sin nombre')}</strong></div>
                     <div class="modal-row"><span>Transacciones afectadas:</span><span>${txCount}</span></div>
                 </div>
             `;
@@ -2752,81 +2738,6 @@
         }
 
         handleTipoChange();
-
-        // Variables del calendario
-        let calendarioMesActual = new Date().getMonth();
-        let calendarioAnoActual = new Date().getFullYear();
-        let fechaSeleccionadaCalendario = null;
-
-        // Inicializar calendario
-        function initCalendarioPagoCuota() {
-            renderizarCalendario();
-        }
-
-        // Renderizar el calendario
-        function renderizarCalendario() {
-            const container = document.getElementById('calendarDays');
-            const monthYearDisplay = document.getElementById('calendarMonthYear');
-            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            
-            monthYearDisplay.textContent = `${meses[calendarioMesActual]} ${calendarioAnoActual}`;
-            
-            const primerDia = new Date(calendarioAnoActual, calendarioMesActual, 1).getDay();
-            const diasEnMes = new Date(calendarioAnoActual, calendarioMesActual + 1, 0).getDate();
-            const hoy = new Date();
-            
-            let html = '';
-            
-            // Días vacíos antes del primer día del mes
-            for (let i = 0; i < primerDia; i++) {
-                html += '<button class="calendar-day calendar-day-empty"></button>';
-            }
-            
-            // Días del mes
-            for (let dia = 1; dia <= diasEnMes; dia++) {
-                const fechaDia = new Date(calendarioAnoActual, calendarioMesActual, dia);
-                const esHoy = fechaDia.getDate() === hoy.getDate() && 
-                              fechaDia.getMonth() === hoy.getMonth() && 
-                              fechaDia.getFullYear() === hoy.getFullYear();
-                const esPasado = fechaDia < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-                
-                let clases = 'calendar-day';
-                if (esHoy) clases += ' calendar-day-today';
-                if (esPasado) clases += ' calendar-day-disabled';
-                if (fechaSeleccionadaCalendario && 
-                    fechaSeleccionadaCalendario.getDate() === dia &&
-                    fechaSeleccionadaCalendario.getMonth() === calendarioMesActual &&
-                    fechaSeleccionadaCalendario.getFullYear() === calendarioAnoActual) {
-                    clases += ' calendar-day-selected';
-                }
-                
-                const disabledAttr = esPasado ? 'disabled' : '';
-                const onclickAttr = esPasado ? '' : `onclick="seleccionarDiaCalendario(${dia})"`;
-                
-                html += `<button class="${clases}" ${disabledAttr} ${onclickAttr}>${dia}</button>`;
-            }
-            
-            container.innerHTML = html;
-        }
-
-        // Cambiar mes
-        function cambiarMesCalendario(direccion) {
-            calendarioMesActual += direccion;
-            if (calendarioMesActual < 0) {
-                calendarioMesActual = 11;
-                calendarioAnoActual--;
-            } else if (calendarioMesActual > 11) {
-                calendarioMesActual = 0;
-                calendarioAnoActual++;
-            }
-            renderizarCalendario();
-        }
-
-        // Seleccionar día
-        function seleccionarDiaCalendario(dia) {
-            fechaSeleccionadaCalendario = new Date(calendarioAnoActual, calendarioMesActual, dia);
-            renderizarCalendario();
-        }
 
         // Formatear fecha
         function formatDate(dateStr) {
