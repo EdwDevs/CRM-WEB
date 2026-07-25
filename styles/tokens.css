@@ -117,6 +117,7 @@
             --transition-fast: 180ms ease;
             --transition-base: 260ms ease;
             --transition-slow: 360ms ease;
+            --focus-ring: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
             --header-height: 64px;
             --nav-width: 278px;
             /* IMPORTANTE: Reserva global para que el scroll principal no quede oculto bajo la navegación móvil. */

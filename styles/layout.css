@@ -21,7 +21,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(37, 99, 255, 0.05) 0%, transparent 100%);
             pointer-events: none;
         }
 
@@ -36,8 +36,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             position: relative;
             z-index: 1;
-            letter-spacing: -0.02em;
-            text-transform: uppercase;
+            letter-spacing: 0.01em;
         }
 
         .brand i {
@@ -169,9 +168,14 @@
         }
 
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--surface-hover);
             color: var(--text-primary);
             transform: translateX(4px);
+        }
+
+        .nav-item:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
 
         .nav-item:hover::before {
@@ -278,7 +282,7 @@
             right: 0;
             width: 800px;
             height: 800px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(37, 99, 255, 0.03) 0%, transparent 60%);
             pointer-events: none;
             z-index: 0;
         }
