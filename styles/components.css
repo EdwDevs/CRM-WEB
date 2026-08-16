@@ -1575,6 +1575,7 @@
             outline: none;
             transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
             font-family: inherit;
+            min-height: 48px;
         }
 
         input:focus, select:focus {
@@ -1604,6 +1605,7 @@
             touch-action: manipulation;
             letter-spacing: 0.01em;
             font-size: 0.85rem;
+            min-height: 48px;
         }
 
         .btn.is-loading {
@@ -1869,8 +1871,8 @@
             font-size: 1rem;
             padding: 8px;
             margin-right: 4px;
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 48px;
+            min-height: 48px;
             border-radius: var(--radius-sm);
             color: var(--text-muted);
             transition: all var(--transition-fast);
@@ -1975,8 +1977,8 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 48px;
+            min-height: 48px;
             color: var(--text-muted);
             font-size: 0.7rem;
             text-transform: uppercase;
@@ -2496,7 +2498,7 @@
             .btn-ai-action,
             .btn-icon-action {
                 font-size: 1.05rem;
-                min-height: 44px;
+                min-height: 48px;
             }
 
             .btn--lg,
