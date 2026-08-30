@@ -92,9 +92,14 @@ function preSubmit(){
     }
 }
 
+let isSavingTransaction=false;
 async function saveTransaction(d){
+    // IMPORTANTE: guardia anti-reentrada para evitar doble submit/guardado duplicado.
+    if(isSavingTransaction)return;
+    isSavingTransaction=true;
     const monto=Number(d?.monto);
     if(!isValidPositiveAmount(monto)){
+        isSavingTransaction=false;
         showToast('Monto inválido','error');
         return;
     }
@@ -136,6 +141,7 @@ async function saveTransaction(d){
         showToast('Error al guardar. Verifica tu conexión.', 'error');
     }finally{
         if(btn)btn.classList.remove('is-loading');
+        isSavingTransaction=false;
         if(shouldReturnToQuota){
             returnToQuotaModal=false;
             openQuotaModal();

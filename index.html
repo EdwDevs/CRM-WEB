@@ -104,7 +104,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row"><span>Valor de Cuota:</span><strong id="modalValorCuota"></strong></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
+    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row"><span>Valor de Cuota:</span><strong id="modalValorCuota"></strong></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" id="btnConfirmCredit" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
 
     <div class="modal-overlay" id="confirmActionModal">
         <div class="modal-content">
@@ -537,20 +537,20 @@
             }
         }
         async function executeFirestoreAction({entity, action, payload}){
-            if(entity==='cards'){
-                const cardsRef = await getUserCardsCollection();
-                if(action==='add')return cardsRef.add(payload.data);
-                if(action==='update')return cardsRef.doc(payload.id).update(payload.data);
-                if(action==='delete')return cardsRef.doc(payload.id).delete();
-            }
-            if(entity==='transactions'){
-                const transactionsRef = await getUserTransactionsCollection();
-                if(action==='add')return transactionsRef.add(payload.data);
-                if(action==='update')return transactionsRef.doc(payload.id).update(payload.data);
-                if(action==='delete')return transactionsRef.doc(payload.id).delete();
-            }
-            throw new Error('Acción offline no soportada');
-        }
+                    if(entity==='cards'){
+                        const cardsRef = await getUserCardsCollection();
+                        if(action==='add')return cardsRef.doc(payload.localId).set(payload.data).then(()=>({id:payload.localId}));
+                        if(action==='update')return cardsRef.doc(payload.id).update(payload.data);
+                        if(action==='delete')return cardsRef.doc(payload.id).delete();
+                    }
+                    if(entity==='transactions'){
+                        const transactionsRef = await getUserTransactionsCollection();
+                        if(action==='add')return transactionsRef.doc(payload.localId).set(payload.data).then(()=>({id:payload.localId}));
+                        if(action==='update')return transactionsRef.doc(payload.id).update(payload.data);
+                        if(action==='delete')return transactionsRef.doc(payload.id).delete();
+                    }
+                    throw new Error('Acción offline no soportada');
+                }
         function updateCachedTransactions(action, payload, queueId){
             const cached=getStoredCachedTransactions();
             if(action==='add'){
@@ -563,12 +563,10 @@
                     cached.unshift({id:payload.id,...payload.data,pendingSync:true});
                 }
             }else if(action==='delete'){
-                if(payload.id && String(payload.id).startsWith('offline-')){
-                    const idx=cached.findIndex(t=>t.id===payload.id);
-                    if(idx>-1)cached.splice(idx,1);
-                }
-            }
-            setStoredCachedTransactions(cached);
+                            const idx=cached.findIndex(t=>t.id===payload.id);
+                            if(idx>-1)cached.splice(idx,1);
+                        }
+                        setStoredCachedTransactions(cached);
         }
         function updateCachedCards(action, payload, queueId){
             const cached=getStoredCardsCache();
@@ -672,18 +670,23 @@
             return false;
         }
         async function enqueueOrExecute({entity, action, payload, silent=false}){
-            const queueId=generateQueueId();
-            const localId=queueId;
-            const queuedItem={
-                id:queueId,
-                localId,
-                entity,
-                action,
-                payload,
-                createdAt:new Date().toISOString(),
-                status:navigator.onLine?'processing':'pending',
-                error:''
-            };
+                    const queueId=generateQueueId();
+                    const localId=queueId;
+                    // IMPORTANTE: los 'add' usan un ID determinístico generado por el cliente (localId)
+                    // para que los reintentos (timeout/corte de red) sean idempotentes y no creen duplicados.
+                    if(action==='add'&&payload&&typeof payload==='object'&&!payload.localId){
+                        payload={...payload,localId};
+                    }
+                    const queuedItem={
+                        id:queueId,
+                        localId,
+                        entity,
+                        action,
+                        payload,
+                        createdAt:new Date().toISOString(),
+                        status:navigator.onLine?'processing':'pending',
+                        error:''
+                    };
             if(action==='update'&&payload.id&&String(payload.id).startsWith('offline-')){
                 const localRef=String(payload.id).replace('offline-','');
                 if(updateQueuedAddPayload(entity, localRef, payload.data)){
@@ -1845,17 +1848,24 @@
             loadTransactions();
         }
         async function seedDefaultCards(){
-            const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}];
-            for(const card of cards){
-                await enqueueOrExecute({
-                    entity:'cards',
-                    action:'add',
-                    payload:{data:{name:card.name,quota:0,diaPago:card.diaPago,ajusteDisponible:0}},
-                    silent:true
-                });
-            }
-            loadCards();
-        }
+                    const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}];
+                    // IMPORTANTE: evitar re-sembrar tarjetas ya existentes (en Firestore o pendientes en cola offline) para no duplicarlas.
+                    const existingNames=new Set(cardsList.map(c=>c.name).filter(Boolean));
+                    const queuedNames=new Set(offlineQueue
+                        .filter(i=>i.entity==='cards'&&i.action==='add')
+                        .map(i=>i.payload?.data?.name)
+                        .filter(Boolean));
+                    for(const card of cards){
+                        if(existingNames.has(card.name)||queuedNames.has(card.name))continue;
+                        await enqueueOrExecute({
+                            entity:'cards',
+                            action:'add',
+                            payload:{data:{name:card.name,quota:0,diaPago:card.diaPago,ajusteDisponible:0}},
+                            silent:true
+                        });
+                    }
+                    loadCards();
+                }
         function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
         async function loadTransactions(){
             // IMPORTANTE: loadTransactions controla el fin de los skeletons iniciales porque historial, dashboard y charts dependen de estos datos.
@@ -1928,7 +1938,15 @@
             handleTipoChange();
             logEvent('switchView',{view:'transacciones-bindings-ready'});
         }
-        function confirmSaveTransaction(){if(tempTransactionData)saveTransaction(tempTransactionData);closeModal('creditModal');}
+        function confirmSaveTransaction(){
+            const btn=document.getElementById('btnConfirmCredit');
+            if(btn&&btn.disabled)return;
+            if(btn)btn.disabled=true;
+            if(tempTransactionData)saveTransaction(tempTransactionData).finally(()=>{if(btn)btn.disabled=false;});
+            else if(btn)btn.disabled=false;
+            tempTransactionData=null;
+            closeModal('creditModal');
+        }
         window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;document.getElementById('creditoFechaPago').value=t.proximaFechaPago||getDefaultCreditPaymentDate(resolveCreditCardId(t), t.fecha);}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
         async function performDeleteTransaction(id,{skipConfirm=false}={}){
             if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
