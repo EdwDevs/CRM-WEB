@@ -5262,3 +5262,201 @@ body:not(.is-data-loading) .chart-loading-shell {
 .transaction-form .transaction-actions {
     padding: 14px 16px;
 }
+
+/* ============================================================
+   DASHBOARD · Rediseño móvil/táctil (FASE 1)
+   Preserva IDs existentes, mejora objetivo táctil y espaciado.
+   ============================================================ */
+
+/* --- Tarjetas KPI: objetivo táctil ≥48px en vertical --- */
+.dashboard-hero__metric {
+    min-height: 80px !important;        /* asegurar altura táctil vertical */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 12px 14px !important;
+}
+
+/* Iconos de KPI más grandes y con buen contraste */
+.dashboard-hero__metric .mini-icon-wrapper {
+    width: 36px !important;
+    height: 36px !important;
+    margin: 0 auto 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Valor numérico más legible */
+.dashboard-hero__metric .mini-value {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+}
+
+/* Etiquetas y deltas: ligeramente más compactos */
+.dashboard-hero__metric .mini-label,
+.dashboard-hero__metric .mini-footer,
+.dashboard-hero__metric .mini-delta {
+    font-size: 0.875rem !important;
+}
+
+/* Barra de progreso del ahorro: altura táctil */
+#savingsProgressBar,
+#balanceProgressBar,
+#creditUtilizationBar,
+#dailySpendProgressBar {
+    height: 12px !important;
+    border-radius: 6px !important;
+}
+
+/* --- Acciones rápidas: grid táctil --- */
+.quick-actions-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)) !important;
+    gap: 10px !important;
+    padding: 8px !important;
+}
+
+/* Botón de acción rápida: objetivo táctil ≥48px */
+.quick-action-card {
+    min-height: 72px !important;
+    aspect-ratio: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    padding: 8px !important;
+}
+
+/* Icono de acción rápida más grande */
+.quick-action-card__icon {
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Etiqueta de acción rápida: legible */
+.quick-action-card__label {
+    font-size: 0.75rem !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* --- Cuentas: tarjetas compactas y objetivo táctil --- */
+.account-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+}
+
+.account-card {
+    min-height: 72px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    padding: 8px !important;
+}
+
+/* Icono de cuenta más grande */
+.account-card .account-icon {
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Texto de cuenta: legible */
+.account-card .account-label,
+.account-card .account-amount {
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+}
+
+/* --- Contenedores de alertas y recordatorios: más aire --- */
+.dashboard-alert-strip {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
+
+/* Botón de alerta: objetivo táctil */
+.budget-alert {
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px 10px !important;
+}
+
+/* Texto de alerta: legible */
+.budget-alert-title,
+.budget-alert-desc {
+    font-size: 0.875rem !important;
+}
+
+/* --- Secciones colapsables (panele secundario): header más táctil --- */
+.view-secondary-stack details > .card-header {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+}
+
+.view-secondary-stack details > .card-header h2 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+
+/* Cuerpo de sección colapsable: reducir padding interno excesivo */
+.view-secondary-stack details > .card-body {
+    padding: 12px !important;
+}
+
+/* --- Mini-stats dentro de colapsables: compactos y legibles --- */
+.mini-stat {
+    min-height: 56px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 8px 10px !important;
+}
+
+.mini-stat .mini-label {
+    font-size: 0.75rem !important;
+}
+
+.mini-stat .mini-value {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+/* Barra de progreso interna de mini-stat: altura táctil */
+.mini-stat .stat-progress-fill {
+    height: 8px !important;
+    border-radius: 4px !important;
+}
+
+/* --- Responsividad: en pantallas muy pequeñas, priorizar altura mínima --- */
+@media (max-width: 320px) {
+    .dashboard-hero__metric { min-height: 72px !important; }
+    .quick-action-card { min-height: 64px !important; }
+    .account-card { min-height: 64px !important; }
+    .mini-stat { min-height: 48px !important; }
+}
+
+/* ============================================================ */
