@@ -5743,5 +5743,133 @@ body:not(.is-data-loading) .chart-loading-shell {
     .stats-chart-wrap--sm { min-height: 120px !important; }
 }
 
+/* ============================================================
+   OBJETIVOS · Rediseño móvil/táctil (FASE 4)
+   Preserva IDs existentes, mejora objetivo táctil y espaciado.
+   ============================================================ */
+
+/* --- Goals dashboard layout: grid táctil --- */
+.goals-layout {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+    gap: 12px !important;
+    padding: 8px !important;
+}
+
+/* Goal card (skeleton or real) */
+.goal-card,
+.skeleton-goal-hero,
+.skeleton-goal-list {
+    min-height: 120px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: stretch !important;
+    padding: 12px !important;
+    gap: 8px !important;
+}
+
+/* Goal header: title and icon */
+.goal-card .goal-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 4px !important;
+}
+.goal-card .goal-header i {
+    font-size: 1.4rem !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.goal-card .goal-header h3 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    flex: 1 !important;
+}
+
+/* Goal progress bar */
+.goal-card .progress-bar {
+    height: 8px !important;
+    border-radius: 4px !important;
+    background: var(--bg-muted) !important;
+    margin: 4px 0 !important;
+}
+.goal-card .progress-fill {
+    height: 100% !important;
+    border-radius: 4px !important;
+    transition: width 0.3s ease !important;
+}
+
+/* Goal stats: saved / target */
+.goal-card .goal-stats {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 0.85rem !important;
+    color: var(--muted-foreground) !important;
+    margin-top: 4px !important;
+}
+.goal-card .goal-stats .saved {
+    font-weight: 600 !important;
+}
+
+/* Goal date */
+.goal-card .goal-date {
+    font-size: 0.75rem !important;
+    text-align: right !important;
+    color: var(--text-secondary) !important;
+    margin-top: 4px !important;
+}
+
+/* Empty state: more air and tactile button */
+#goalsEmptyState {
+    text-align: center !important;
+    padding: 24px 16px !important;
+}
+#goalsEmptyState .empty-state__icon {
+    font-size: 2.2rem !important;
+    margin-bottom: 12px !important;
+}
+#goalsEmptyState .empty-state__title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+#goalsEmptyState .empty-state__message {
+    font-size: 0.9rem !important;
+    color: var(--muted-foreground) !important;
+    margin-bottom: 16px !important;
+    line-height: 1.4 !important;
+}
+#goalsEmptyState .btn {
+    min-height: 40px !important;
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+}
+
+/* View header actions: make button more tactile */
+.view-header__actions .btn {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+}
+
+/* Responsividad: en pantallas muy pequeñas */
+@media (max-width: 320px) {
+    .goals-layout { gap: 8px !important; padding: 6px !important; }
+    .goal-card,
+    .skeleton-goal-hero,
+    .skeleton-goal-list { min-height: 100px !important; padding: 10px !important; }
+    .goal-card .goal-header i { font-size: 1.2rem !important; }
+    .goal-card .goal-header h3 { font-size: 0.85rem !important; }
+    .goal-card .goal-stats { font-size: 0.75rem !important; }
+    .goal-card .goal-date { font-size: 0.65rem !important; }
+    #goalsEmptyState { padding: 16px 12px !important; }
+    .view-header__actions .btn { min-height: 36px !important; padding: 6px 10px !important; }
+}
+
 /* ============================================================ */
 /* ============================================================ */
