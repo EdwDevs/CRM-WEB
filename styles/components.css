@@ -5872,4 +5872,133 @@ body:not(.is-data-loading) .chart-loading-shell {
 }
 
 /* ============================================================ */
+
+
+/* ============================================================
+   ASISTENTE · Rediseño móvil/táctil (FASE 5)
+   Preserva IDs existentes, mejora objetivo táctil y espaciado.
+   ============================================================ */
+
+/* --- Welcome card: more air and readable text --- */
+.ai-welcome-card {
+    padding: 20px 24px !important;
+}
+.ai-welcome-card h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 8px !important;
+}
+.ai-welcome-card p {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+}
+
+/* --- AI action button: make more tactile --- */
+.btn-ai-action {
+    min-height: 44px !important;
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+.btn-ai-action i {
+    font-size: 1.1rem !important;
+}
+
+/* --- Loading spinner: slightly larger for visibility --- */
+.ai-loading {
+    padding: 20px !important;
+}
+.ai-loading .ai-spinner {
+    width: 36px !important;
+    height: 36px !important;
+}
+.ai-loading-text {
+    font-size: 0.9rem !important;
+    margin-top: 10px !important;
+}
+
+/* --- Response container: spacing between collapsible cards --- */
+.ai-response-container {
+    gap: 12px !important;
+}
+
+/* --- Report header: make more legible --- */
+.ai-report-header {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+}
+.ai-report-title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+}
+.ai-report-subtitle {
+    font-size: 0.85rem !important;
+    color: var(--muted-foreground) !important;
+}
+
+/* --- Score badge: make larger and more prominent --- */
+.score-badge {
+    min-height: 36px !important;
+    min-width: 80px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+}
+
+/* --- Collapsible card header: touch height --- */
+#aiResultContainer > .card > .card-header,
+#predictionCard > .card > .card-header {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+}
+#aiResultContainer > .card > .card-header h3,
+#predictionCard > .card > .card-header h3 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+#aiResultContainer > .card > .card-body,
+#predictionCard > .card > .card-body {
+    padding: 12px !important;
+}
+
+/* --- Prediction value: larger --- */
+#predictedExpenses {
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+}
+
+/* --- Responsividad: en pantallas muy pequeñas --- */
+@media (max-width: 320px) {
+    .ai-welcome-card { padding: 16px 20px !important; }
+    .ai-welcome-card h2 { font-size: 1.1rem !important; }
+    .ai-welcome-card p { font-size: 0.85rem !important; }
+    .btn-ai-action { min-height: 40px !important; padding: 6px 12px !important; font-size: 0.85rem !important; }
+    .btn-ai-action i { font-size: 1rem !important; }
+    .ai-loading { padding: 16px !important; }
+    .ai-loading .ai-spinner { width: 30px !important; height: 30px !important; }
+    .ai-loading-text { font-size: 0.8rem !important; }
+    .ai-response-container { gap: 8px !important; }
+    .ai-report-title { font-size: 1rem !important; }
+    .ai-report-subtitle { font-size: 0.75rem !important; }
+    .score-badge { min-height: 32px !important; min-width: 70px !important; font-size: 0.8rem !important; }
+    #aiResultContainer > .card > .card-header,
+    #predictionCard > .card > .card-header { min-height: 40px !important; padding: 0 10px !important; }
+    #aiResultContainer > .card > .card-header h3,
+    #predictionCard > .card > .card-header h3 { font-size: 0.85rem !important; }
+    #aiResultContainer > .card > .card-body,
+    #predictionCard > .card > .card-body { padding: 10px !important; }
+    #predictedExpenses { font-size: 1.1rem !important; }
+
+/* ============================================================ */
 /* ============================================================ */
