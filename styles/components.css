@@ -4986,3 +4986,279 @@ body:not(.is-data-loading) .loading-state[data-loading-label]::after {
 body:not(.is-data-loading) .chart-loading-shell {
     display: none;
 }
+
+/* ============================================================
+   TRANSACCIÓN · Selector de categoría con botón limpiar
+   Mantiene el <select> id="categoria" oculto para JS existente.
+   ============================================================ */
+
+.category-select-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+.category-select-wrapper select {
+    width: 100%;
+    padding-right: 2.5rem; /* space for button */
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236B7280' stroke-width='1.5' d='M1 5l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+}
+.category-select-wrapper .category-clear {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0.25rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+.category-select-wrapper .category-clear:hover {
+    opacity: 1;
+    color: var(--text-primary);
+}
+.category-select-wrapper .category-clear:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+.category-select-wrapper .category-clear.hidden {
+    display: none;
+}
+
+/* Hide the native dropdown arrow in Firefox */
+.category-select-wrapper select::-ms-expand {
+    display: none;
+}
+
+/* ============================================================
+   TRANSACCIÓN · Selector de tipo táctil (botones en lugar de select)
+   Conserva el <select> id="tipo" oculto para JS existente.
+   ============================================================ */
+
+/* Accesibilidad: ocultar visualmente pero mantener para lectores de pantalla */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+}
+
+/* Grupo de botones para tipo de transacción */
+.transaction-type-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+.transaction-type-btn {
+    flex: 1 0 120px; /* Crece, encoge, ancho base */
+    min-height: 44px; /* Objetivo táctil mínimo */
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border: 2px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.transaction-type-btn:hover {
+    background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+    border-color: color-mix(in srgb, var(--border-light) 80%, transparent);
+}
+.transaction-type-btn[data-value="gasto"]:focus-visible,
+.transaction-type-btn[data-value="ingreso"]:focus-visible,
+.transaction-type-btn[data-value="credito"]:focus-visible,
+.transaction-type-btn[data-value="pago_tarjeta"]:focus-visible,
+.transaction-type-btn[data-value="transferencia"]:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+.transaction-type-btn.active {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary-light) 15%, var(--bg-surface));
+    border-color: var(--primary);
+}
+
+/* ============================================================
+   TRANSACCIÓN · Formulario compacto y agrupado (mobile-first)
+   Reduce espaciado, elimina cajas individuales y mantiene IDs/JS intactos.
+   ============================================================ */
+.transaction-form--compact {
+    gap: 6px;
+}
+.transaction-form--compact > .transaction-step {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 8px 0;
+}
+.transaction-form--compact > .transaction-step:not(:last-of-type) {
+    border-bottom: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
+}
+.transaction-form--compact .transaction-step::after { display: none; }
+.transaction-form--compact .transaction-type-selector {
+    border-top: 2px solid color-mix(in srgb, var(--primary) 40%, transparent);
+    padding-top: 8px;
+}
+.transaction-form--compact .transaction-step__header {
+    gap: 8px;
+    align-items: center;
+}
+.transaction-form--compact .transaction-panel__header {
+    margin-bottom: 6px;
+}
+.transaction-form--compact .transaction-step__number {
+    width: 20px;
+    height: 20px;
+    flex-basis: 20px;
+    font-size: 0.7rem;
+}
+.transaction-form--compact .transaction-step__eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.09em;
+    margin-bottom: 1px;
+}
+.transaction-form--compact .transaction-section-title {
+    font-size: 0.95rem;
+    line-height: 1.2;
+}
+.transaction-form--compact .transaction-section-copy { display: none; }
+/* Grid denser */
+.transaction-form--compact .form-grid,
+.transaction-form--compact .form-panel-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px 10px;
+}
+.transaction-form--compact .transaction-guided-grid {
+    row-gap: 6px;
+}
+/* Fields without individual boxes */
+.transaction-form--compact .form-group {
+    background: transparent;
+    border: 0;
+    padding: 2px 0 3px;
+    gap: 4px;
+}
+.transaction-form--compact .form-group.full-width {
+    grid-column: 1 / -1;
+}
+/* Special panels */
+.transaction-form--compact .transaction-subpanel {
+    margin-top: 2px;
+}
+.transaction-form--compact .transaction-panel__content {
+    margin-top: 8px;
+}
+/* Actions */
+.transaction-form--compact .transaction-actions {
+    padding: 10px 12px;
+}
+
+/* ============================================================
+   TRANSACCIÓN · Formulario agrupado y de entrada rápida (CSS-only)
+   Agrupa las secciones en una sola superficie continua y compacta.
+   NO toca IDs, onchange/onclick ni ninguna variable leída por JS.
+   ============================================================ */
+.transaction-form {
+    gap: 10px;
+}
+
+/* --- Secciones de nivel superior: sin cajas pesadas, conectadas por divisores finos --- */
+.transaction-form > .transaction-step {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 10px 0 12px;
+}
+.transaction-form > .transaction-step:not(:last-of-type) {
+    border-bottom: 1px dashed color-mix(in srgb, var(--border-light) 88%, transparent);
+}
+.transaction-form > .transaction-step::after {
+    display: none;
+}
+/* El selector de tipo conserva un leve acento como punto de entrada. */
+.transaction-form > .transaction-type-selector {
+    border-top: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+    padding-top: 12px;
+}
+
+/* --- Encabezados de paso compactos: título + número pequeños, sin párrafo decorativo --- */
+.transaction-form .transaction-step__header {
+    gap: 10px;
+    align-items: center;
+}
+.transaction-form .transaction-panel__header {
+    margin-bottom: 10px;
+}
+.transaction-form .transaction-step__number {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+    font-size: 0.78rem;
+}
+.transaction-form .transaction-step__eyebrow {
+    font-size: 0.64rem;
+    letter-spacing: 0.09em;
+    margin-bottom: 1px;
+}
+.transaction-form .transaction-section-title {
+    font-size: 1rem;
+    line-height: 1.2;
+}
+.transaction-form .transaction-section-copy {
+    display: none;
+}
+
+/* --- Grid denso: más campos por fila, menos scroll entre grupos --- */
+.transaction-form .form-grid,
+.transaction-form .form-panel-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px 14px;
+}
+.transaction-form .transaction-guided-grid {
+    row-gap: 10px;
+}
+
+/* --- Campos sin cajón individual para que fluyan como un solo grupo --- */
+.transaction-form .form-group {
+    background: transparent;
+    border: 0;
+    padding: 2px 2px 4px;
+    gap: 6px;
+}
+.transaction-form .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- Los subpaneles especiales (crédito / pago TC / transferencia) conservan su acento --- */
+.transaction-form .transaction-subpanel {
+    margin-top: 4px;
+}
+.transaction-form .transaction-panel__content {
+    margin-top: 12px;
+}
+
+/* --- Acciones: compactas y alineadas con el nuevo look --- */
+.transaction-form .transaction-actions {
+    padding: 14px 16px;
+}

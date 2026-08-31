@@ -151,6 +151,75 @@ async function saveTransaction(d){
 
 function cancelEdit(){editingTransactionId=null; returnToQuotaModal=false; document.getElementById('transactionForm').reset(); document.getElementById('formTitle').textContent='Nueva Transacción'; document.getElementById('btnCancelar').classList.add('hidden'); document.getElementById('btnSubmitText').textContent='Guardar'; handleTipoChange();}
 
+function initTransactionTypeButtons() {
+    const select = document.getElementById('tipo');
+    if (!select) return;
+
+    const buttonsContainer = select.parentElement.querySelector('.transaction-type-buttons');
+    if (!buttonsContainer) return;
+
+    const buttons = buttonsContainer.querySelectorAll('.transaction-type-btn');
+
+    // Establecer estado inicial basado en el valor del select
+    const setActiveButton = (value) => {
+        buttons.forEach(btn => {
+            const isActive = btn.dataset.value === value;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', isActive);
+        });
+    };
+
+    // Actualizar botones cuando cambie el select (por ejemplo, al cargar datos al editar)
+    select.addEventListener('change', () => {
+        setActiveButton(select.value);
+    });
+
+    // Cuando se haga clic en un botón, actualizar el select y disparar su evento change
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            const value = button.dataset.value;
+            if (select.value !== value) {
+                select.value = value;
+                select.dispatchEvent(new Event('change')); // Dispara handleTipoChange()
+                // Actualizar estado visual inmediatamente (evita doble parpadeo)
+                setActiveButton(value);
+            }
+        });
+    });
+
+    // Inicializar estado visual
+    setActiveButton(select.value);
+}
+
+function initCategorySelector() {
+    const wrapper = document.querySelector('.category-select-wrapper');
+    if (!wrapper) return;
+
+    const select = wrapper.querySelector('#categoria');
+    const clearBtn = wrapper.querySelector('.category-clear');
+    if (!select || !clearBtn) return;
+
+    const updateClearButtonVisibility = () => {
+        clearBtn.classList.toggle('hidden', !select.value);
+    };
+
+    // When user clicks the clear button, reset select and trigger change
+    clearBtn.addEventListener('click', () => {
+        if (select.value) {
+            select.value = '';
+            select.dispatchEvent(new Event('change'));
+            updateClearButtonVisibility();
+        }
+    });
+
+    // Keep clear button visibility in sync with select value
+    select.addEventListener('change', updateClearButtonVisibility);
+    select.addEventListener('input', updateClearButtonVisibility);
+
+    // Initialize visibility
+    updateClearButtonVisibility();
+}
+
 // IMPORTANTE: compatibilidad temporal con HTML inline de transacciones hasta reemplazar onchange/onclick por listeners.
 window.handleTipoChange=handleTipoChange;
 window.preSubmit=preSubmit;

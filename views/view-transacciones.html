@@ -13,32 +13,40 @@
                     </summary>
 
                     <!-- IMPORTANTE: el formulario permanece dentro del plegable principal para conservar validación e IDs existentes. -->
-                    <form id="transactionForm" class="collapsible-card__content transaction-form">
+                                        <form id="transactionForm" class="collapsible-card__content transaction-form transaction-form--compact">
                         <!-- IMPORTANTE: editingId es consumido por flujos de edición; mantener el ID aunque no sea visible. -->
                         <input type="hidden" id="editingId" value="">
 
                         <!-- IMPORTANTE: bloque 1 contiene #tipo, leído por handleTipoChange(); conservar ID, required y onchange. -->
-                        <section class="transaction-step transaction-type-selector" aria-labelledby="transactionTypeTitle">
-                            <div class="transaction-step__header">
-                                <span class="transaction-step__number" aria-hidden="true">1</span>
-                                <div>
-                                    <p class="transaction-step__eyebrow">Paso inicial</p>
-                                    <h3 class="transaction-section-title" id="transactionTypeTitle">Tipo de movimiento</h3>
-                                    <p class="transaction-section-copy">Elige el contexto para mostrar solo los campos necesarios.</p>
-                                </div>
-                            </div>
-                            <div class="form-group transaction-type-selector__control">
-                                <!-- IMPORTANTE: #tipo dispara handleTipoChange(); no cambiar ID, required ni onchange. -->
-                                <label for="tipo">Tipo</label>
-                                <select id="tipo" required onchange="handleTipoChange()">
-                                    <option value="gasto">💸 Gasto</option>
-                                    <option value="ingreso">💰 Ingreso</option>
-                                    <option value="credito">💳 Crédito</option>
-                                    <option value="pago_tarjeta">📉 Abono TC</option>
-                                    <option value="transferencia">🔄 Transferencia</option>
-                                </select>
-                            </div>
-                        </section>
+                                                <section class="transaction-step transaction-type-selector" aria-labelledby="transactionTypeTitle">
+                                                    <div class="transaction-step__header">
+                                                        <span class="transaction-step__number" aria-hidden="true">1</span>
+                                                        <div>
+                                                            <p class="transaction-step__eyebrow">Paso inicial</p>
+                                                            <h3 class="transaction-section-title" id="transactionTypeTitle">Tipo de movimiento</h3>
+                                                            <p class="transaction-section-copy">Elige el contexto para mostrar solo los campos necesarios.</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="transaction-type-selector__control">
+                                                        <label for="tipo">Tipo</label>
+                                                        <!-- Select oculto para preservar comportamiento JS existente -->
+                                                        <select id="tipo" required onchange="handleTipoChange()" class="visually-hidden">
+                                                            <option value="gasto">💸 Gasto</option>
+                                                            <option value="ingreso">💰 Ingreso</option>
+                                                            <option value="credito">💳 Crédito</option>
+                                                            <option value="pago_tarjeta">📉 Abono TC</option>
+                                                            <option value="transferencia">🔄 Transferencia</option>
+                                                        </select>
+                                                        <!-- Grupo de botones táctiles -->
+                                                        <div class="transaction-type-buttons" role="radiogroup" aria-labelledby="lblTipo">
+                                                            <button type="button" class="transaction-type-btn" data-value="gasto">💸 Gasto</button>
+                                                            <button type="button" class="transaction-type-btn" data-value="ingreso">💰 Ingreso</button>
+                                                            <button type="button" class="transaction-type-btn" data-value="credito">💳 Crédito</button>
+                                                            <button type="button" class="transaction-type-btn" data-value="pago_tarjeta">📉 Abono TC</button>
+                                                            <button type="button" class="transaction-type-btn" data-value="transferencia">🔄 Transferencia</button>
+                                                        </div>
+                                                    </div>
+                                                </section>
 
                         <!-- IMPORTANTE: bloque 2 contiene #monto, #fecha, #miembro y #descripcion usados por preSubmit()/saveTransaction(). -->
                         <section class="transaction-step transaction-panel" aria-labelledby="transactionBaseTitle">
@@ -91,10 +99,13 @@
                             </div>
                             <div class="form-grid transaction-guided-grid">
                                 <div class="form-group">
-                                    <!-- IMPORTANTE: #categoria es obligatorio para preSubmit(), handleTipoChange() y gráficos; no cambiar ID. -->
-                                    <label for="categoria">Categoría</label>
-                                    <select id="categoria" required></select>
-                                </div>
+                                                <!-- IMPORTANTE: #categoria es obligatorio para preSubmit(), handleTipoChange() y gráficos; no cambiar ID. -->
+                                                <label for="categoria">Categoría</label>
+                                                <div class="category-select-wrapper">
+                                                    <select id="categoria" required></select>
+                                                    <button type="button" class="category-clear" aria-label="Limpiar categoría"></button>
+                                                </div>
+                                            </div>
                                 <!-- IMPORTANTE: #subcategoriaDiv es mostrado/ocultado por el listener de categoría; conservar ID. -->
                                 <div class="form-group hidden" id="subcategoriaDiv">
                                     <!-- IMPORTANTE: #subcategoria es leído por preSubmit(); conservar ID aunque sea opcional. -->

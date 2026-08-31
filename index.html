@@ -1936,7 +1936,9 @@
             creditCard.addEventListener('change',()=>syncCreditPaymentDateField(true));
             dateInput.addEventListener('change',()=>syncCreditPaymentDateField(true));
             handleTipoChange();
-            logEvent('switchView',{view:'transacciones-bindings-ready'});
+                        initTransactionTypeButtons();
+                        initCategorySelector();
+                        logEvent('switchView',{view:'transacciones-bindings-ready'});
         }
         function confirmSaveTransaction(){
             const btn=document.getElementById('btnConfirmCredit');
