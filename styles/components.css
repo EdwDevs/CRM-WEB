@@ -5598,4 +5598,150 @@ body:not(.is-data-loading) .chart-loading-shell {
     .mini-stat { min-height: 48px !important; }
 }
 
+
+
+/* ============================================================
+   ESTADÍSTICAS · Rediseño móvil/táctil (FASE 3)
+   Preserva IDs existentes, mejora objetivo táctil y espaciado.
+   ============================================================ */
+
+/* --- KPI strip: touch targets and vertical on narrow --- */
+#statsKpiCard {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px !important;
+}
+#statsKpiCard .stats-summary-strip__item {
+    min-width: 100px !important;
+    flex: 1 1 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 8px !important;
+    min-height: 60px !important;
+}
+#statsKpiCard .stats-summary-strip__label {
+    font-size: 0.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+#statsKpiCard .stats-summary-strip__value {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+/* --- Insights grid: touch-friendly cards --- */
+#statsInsightsGrid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 10px !important;
+    padding: 8px !important;
+}
+#statsInsightsGrid > * {
+    min-height: 80px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 6px 8px !important;
+}
+#statsInsightsGrid .stats-insight-label {
+    font-size: 0.75rem !important;
+}
+#statsInsightsGrid .stats-insight-value {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+/* --- Chart wrappers: minimum height for touch interaction --- */
+.stats-chart-wrap {
+    min-height: 180px !important; /* enough height for touch interaction with chart */
+}
+.stats-chart-wrap--md { min-height: 220px !important; }
+.stats-chart-wrap--sm { min-height: 150px !important; }
+
+.chart-loading-shell {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: inherit !important;
+}
+
+/* --- Fallback charts: larger text and button --- */
+.chart-fallback {
+    text-align: center !important;
+    padding: 16px !important;
+}
+.chart-fallback > * {
+    display: block !important;
+}
+.chart-fallback-title {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+.chart-fallback-message {
+    font-size: 0.875rem !important;
+    color: var(--muted-foreground) !important;
+    margin-bottom: 12px !important;
+}
+
+/* --- Empty state: more air and tactile button --- */
+#statsEmptyState {
+    text-align: center !important;
+    padding: 24px 16px !important;
+}
+#statsEmptyState .empty-state__icon {
+    font-size: 2.2rem !important;
+    margin-bottom: 12px !important;
+}
+#statsEmptyState .empty-state__title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+#statsEmptyState .empty-state__message {
+    font-size: 0.9rem !important;
+    color: var(--muted-foreground) !important;
+    margin-bottom: 16px !important;
+    line-height: 1.4 !important;
+}
+#statsEmptyState .btn {
+    min-height: 40px !important;
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+}
+
+/* --- Secondary stack cards (collapsible): header touch height --- */
+.view-secondary-stack > .card > .card-header {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+}
+.view-secondary-stack > .card > .card-header h2 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+.view-secondary-stack > .card > .card-body {
+    padding: 12px !important;
+}
+
+/* --- Responsividad: en pantallas muy pequeñas --- */
+@media (max-width: 320px) {
+    #statsKpiCard { gap: 6px !important; padding: 6px !important; }
+    #statsKpiCard .stats-summary-strip__item { min-height: 52px !important; padding: 6px !important; }
+    #statsInsightsGrid { gap: 8px !important; padding: 6px !important; }
+    #statsInsightsGrid > * { min-height: 70px !important; padding: 4px 6px !important; }
+    .stats-chart-wrap { min-height: 140px !important; }
+    .stats-chart-wrap--md { min-height: 180px !important; }
+    .stats-chart-wrap--sm { min-height: 120px !important; }
+}
+
+/* ============================================================ */
 /* ============================================================ */
