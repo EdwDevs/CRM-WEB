@@ -5264,6 +5264,145 @@ body:not(.is-data-loading) .chart-loading-shell {
 }
 
 /* ============================================================
+   HISTORIAL / TARJETAS · Rediseño móvil/táctil (FASE 2)
+   Preserva IDs existentes, mejora objetivo táctil y espaciado.
+   ============================================================ */
+
+/* --- Resumen filtrado: pills más grandes y táctiles --- */
+.history-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+}
+.history-summary-grid .summary-pill {
+    min-height: 48px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
+}
+.history-summary-grid .summary-pill strong,
+.history-summary-grid .summary-pill span {
+    display: block !important;
+    line-height: 1.2 !important;
+}
+.history-summary-grid .summary-pill strong {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+/* --- Filtros: grupos más accesibles y selects táctiles --- */
+.advanced-filters .filter-group {
+    margin-bottom: 10px !important;
+}
+.advanced-filters .filter-control {
+    min-height: 40px !important; /* táctil para date, select, input */
+    padding: 8px 10px !important;
+    font-size: 0.9rem !important;
+}
+.advanced-filters .voice-search-btn {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.advanced-filters .btn-clear,
+.advanced-filters .btn {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+}
+
+/* --- Tabla de historial: filas táctiles y desplazamiento suave --- */
+.table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+.responsive-table-card {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+.responsive-table-card th,
+.responsive-table-card td {
+    min-height: 44px !important; /* altura táctil mínima para celda */
+    padding: 8px 10px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.3 !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+.responsive-table-card th {
+    background: var(--bg-muted) !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+}
+.responsive-table-card tbody tr:hover {
+    background: var(--bg-accent) !important;
+}
+
+/* --- Acciones de fila (editar/eliminar): objetivo táctil --- */
+.responsive-table-card .actions-cell {
+    min-width: 60px !important;
+}
+.responsive-table-card .actions-cell button {
+    min-width: 32px !important;
+    min-height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 2px !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+}
+
+/* --- Estados vacíos: más aire y botón táctil --- */
+.empty-state {
+    text-align: center !important;
+    padding: 24px 16px !important;
+}
+.empty-state__icon {
+    font-size: 2.2rem !important;
+    margin-bottom: 12px !important;
+}
+.empty-state__title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+.empty-state__message {
+    font-size: 0.9rem !important;
+    color: var(--muted-foreground) !important;
+    margin-bottom: 16px !important;
+    line-height: 1.4 !important;
+}
+.empty-state .btn {
+    min-height: 40px !important;
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+}
+
+/* --- Responsividad: en pantallas muy pequeñas, reducir padding de contenedores --- */
+@media (max-width: 320px) {
+    .history-summary-grid { gap: 6px !important; }
+    .history-summary-grid .summary-pill { min-height: 42px !important; padding: 4px 6px !important; }
+    .advanced-filters .filter-control { min-height: 36px !important; padding: 6px 8px !important; }
+    .responsive-table-card th,
+    .responsive-table-card td { min-height: 38px !important; padding: 6px 8px !important; }
+    .empty-state { padding: 16px 12px !important; }
+}
+
+/* ============================================================ */
+
+/* ============================================================
    DASHBOARD · Rediseño móvil/táctil (FASE 1)
    Preserva IDs existentes, mejora objetivo táctil y espaciado.
    ============================================================ */
