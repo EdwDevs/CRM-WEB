@@ -6260,3 +6260,59 @@ body:not(.is-data-loading) .chart-loading-shell {
 .daily-cap-card .daily-cap-value {
     font-size: clamp(1.3rem, 2.6vw, 1.8rem);
 }
+
+/* ============================================================
+   FASE 3 · FLUIDEZ (2026-09)
+   Cierre animado de modales, feedback táctil global, touch targets.
+   ============================================================ */
+
+/* --- Cierre de modales (entrada ya existía; salida faltaba) --- */
+@keyframes modalOverlayOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+@keyframes modalSlideDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(14px); opacity: 0; }
+}
+.modal-overlay--closing {
+    animation: modalOverlayOut 0.2s ease forwards;
+    pointer-events: none;
+}
+.modal-overlay--closing .modal-content {
+    animation: modalSlideDown 0.2s ease forwards;
+}
+
+/* --- Feedback táctil global: todos los botones responden al toque --- */
+.btn:active:not(:disabled),
+.btn-icon-action:active:not(:disabled),
+.btn-cuota-pagar:active:not(:disabled),
+.quick-action-card:active,
+.nav-item:active,
+.mob-link:active,
+.btn-export:active:not(:disabled),
+.onboarding-step:active {
+    transform: scale(0.97);
+    transition-duration: 80ms;
+}
+
+/* --- Touch targets: acciones de fila 32px → 40px (guía táctil ≥40px) --- */
+.btn-icon-action {
+    min-width: 40px;
+    min-height: 40px;
+}
+@media (max-width: 768px) {
+    .btn-icon-action {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* --- Transición entre vistas: entrada fade+rise más percibible --- */
+.tab-content.active {
+    animation: fadeIn 0.28s ease both, viewRise 0.28s ease both;
+}
+@keyframes viewRise {
+    from { transform: translateY(10px); }
+    to { transform: translateY(0); }
+}

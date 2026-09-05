@@ -2321,8 +2321,20 @@
             }
         }
 
+        // IMPORTANTE: Fase 3 - cierre animado de modales; el overlay se desvanece antes de ocultarse.
         function closeModal(id){
-            document.getElementById(id).style.display='none';
+            const modal=document.getElementById(id);
+            if(!modal)return;
+            if(modal.style.display!=='flex'){modal.style.display='none';return;}
+            modal.classList.add('modal-overlay--closing');
+            const finish=()=>{
+                modal.style.display='none';
+                modal.classList.remove('modal-overlay--closing');
+                modal.removeEventListener('animationend',finish);
+            };
+            // IMPORTANTE: prefers-reduced-motion desactiva animaciones; garantizamos el cierre aunque no llegue animationend.
+            modal.addEventListener('animationend',finish);
+            setTimeout(finish,250);
             if(id==='cardDetailModal')currentDetailCardName=null;
         }
         async function saveCard(){
