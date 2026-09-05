@@ -6166,3 +6166,97 @@ body:not(.is-data-loading) .chart-loading-shell {
     color: var(--text-muted);
     font-weight: 500;
 }
+
+/* ============================================================
+   FASE 2 · ESTRUCTURA (2026-09)
+   Tarjetas como vista, tope diario visible, tabs de vista.
+   ============================================================ */
+
+/* --- Vista Tarjetas: tabs como encabezado de sección --- */
+.quota-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
+}
+.quota-tabs .modal-tab {
+    padding: 10px 18px;
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.quota-tabs .modal-tab:hover {
+    color: var(--text-primary);
+}
+.quota-tabs .modal-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+[data-theme="light"] .quota-tabs .modal-tab.active {
+    color: #8a6d1d;
+}
+
+/* --- Vista Tarjetas: contenedores sin marco de modal --- */
+#view-tarjetas .quota-tab-section.active {
+    display: block;
+}
+#view-tarjetas .add-card-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    padding: 14px;
+    margin-bottom: 16px;
+    background: var(--bg-surface);
+    border: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+    border-radius: var(--radius-md);
+}
+#view-tarjetas .add-card-form .form-group {
+    flex: 1 1 160px;
+    margin: 0;
+}
+#view-tarjetas .audit-panel {
+    margin-top: 16px;
+    padding: 0;
+    background: var(--bg-surface);
+    border: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+#view-tarjetas .audit-panel summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    cursor: pointer;
+    list-style: none;
+}
+#view-tarjetas .audit-panel summary::-webkit-details-marker {
+    display: none;
+}
+#view-tarjetas .audit-panel[open] summary {
+    border-bottom: 1px solid color-mix(in srgb, var(--border-light) 50%, transparent);
+}
+#view-tarjetas .audit-summary,
+#view-tarjetas .audit-list {
+    padding: 16px;
+}
+#view-tarjetas .audit-actions .btn {
+    white-space: nowrap;
+}
+
+/* --- Tope de gasto de hoy: tarjeta visible con jerarquía clara --- */
+.daily-cap-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.daily-cap-card .daily-cap-value {
+    font-size: clamp(1.3rem, 2.6vw, 1.8rem);
+}

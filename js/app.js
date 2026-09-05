@@ -39,6 +39,8 @@
             transacciones:{fragment:'views/view-transacciones.html', onActivate:[initCollapsibleCards, initTransactionFormBindings]},
             estadisticas:{fragment:'views/view-estadisticas.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
             historial:{fragment:'views/view-historial.html', focusMode:true, defaultCollapsedSections:['.history-filter-panel'], onActivate:[initCollapsibleCards, renderHistory, initHistoryAutoFilters]},
+            // IMPORTANTE: Fase 2 - Tarjetas migró de modal a vista; openQuotaModal() redirige aquí y refresca sus contenedores.
+            tarjetas:{fragment:'views/view-tarjetas.html', onActivate:[initCollapsibleCards, refreshTarjetasView]},
             objetivos:{fragment:'views/view-objetivos.html', focusMode:true, defaultCollapsedSections:['.goal-history-details'], onActivate:[renderGoals, initCollapsibleCards]},
             asistente:{fragment:'views/view-asistente.html', onActivate:[initCollapsibleCards]}
         };
@@ -1624,9 +1626,9 @@
                     return t;
                 }).sort((a,b)=>a.fecha<b.fecha?1:-1);
                 AppStore.setTransactions(normalizedTransactions);
-                const quotaModal=document.getElementById('quotaModal');
-                if(quotaModal&&quotaModal.style.display==='flex'){
-                    openQuotaModal();
+                // IMPORTANTE: Fase 2 - si la vista activa es Tarjetas, refrescar tras recargar datos (antes: modal abierto).
+                if(document.getElementById('view-tarjetas')?.classList.contains('active')){
+                    refreshTarjetasView();
                 }
                 setDataLoadingState(false);
             }
@@ -2047,7 +2049,7 @@
                 }
                 loadCards();
                 setTimeout(() => {
-                    openQuotaModal();
+                    refreshTarjetasView();
                     runConsistencyAudit();
                 }, 500);
             } catch (e) {
@@ -2146,7 +2148,7 @@
                 confirmClass: 'btn--danger',
                 onConfirm: async () => {
                     await performDeleteTransaction(id, { skipConfirm: true });
-                    openQuotaModal();
+                    refreshTarjetasView();
                 }
             });
         }
@@ -2187,7 +2189,7 @@
                             payload: { id, data: { proximaFechaPago: newDate } }
                         });
                         await loadTransactions();
-                        openQuotaModal();
+                        refreshTarjetasView();
                         if(!result?.queued){
                             showToast('Fecha de pago actualizada', 'success');
                         }
@@ -2199,7 +2201,13 @@
             });
         }
         function openQuotaModal(){
+            // IMPORTANTE: Fase 2 - el contenido vive en la vista Tarjetas; los flujos legacy que llamaban al modal ahora navegan a la vista.
+            switchView('tarjetas');
+        }
+        // IMPORTANTE: refactor de openQuotaModal(): pinta el formulario, la lista y los créditos dentro de view-tarjetas.html (IDs sin cambio).
+        function refreshTarjetasView(){
             const d=document.getElementById('quotaListContainer');
+            if(!d)return;
             d.innerHTML='';
             cardsList.forEach(c=>{
                 const db=globalDeudaPorTarjeta[c.name]||0;
@@ -2221,7 +2229,6 @@
             renderConsistencyAlerts();
             renderQuotaCreditList();
             setQuotaTab(currentQuotaTab);
-            document.getElementById('quotaModal').style.display='flex';
         }
         function openConfirmActionModal({ title, body, confirmLabel = 'Confirmar', confirmClass = 'btn--primary', onConfirm }) {
             const modal = document.getElementById('confirmActionModal');
@@ -2357,7 +2364,7 @@
                     });
                 }
                 await loadCards();
-                openQuotaModal();
+                refreshTarjetasView();
                 if(!result?.queued){
                     showToast(i ? 'Tarjeta actualizada' : 'Tarjeta guardada','success');
                 }
@@ -2389,7 +2396,7 @@
                     payload: { id, data: { ajusteDisponible: ajuste } }
                 });
                 await loadCards();
-                openQuotaModal();
+                refreshTarjetasView();
                 if(!result?.queued){
                     showToast('Conciliación aplicada','success');
                 }
@@ -2441,7 +2448,7 @@
                         });
                         if(deleteResult?.queued)queued=true;
                         await loadCards();
-                        openQuotaModal();
+                        refreshTarjetasView();
                         if(queued){
                             showToast('Eliminación guardada localmente. Se sincronizará al reconectar.', 'info');
                         }else{
@@ -2469,22 +2476,24 @@
             document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
             const s=document.querySelectorAll('.sidebar .nav-item');
             const m=document.querySelectorAll('.mobile-nav .mob-link');
-            // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG; Tarjetas usa .nav-action para no desplazar índices legacy.
+            // IMPORTANTE: Fase 2 - Tarjetas es .nav-item real (antes .nav-action); los índices siguen el orden visual del sidebar:
+            // 0=Panel 1=Registrar 2=Historial 3=Tarjetas 4=Insights 5=Metas 6=Asesor IA.
             if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
-            if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
-            if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
-            if(id==='estadisticas'){s[3].classList.add('active');}
-            if(id==='objetivos'){s[4].classList.add('active');}
-            if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
+            if(id==='transacciones'){s[1].classList.add('active');}
+            if(id==='historial'){s[2].classList.add('active');m[1].classList.add('active');}
+            if(id==='tarjetas'){s[3].classList.add('active');m[3].classList.add('active');}
+            if(id==='estadisticas'){s[4].classList.add('active');}
+            if(id==='objetivos'){s[5].classList.add('active');m[4].classList.add('active');}
+            if(id==='asistente'){s[6].classList.add('active');}
             // IMPORTANTE: ejecutar hooks de render de la vista activa (documentación funcional en VIEW_CONFIG).
             requestAnimationFrame(()=>{(VIEW_CONFIG[id].onActivate||[]).forEach(fn=>fn());});
             closeSidebar();
         }
         function goToAddTransaction(){switchView('transacciones');}
         function openCardsNavigation(){
-            // IMPORTANTE: Tarjetas reutiliza el modal existente de cupos y no registra una ruta nueva en VIEW_CONFIG.
+            // IMPORTANTE: Fase 2 - Tarjetas es una vista; este atajo navega en vez de abrir el modal legacy.
             currentQuotaTab='cards';
-            openQuotaModal();
+            switchView('tarjetas');
         }
 
         handleTipoChange();

@@ -1,0 +1,82 @@
+<div id="view-tarjetas" class="tab-content view-stack view-transition fade-in">
+    <header class="view-header">
+        <div>
+            <h1 class="view-header__title">Tarjetas</h1>
+            <p class="view-header__subtitle">Administra tus tarjetas, cupos, deudas y pagos de cuotas.</p>
+        </div>
+    </header>
+
+    <!-- IMPORTANTE: contenido migrado de #quotaModal conservando TODOS los IDs internos; openQuotaModal() refresca estos contenedores. -->
+    <div class="modal-tabs quota-tabs" role="tablist" aria-label="Gestión de tarjetas y créditos">
+        <button class="modal-tab active" data-tab="cards" role="tab" aria-selected="true" onclick="setQuotaTab('cards')">Tarjetas</button>
+        <button class="modal-tab" data-tab="credits" role="tab" aria-selected="false" onclick="setQuotaTab('credits')">Créditos</button>
+    </div>
+    <div id="quotaTabCards" class="quota-tab-section active" role="tabpanel">
+        <div class="add-card-form">
+            <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
+            <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
+            <div class="form-group"><label for="cardPaymentDayInput">Día de pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" step="1" placeholder="1-31"></div>
+            <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
+            <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
+            <input type="hidden" id="editCardId">
+        </div>
+        <div id="quotaListContainer" class="quota-list-scroll"></div>
+        <details class="audit-panel collapsible-card" data-force-collapsed="true" data-secondary-section="true">
+            <summary class="audit-header">
+                <div>
+                    <div class="audit-title"><i class="fas fa-shield-halved" aria-hidden="true"></i> Alertas de consistencia</div>
+                    <div class="audit-subtitle">Revisa cupos, cuotas y saldos; aplica correcciones si hay diferencias.</div>
+                </div>
+                <div class="audit-actions">
+                    <button class="btn btn--ghost btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar</button>
+                </div>
+            </summary>
+            <div class="audit-summary" aria-live="polite">
+                <div id="auditScore" class="audit-score audit-score--warning">
+                    <span>Estado visual</span>
+                    <strong id="auditStatusLabel">Sin ejecutar</strong>
+                    <small id="auditStatusDetail">Ejecuta la auditoría para calcular consistencia.</small>
+                </div>
+                <div class="audit-summary-card">
+                    <span>Total de issues</span>
+                    <strong id="auditIssueTotal">0</strong>
+                </div>
+                <div class="audit-summary-card">
+                    <span>Correcciones disponibles</span>
+                    <strong id="auditCorrectionTotal">0</strong>
+                </div>
+                <div class="audit-summary-card">
+                    <span>Última ejecución</span>
+                    <strong id="auditLastRun">Pendiente</strong>
+                </div>
+            </div>
+            <div id="consistencyAlertList" class="audit-list">
+                <!-- IMPORTANTE: estado inicial accionable para que el contenedor dinámico de auditoría no arranque en blanco. -->
+                <div class="empty-state" role="status">
+                    <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
+                    <strong class="empty-state__title">Auditoría pendiente.</strong>
+                    <p class="empty-state__message">Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.</p>
+                    <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="runConsistencyAudit()">Ejecutar auditoría</button>
+                </div>
+            </div>
+        </details>
+    </div>
+    <div id="quotaTabCredits" class="quota-tab-section" role="tabpanel">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tarjeta</th>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Cuotas</th>
+                        <th>Monto</th>
+                        <th>Saldo pendiente</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="quotaCreditList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>

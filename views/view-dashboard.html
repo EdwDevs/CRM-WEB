@@ -282,14 +282,18 @@
             </div>
         </details>
 
+        <!-- IMPORTANTE: Fase 2 - Capacidad diaria es el dato más accionable del día; pasó de plegable a tarjeta visible. -->
         <!-- IMPORTANTE: dailyCapCard es consultado por updateDailyCapIndicator(); conservar ID. -->
-        <details class="card collapsible-card" id="dailyCapCard" data-force-collapsed="true" data-secondary-section="true">
-            <summary class="collapsible-card__summary card-header">
-                <h2 class="card-title"><i class="fas fa-calendar-day section-title-icon" aria-hidden="true"></i> Capacidad diaria</h2>
+        <section class="card daily-cap-card" id="dailyCapCard" aria-labelledby="dailyCapTitle">
+            <div class="card-header">
+                <div>
+                    <h2 id="dailyCapTitle" class="card-title"><i class="fas fa-calendar-day section-title-icon" aria-hidden="true"></i> Tope de gasto de hoy</h2>
+                    <p class="card-subtitle">Cuánto puedes gastar al día con lo disponible del mes.</p>
+                </div>
                 <!-- IMPORTANTE: dailyCapStatus es actualizado por updateDashboard(); conservar ID. -->
                 <span id="dailyCapStatus" class="status-pill status-pill--success">Estado: OK</span>
-            </summary>
-            <div class="card-body collapsible-card__content">
+            </div>
+            <div class="card-body">
                 <div class="daily-cap-grid">
                     <div>
                         <div class="daily-cap-label">Límite hoy</div>
@@ -313,7 +317,7 @@
                 </div>
                 <div class="daily-cap-note">* El tope no incluye Vivienda ni Servicios Públicos. Se calcula en base al patrimonio líquido / días restantes.</div>
             </div>
-        </details>
+        </section>
 
         <details class="card collapsible-card skeleton-card loading-state" data-loading-label="Cargando tarjetas" data-force-collapsed="true" data-secondary-section="true">
             <summary class="collapsible-card__summary card-header">

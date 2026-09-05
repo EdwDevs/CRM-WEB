@@ -35,8 +35,8 @@
                 <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Registrar</span></div>
                 <!-- IMPORTANTE: El nombre visual "Historial" mantiene el id interno "historial" para no romper switchView() ni VIEW_CONFIG. -->
                 <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Historial</span></div>
-                <!-- IMPORTANTE: "Tarjetas" abre el modal existente de cupos; no agrega id nuevo a VIEW_CONFIG ni altera el orden de .nav-item. -->
-                <button class="nav-action" type="button" onclick="openCardsNavigation()"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></button>
+                <!-- IMPORTANTE: Fase 2 - Tarjetas es vista real; conserva posición entre Registrar e Historial. -->
+                <div class="nav-item" onclick="switchView('tarjetas', this)"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></div>
             </div>
             <div class="nav-group">
                 <div class="nav-section-label">Planificación</div>
@@ -57,12 +57,12 @@
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
     <nav class="mobile-nav">
-        <!-- IMPORTANTE: Navegación móvil usa nombres visuales cortos pero conserva ids internos compatibles con switchView() y VIEW_CONFIG. -->
+        <!-- IMPORTANTE: Fase 2 - nav móvil da acceso directo a Tarjetas y Metas; el Asesor IA vive en el menú lateral. -->
         <button class="mob-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Panel</span></button>
-        <button class="mob-link" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Reg.</span></button>
-        <button class="mob-link mob-fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
         <button class="mob-link" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Hist.</span></button>
-        <button class="mob-link ai-mob" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>IA</span></button>
+        <button class="mob-link mob-fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
+        <button class="mob-link" onclick="switchView('tarjetas', this)"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></button>
+        <button class="mob-link" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Metas</span></button>
     </nav>
 
     <div class="sync-indicator offline sync-pulse" id="syncIndicator">
@@ -125,87 +125,8 @@
         </div>
     </div>
     
-    <div class="modal-overlay" id="quotaModal">
-        <div class="modal-content">
-            <div class="section-header mb-md">
-                <h3 class="modal-title">Gestión de Créditos y Tarjetas</h3>
-                <button onclick="closeModal('quotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
-            </div>
-            <div class="modal-tabs" role="tablist" aria-label="Gestión de tarjetas y créditos">
-                <button class="modal-tab active" data-tab="cards" role="tab" aria-selected="true" onclick="setQuotaTab('cards')">Tarjetas</button>
-                <button class="modal-tab" data-tab="credits" role="tab" aria-selected="false" onclick="setQuotaTab('credits')">Créditos</button>
-            </div>
-            <div id="quotaTabCards" class="quota-tab-section active" role="tabpanel">
-                <div class="add-card-form">
-                    <div class="form-group"><label>Nombre</label><input type="text" id="cardNameInput" placeholder="Ej: Visa"></div>
-                    <div class="form-group"><label>Cupo</label><input type="text" id="cardQuotaInput" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
-                    <div class="form-group"><label for="cardPaymentDayInput">Día de pago</label><input type="number" id="cardPaymentDayInput" min="1" max="31" step="1" placeholder="1-31"></div>
-                    <input type="hidden" id="cardAvailableAdjustmentInput" value="0">
-                    <button class="btn btn--primary btn--icon" onclick="saveCard()" id="btnSaveCard" aria-label="Guardar tarjeta"><i class="fas fa-plus"></i></button>
-                    <input type="hidden" id="editCardId">
-                </div>
-                <div id="quotaListContainer" class="quota-list-scroll"></div>
-                <div class="audit-panel">
-                    <div class="audit-header">
-                        <div>
-                            <div class="audit-title">Alertas de consistencia</div>
-                            <div class="audit-subtitle">Lectura contable y financiera en vivo: consistencia, flujo, riesgo y proyecciones.</div>
-                        </div>
-                        <div class="audit-actions">
-                            <button class="btn btn--primary btn--sm" onclick="runConsistencyAudit()"><i class="fas fa-search"></i> Ejecutar auditoría</button>
-                            <button class="btn btn--ghost btn--sm" id="btnApplyConsistencyCorrections" onclick="applyConsistencyCorrections()" disabled><i class="fas fa-wrench"></i> Aplicar correcciones</button>
-                        </div>
-                    </div>
-                    <div class="audit-summary" aria-live="polite">
-                        <div id="auditScore" class="audit-score audit-score--warning">
-                            <span>Estado visual</span>
-                            <strong id="auditStatusLabel">Sin ejecutar</strong>
-                            <small id="auditStatusDetail">Ejecuta la auditoría para calcular consistencia.</small>
-                        </div>
-                        <div class="audit-summary-card">
-                            <span>Total de issues</span>
-                            <strong id="auditIssueTotal">0</strong>
-                        </div>
-                        <div class="audit-summary-card">
-                            <span>Correcciones disponibles</span>
-                            <strong id="auditCorrectionTotal">0</strong>
-                        </div>
-                        <div class="audit-summary-card">
-                            <span>Última ejecución</span>
-                            <strong id="auditLastRun">Pendiente</strong>
-                        </div>
-                    </div>
-                    <div id="consistencyAlertList" class="audit-list">
-                        <!-- IMPORTANTE: estado inicial accionable para que el contenedor dinámico de auditoría no arranque en blanco. -->
-                        <div class="empty-state" role="status">
-                            <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
-                            <strong class="empty-state__title">Auditoría pendiente.</strong>
-                            <p class="empty-state__message">Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.</p>
-                            <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="runConsistencyAudit()">Ejecutar auditoría</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="quotaTabCredits" class="quota-tab-section" role="tabpanel">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tarjeta</th>
-                                <th>Fecha</th>
-                                <th>Descripción</th>
-                                <th>Cuotas</th>
-                                <th>Monto</th>
-                                <th>Saldo pendiente</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="quotaCreditList"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- IMPORTANTE: quotaModal migrado a views/view-tarjetas.html (Fase 2); este contenedor se conserva vacío para no romper closeModal('quotaModal') y flujos legacy. -->
+    <div class="modal-overlay" id="quotaModal"><div class="modal-content"></div></div>
 
     <div class="modal-overlay" id="cardDetailModal">
         <div class="modal-content modal-content--wide">
