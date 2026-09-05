@@ -48,6 +48,11 @@
         return db.collection('transactions'); // IMPORTANTE: conservar colección actual para compatibilidad de datos.
     }
 
+    async function getUserGoalsCollection() {
+        await getCurrentUserUid();
+        return db.collection('goals'); // IMPORTANTE: metas sincronizadas (antes solo localStorage); misma colección plana que cards/transactions.
+    }
+
     async function runFirestoreHealthCheck() {
         try {
             const cardsRef = await getUserCardsCollection();
@@ -68,6 +73,7 @@
         getCurrentUserUid,
         getUserCardsCollection,
         getUserTransactionsCollection,
+        getUserGoalsCollection,
         runFirestoreHealthCheck
     };
 
@@ -78,7 +84,8 @@
     window.auth = auth;
     window.db = db;
     window.getCurrentUserUid = getCurrentUserUid;
-    window.getUserCardsCollection = getUserCardsCollection;
-    window.getUserTransactionsCollection = getUserTransactionsCollection;
+        window.getUserCardsCollection = getUserCardsCollection;
+        window.getUserTransactionsCollection = getUserTransactionsCollection;
+        window.getUserGoalsCollection = getUserGoalsCollection;
     window.runFirestoreHealthCheck = runFirestoreHealthCheck;
 })(window);

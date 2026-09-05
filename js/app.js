@@ -101,11 +101,47 @@
 
         function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
         function closeSidebar(){document.body.classList.remove('sidebar-open');}
-        
+
+        // IMPORTANTE: index.html quedó sin onclick inline; este binding por delegación conecta nav, tema, FAB y modales.
+        // Habilita CSP futura y centraliza los handlers del shell en un solo lugar idempotente.
+        function initShellBindings(){
+            if(document.body.dataset.shellBound==='1')return;
+            document.body.dataset.shellBound='1';
+            const actions={
+                'toggle-theme':()=>toggleTheme(),
+                'toggle-sidebar':()=>toggleSidebar(),
+                'close-sidebar':()=>closeSidebar(),
+                'add-transaction':()=>goToAddTransaction(),
+                'sync-retry':()=>syncOfflineQueue({includeFailed:true}),
+                'confirm-credit':()=>confirmSaveTransaction(),
+                'close-confirm':()=>closeConfirmActionModal(),
+                'confirm-action':()=>confirmActionModalConfirm(),
+                'save-goal':()=>saveGoal(),
+                'confirm-pago-cuota':()=>confirmarPagoCuota()
+            };
+            document.body.addEventListener('click',(e)=>{
+                const navTarget=e.target.closest('[data-shell-nav]');
+                if(navTarget){
+                    switchView(navTarget.dataset.view);
+                    return;
+                }
+                const closeTarget=e.target.closest('[data-shell-close]');
+                if(closeTarget){
+                    closeModal(closeTarget.dataset.shellClose);
+                    return;
+                }
+                const actionTarget=e.target.closest('[data-shell-action]');
+                if(actionTarget){
+                    const handler=actions[actionTarget.dataset.shellAction];
+                    if(handler)handler();
+                }
+            });
+        }
+
         function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeConfirmActionModal();closeModal('goalModal');closeModal('pagoCuotaModal');}});}
-        
-        document.addEventListener('DOMContentLoaded', async () => { 
-            initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();initShellBindings();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
             await preloadViews();
             initCollapsibleCards(); // IMPORTANTE: dashboard inicia activo sin pasar por switchView(), por eso enlazamos plegables tras precargar.
             const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0');
@@ -125,6 +161,8 @@
         function setStoredCachedTransactions(data){localStorage.setItem('cachedTransactions',JSON.stringify(data));}
         function getStoredCardsCache(){try{return JSON.parse(localStorage.getItem('cardsCache')||'[]');}catch(e){return [];}}
         function setStoredCardsCache(data){localStorage.setItem('cardsCache',JSON.stringify(data));}
+        function getStoredGoalsCache(){try{return JSON.parse(localStorage.getItem('goalsCache')||'[]');}catch(e){return [];}}
+        function setStoredGoalsCache(data){localStorage.setItem('goalsCache',JSON.stringify(data));}
         function generateQueueId(){return `q_${Date.now()}_${Math.random().toString(16).slice(2,8)}`;}
         function normalizeSyncError(error){
             if(!error)return 'Error desconocido';
@@ -235,6 +273,13 @@
                         if(action==='update')return transactionsRef.doc(payload.id).update(payload.data);
                         if(action==='delete')return transactionsRef.doc(payload.id).delete();
                     }
+                    if(entity==='goals'){
+                        // IMPORTANTE: metas siguen el mismo contrato add/update/delete que cards y transactions.
+                        const goalsRef = await getUserGoalsCollection();
+                        if(action==='add')return goalsRef.doc(payload.localId).set(payload.data).then(()=>({id:payload.localId}));
+                        if(action==='update')return goalsRef.doc(payload.id).update(payload.data);
+                        if(action==='delete')return goalsRef.doc(payload.id).delete();
+                    }
                     throw new Error('Acción offline no soportada');
                 }
         function updateCachedTransactions(action, payload, queueId){
@@ -270,6 +315,49 @@
                 if(idx>-1)cached.splice(idx,1);
             }
             setStoredCardsCache(cached);
+        }
+        function updateCachedGoals(action, payload, queueId){
+            // IMPORTANTE: mismo contrato que updateCachedCards; las metas no tienen referencias cruzadas.
+            const cached=getStoredGoalsCache();
+            if(action==='add'){
+                cached.push({id:`offline-${queueId}`,...payload.data,pendingSync:true});
+            }else if(action==='update'){
+                const idx=cached.findIndex(g=>g.id===payload.id);
+                if(idx>-1){
+                    cached[idx]={...cached[idx],...payload.data};
+                }else if(payload.id && String(payload.id).startsWith('offline-')){
+                    cached.push({id:payload.id,...payload.data,pendingSync:true});
+                }
+            }else if(action==='delete'){
+                const idx=cached.findIndex(g=>g.id===payload.id);
+                if(idx>-1)cached.splice(idx,1);
+            }
+            setStoredGoalsCache(cached);
+        }
+        function mergeOfflineQueueIntoGoals(list){
+            // IMPORTANTE: replay de la cola offline sobre la lista remota; idéntico a cards (sin remapeo de ids).
+            let result=[...list];
+            const queueItems=offlineQueue.filter(item=>item.entity==='goals'&&item.status!=='synced');
+            queueItems.forEach(item=>{
+                if(item.action==='add'){
+                    const offlineId=`offline-${item.localId}`;
+                    if(!result.some(g=>g.id===offlineId)){
+                        result.push({id:offlineId,...item.payload.data,pendingSync:true});
+                    }
+                }
+            });
+            queueItems.forEach(item=>{
+                if(item.action==='update'){
+                    const idx=result.findIndex(g=>g.id===item.payload.id);
+                    if(idx>-1){
+                        result[idx]={...result[idx],...item.payload.data,pendingSync:true};
+                    }
+                }
+                if(item.action==='delete'){
+                    result=result.filter(g=>g.id!==item.payload.id);
+                }
+            });
+            return result;
         }
         function mergeOfflineQueueIntoTransactions(list){
             let result=[...list];
@@ -378,6 +466,7 @@
                 if(updateQueuedAddPayload(entity, localRef, payload.data)){
                     if(entity==='transactions')updateCachedTransactions('update',{id:payload.id,data:payload.data});
                     if(entity==='cards')updateCachedCards('update',{id:payload.id,data:payload.data});
+                    if(entity==='goals')updateCachedGoals('update',{id:payload.id,data:payload.data});
                     updateSyncIndicator();
                     return {queued:true,localOnly:true};
                 }
@@ -387,6 +476,7 @@
                 if(removeQueuedAdd(entity, localRef)){
                     if(entity==='transactions')updateCachedTransactions('delete',{id:payload.id});
                     if(entity==='cards')updateCachedCards('delete',{id:payload.id});
+                    if(entity==='goals')updateCachedGoals('delete',{id:payload.id});
                     updateSyncIndicator();
                     return {queued:true,localOnly:true};
                 }
@@ -397,6 +487,7 @@
                 persistOfflineQueue();
                 if(entity==='transactions')updateCachedTransactions(action, payload, localId);
                 if(entity==='cards')updateCachedCards(action, payload, localId);
+                if(entity==='goals')updateCachedGoals(action, payload, localId);
                 if(!silent){
                     showToast('Guardado local. Se sincronizará al reconectar.', 'info');
                 }
@@ -413,6 +504,7 @@
                 persistOfflineQueue();
                 if(entity==='transactions')updateCachedTransactions(action, payload, localId);
                 if(entity==='cards')updateCachedCards(action, payload, localId);
+                if(entity==='goals')updateCachedGoals(action, payload, localId);
                 if(!silent){
                     showToast('No se pudo guardar en línea. Se sincronizará al reconectar.', 'warning');
                 }
@@ -436,10 +528,12 @@
             const queueSnapshot=[...offlineQueue.filter(item=>includeFailed || item.status!=='failed')];
             const orderedItems=[
                 ...queueSnapshot.filter(item=>item.entity==='cards'&&(item.action==='add'||item.action==='update')),
+                ...queueSnapshot.filter(item=>item.entity==='goals'&&(item.action==='add'||item.action==='update')),
                 ...queueSnapshot.filter(item=>item.entity==='transactions'&&(item.action==='add'||item.action==='update')),
                 ...queueSnapshot.filter(item=>item.action==='delete')
             ];
             let cardsTouched=false;
+            let goalsTouched=false;
             let transactionsTouched=false;
             for(const item of orderedItems){
                 try{
@@ -476,6 +570,7 @@
                     offlineQueue=offlineQueue.filter(q=>q.id!==item.id);
                     persistOfflineQueue();
                     if(item.entity==='cards')cardsTouched=true;
+                    if(item.entity==='goals')goalsTouched=true;
                     if(item.entity==='transactions')transactionsTouched=true;
                 }catch(error){
                     const idx=offlineQueue.findIndex(q=>q.id===item.id);
@@ -494,8 +589,9 @@
             syncCardIdMap=null;
             updateSyncIndicator();
             if(cardsTouched)await loadCards();
+            if(goalsTouched)await loadGoals();
             if(transactionsTouched)await loadTransactions();
-            if(cardsTouched||transactionsTouched){
+            if(cardsTouched||goalsTouched||transactionsTouched){
                 showToast('Sincronización completada','success');
             }
         }
@@ -1428,11 +1524,56 @@
             applyGoalProgressStyles(cont);
         }
         
-        function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);AppStore.setGoals(goals);}else{AppStore.setGoals([]);}}
+        // IMPORTANTE: metas migradas de localStorage a Firestore; mismo patrón que loadCards (fetch → cache fallback → merge de cola).
+        async function loadGoals(){
+            let fetchedGoals=[];
+            try{
+                const goalsRef=await getUserGoalsCollection();
+                const s=await goalsRef.orderBy('deadline').get();
+                s.forEach(d=>fetchedGoals.push({id:d.id,...d.data()}));
+                setStoredGoalsCache(fetchedGoals);
+            }catch(e){
+                console.error('Load goals error:',e);
+                fetchedGoals=getStoredGoalsCache();
+            }
+            goals=mergeOfflineQueueIntoGoals(fetchedGoals);
+            AppStore.setGoals(goals);
+            migrateLegacyGoals();
+        }
+        // IMPORTANTE: migración única — si localStorage('goals') aún tiene datos, se suben a Firestore y se limpia la clave local.
+        async function migrateLegacyGoals(){
+            let legacy=[];
+            try{legacy=JSON.parse(localStorage.getItem('goals')||'[]');}catch(e){legacy=[];}
+            if(!Array.isArray(legacy)||legacy.length===0){localStorage.removeItem('goals');return;}
+            const existing=new Set(goals.map(g=>String(g.id)));
+            for(const goal of legacy){
+                if(!goal||!goal.id||existing.has(String(goal.id)))continue;
+                await enqueueOrExecute({entity:'goals',action:'add',payload:{localId:String(goal.id),data:{name:goal.name||'Objetivo',target:Number(goal.target)||0,saved:Number(goal.saved)||0,deadline:goal.deadline||''}},silent:true});
+            }
+            localStorage.removeItem('goals');
+            showToast('Tus metas ahora se sincronizan en la nube','success');
+        }
         async function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseCurrencyInput(document.getElementById('goalTarget').value);const saved=parseCurrencyInput(document.getElementById('goalSaved').value);const deadline=document.getElementById('goalDeadline').value;if(!name||target<=0){showToast('Completa los campos correctamente','error');return;}
-        const goal={id:Date.now().toString(),name,target,saved,deadline};goals.push(goal);localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);closeModal('goalModal');showToast('Objetivo guardado','success');}
-        async function addToGoal(id){const g=goals.find(goal=>goal.id===id);if(!g)return;const amount=prompt(`¿Cuánto quieres agregar a "${g.name}"?`);if(!amount)return;const val=parseCurrencyInput(amount);if(val<=0){showToast('Monto inválido','error');return;}g.saved+=val;localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);showToast('Ahorro actualizado','success');}
-        async function deleteGoal(id){if(!confirm('¿Eliminar este objetivo?'))return;goals=goals.filter(g=>g.id!==id);localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);showToast('Objetivo eliminado','success');}
+        const goal={name,target,saved,deadline};
+        try{
+            const result=await enqueueOrExecute({entity:'goals',action:'add',payload:{data:goal}});
+            // IMPORTANTE: recargar desde la fuente (Firestore/cola) mantiene ids reales y estado pendingSync correcto.
+            await loadGoals();
+            closeModal('goalModal');
+            if(!result?.queued){showToast('Objetivo guardado','success');}
+        }catch(e){console.error(e);showToast('Error al guardar el objetivo. Verifica tu conexión.','error');}}
+        async function addToGoal(id){const g=goals.find(goal=>goal.id===id);if(!g)return;const amount=prompt(`¿Cuánto quieres agregar a "${g.name}"?`);if(!amount)return;const val=parseCurrencyInput(amount);if(val<=0){showToast('Monto inválido','error');return;}
+        try{
+            await enqueueOrExecute({entity:'goals',action:'update',payload:{id:g.id,data:{saved:(Number(g.saved)||0)+val}}});
+            await loadGoals();
+            showToast('Ahorro actualizado','success');
+        }catch(e){console.error(e);showToast('Error al actualizar el ahorro. Verifica tu conexión.','error');}}
+        async function deleteGoal(id){if(!confirm('¿Eliminar este objetivo?'))return;
+        try{
+            await enqueueOrExecute({entity:'goals',action:'delete',payload:{id}});
+            await loadGoals();
+            showToast('Objetivo eliminado','success');
+        }catch(e){console.error(e);showToast('Error al eliminar. Verifica tu conexión.','error');}}
         function openGoalModal(){document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalSaved').value='';document.getElementById('goalModal').style.display='flex';}
 
         function escapeCSVValue(value){return `"${String(value ?? '').replace(/"/g,'""')}"`;}
@@ -1939,7 +2080,7 @@
                         : 'audit-score--ok';
             const label = !lastRunAt ? 'Sin ejecutar' : severityCounts.danger > 0 ? 'Riesgo alto' : issues.length > 0 ? 'Revisión' : 'OK';
             const detail = !lastRunAt
-                ? 'Ejecuta la auditoría para calcular consistencia.'
+                ? 'Ejecuta el análisis para calcular consistencia.'
                 : `${severityCounts.danger} críticas · ${severityCounts.warning} advertencias`;
 
             if (score) score.className = `audit-score ${statusClass}`;
@@ -1961,9 +2102,9 @@
                 // IMPORTANTE: el panel de consistencia nunca queda en blanco; ofrece ejecutar/repetir auditoría como acción segura.
                 container.innerHTML = renderEmptyState({
                     icon: consistencyAudit.lastRunAt ? 'fas fa-circle-check' : 'fas fa-shield-halved',
-                    title: consistencyAudit.lastRunAt ? 'Sin inconsistencias detectadas.' : 'Auditoría pendiente.',
+                    title: consistencyAudit.lastRunAt ? 'Sin inconsistencias detectadas.' : 'Análisis pendiente.',
                     message: consistencyAudit.lastRunAt ? 'Puedes repetir la revisión si agregaste nuevas transacciones o editaste cupos.' : 'Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.',
-                    actionLabel: 'Ejecutar auditoría',
+                    actionLabel: 'Ejecutar análisis',
                     actionOnclick: 'runConsistencyAudit()'
                 });
                 if (btn) btn.disabled = true;

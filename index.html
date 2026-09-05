@@ -19,7 +19,7 @@
 
     <nav class="sidebar">
         <div class="brand"><i class="fas fa-wallet"></i> CRM <span>Prime</span></div>
-        <button class="theme-toggle" onclick="toggleTheme()">
+        <button class="theme-toggle" data-shell-action="toggle-theme">
             <i class="fas fa-moon" id="themeIcon"></i>
             <span id="themeText">Modo Oscuro</span>
         </button>
@@ -27,42 +27,43 @@
             <div class="nav-group nav-group--primary">
                 <div class="nav-section-label">Resumen</div>
                 <!-- IMPORTANTE: El nombre visual "Panel" mantiene el id interno "dashboard" para no romper switchView() ni VIEW_CONFIG. -->
-                <div class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Panel</span></div>
+                <div class="nav-item active" data-view="dashboard" data-shell-nav"><i class="fas fa-home"></i> <span>Panel</span></div>
             </div>
             <div class="nav-group">
                 <div class="nav-section-label">Movimientos</div>
                 <!-- IMPORTANTE: El nombre visual "Registrar" mantiene el id interno "transacciones" para no romper switchView() ni VIEW_CONFIG. -->
-                <div class="nav-item" onclick="switchView('transacciones', this)"><i class="fas fa-exchange-alt"></i> <span>Registrar</span></div>
+                <div class="nav-item" data-view="transacciones" data-shell-nav><i class="fas fa-exchange-alt"></i> <span>Registrar</span></div>
                 <!-- IMPORTANTE: El nombre visual "Historial" mantiene el id interno "historial" para no romper switchView() ni VIEW_CONFIG. -->
-                <div class="nav-item" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Historial</span></div>
+                <div class="nav-item" data-view="historial" data-shell-nav><i class="fas fa-list"></i> <span>Historial</span></div>
                 <!-- IMPORTANTE: Fase 2 - Tarjetas es vista real; conserva posición entre Registrar e Historial. -->
-                <div class="nav-item" onclick="switchView('tarjetas', this)"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></div>
+                <div class="nav-item" data-view="tarjetas" data-shell-nav><i class="fas fa-credit-card"></i> <span>Tarjetas</span></div>
             </div>
             <div class="nav-group">
                 <div class="nav-section-label">Planificación</div>
                 <!-- IMPORTANTE: El nombre visual "Insights" mantiene el id interno "estadisticas" para no romper switchView() ni VIEW_CONFIG. -->
-                <div class="nav-item" onclick="switchView('estadisticas', this)"><i class="fas fa-chart-pie"></i> <span>Insights</span></div>
+                <div class="nav-item" data-view="estadisticas" data-shell-nav><i class="fas fa-chart-pie"></i> <span>Insights</span></div>
                 <!-- IMPORTANTE: El nombre visual "Metas" mantiene el id interno "objetivos" para no romper switchView() ni VIEW_CONFIG. -->
-                <div class="nav-item" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Metas</span></div>
+                <div class="nav-item" data-view="objetivos" data-shell-nav><i class="fas fa-bullseye"></i> <span>Metas</span></div>
             </div>
             <div class="nav-group nav-group--ai">
-                <div class="nav-section-label">Control</div>
+                <!-- IMPORTANTE: el grupo se llama como su único contenido; "Control" no significaba nada. -->
+                <div class="nav-section-label">Asesor</div>
                 <!-- IMPORTANTE: El nombre visual "Asesor IA" mantiene el id interno "asistente" para no romper switchView() ni VIEW_CONFIG. -->
-                <div class="nav-item ai-nav" onclick="switchView('asistente', this)"><i class="fas fa-brain"></i> <span>Asesor IA</span></div>
+                <div class="nav-item ai-nav" data-view="asistente" data-shell-nav><i class="fas fa-brain"></i> <span>Asesor IA</span></div>
             </div>
         </div>
         <div class="sidebar-footer">Hogar & Finanzas © 2026</div>
     </nav>
 
-    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar-overlay" data-shell-action="close-sidebar"></div>
 
     <nav class="mobile-nav">
         <!-- IMPORTANTE: Fase 2 - nav móvil da acceso directo a Tarjetas y Metas; el Asesor IA vive en el menú lateral. -->
-        <button class="mob-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home"></i> <span>Panel</span></button>
-        <button class="mob-link" onclick="switchView('historial', this)"><i class="fas fa-list"></i> <span>Hist.</span></button>
-        <button class="mob-link mob-fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
-        <button class="mob-link" onclick="switchView('tarjetas', this)"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></button>
-        <button class="mob-link" onclick="switchView('objetivos', this)"><i class="fas fa-bullseye"></i> <span>Metas</span></button>
+        <button class="mob-link active" data-view="dashboard" data-shell-nav"><i class="fas fa-home"></i> <span>Panel</span></button>
+        <button class="mob-link" data-view="historial" data-shell-nav><i class="fas fa-list"></i> <span>Hist.</span></button>
+        <button class="mob-link mob-fab" data-shell-action="add-transaction"><i class="fas fa-plus"></i></button>
+        <button class="mob-link" data-view="tarjetas" data-shell-nav><i class="fas fa-credit-card"></i> <span>Tarjetas</span></button>
+        <button class="mob-link" data-view="objetivos" data-shell-nav><i class="fas fa-bullseye"></i> <span>Metas</span></button>
     </nav>
 
     <div class="sync-indicator offline sync-pulse" id="syncIndicator">
@@ -72,22 +73,22 @@
                 <span id="syncText">Sin conexión</span>
                 <span class="sync-indicator__count" id="syncPendingCount">0 pendientes</span>
             </div>
-            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" onclick="syncOfflineQueue({ includeFailed: true })">Reintentar</button>
+            <button class="btn btn--ghost btn--sm" id="syncRetryBtn" data-shell-action="sync-retry">Reintentar</button>
         </div>
         <div class="sync-indicator__message" id="syncNotice"></div>
         <div class="sync-indicator__failures" id="syncFailures"></div>
     </div>
 
-    <button class="fab" onclick="goToAddTransaction()"><i class="fas fa-plus"></i></button>
+    <button class="fab" data-shell-action="add-transaction"><i class="fas fa-plus"></i></button>
 
     <div class="main-wrapper">
         <header class="top-header">
-            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Abrir menú">
+            <button class="hamburger-btn" data-shell-action="toggle-sidebar" aria-label="Abrir menú">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="page-title" id="pageTitle">Resumen Financiero</div>
             <div class="inline-actions">
-                <button onclick="toggleTheme()" class="btn btn--icon btn--ghost mobile-theme-button" aria-label="Cambiar tema">
+                <button data-shell-action="toggle-theme" class="btn btn--icon btn--ghost mobile-theme-button" aria-label="Cambiar tema">
                     <i class="fas fa-moon" id="mobileThemeIcon"></i>
                 </button>
                 <div class="date-filter-pill" id="headerDateFilter">
@@ -105,13 +106,13 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row"><span>Valor de Cuota:</span><strong id="modalValorCuota"></strong></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" onclick="closeModal('creditModal')">Volver</button><button class="btn btn--primary btn--md" id="btnConfirmCredit" onclick="confirmSaveTransaction()">Confirmar</button></div></div></div>
+    <div class="modal-overlay" id="creditModal"><div class="modal-content"><h3>Confirmar Crédito</h3><div class="modal-details"><div class="modal-row"><span>Tarjeta:</span><strong id="modalTarjeta">-</strong></div><div class="modal-row"><span>Cuotas:</span><span id="modalCuotas">0</span></div><div class="modal-row"><span>Valor de Cuota:</span><strong id="modalValorCuota"></strong></div><div class="modal-row total"><span>Total Deuda:</span><span id="modalTotalDeuda">$0</span></div></div><div class="modal-actions"><button class="btn btn--ghost btn--md" data-shell-close="creditModal">Volver</button><button class="btn btn--primary btn--md" id="btnConfirmCredit" data-shell-action="confirm-credit">Confirmar</button></div></div></div>
 
     <div class="modal-overlay" id="confirmActionModal">
         <div class="modal-content">
             <div class="section-header mb-md">
                 <h3 class="modal-title" id="confirmActionTitle">Confirmar acción</h3>
-                <button onclick="closeConfirmActionModal()" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+                <button data-shell-action="close-confirm" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
             <div id="confirmActionBody"></div>
             <div class="modal-feedback">
@@ -119,8 +120,8 @@
                 <div class="modal-feedback__error" id="confirmActionError"></div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn--ghost btn--md" id="confirmActionCancelBtn" onclick="closeConfirmActionModal()">Cancelar</button>
-                <button class="btn btn--primary btn--md" id="confirmActionConfirmBtn" onclick="confirmActionModalConfirm()">Confirmar</button>
+                <button class="btn btn--ghost btn--md" id="confirmActionCancelBtn" data-shell-action="close-confirm">Cancelar</button>
+                <button class="btn btn--primary btn--md" id="confirmActionConfirmBtn" data-shell-action="confirm-action">Confirmar</button>
             </div>
         </div>
     </div>
@@ -136,7 +137,7 @@
                     <div id="cardDetailName" class="card-detail-name"></div>
                     <div id="cardDetailMeta" class="card-detail-meta"></div>
                 </div>
-                <button onclick="closeModal('cardDetailModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+                <button data-shell-close="cardDetailModal" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
             <div class="card-detail-summary" id="cardDetailSummary"></div>
             <div class="table-container">
@@ -162,7 +163,7 @@
         <div class="modal-content modal-content--sm">
             <div class="section-header mb-md">
                 <h3 class="modal-title"><i class="fas fa-balance-scale text-primary"></i> Arqueo de Cuentas</h3>
-                <button onclick="closeModal('arqueoModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+                <button data-shell-close="arqueoModal" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
             <p class="modal-help-text">
                 Ingresa el saldo real de cada cuenta. El sistema calculará la diferencia y registrará un ajuste si es necesario.
@@ -188,7 +189,7 @@
                     <input type="text" id="arqueoRealNequi" inputmode="decimal" oninput="formatCurrencyInput(this)" placeholder="Dejar en blanco para no ajustar">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn--ghost btn--grow" onclick="closeModal('arqueoModal')">Cancelar</button>
+                    <button type="button" class="btn btn--ghost btn--grow" data-shell-close="arqueoModal">Cancelar</button>
                     <button type="submit" class="btn btn--primary btn--grow btn--primary-dark-text">Guardar Arqueo</button>
                 </div>
             </form>
@@ -197,12 +198,12 @@
 
     <div class="modal-overlay" id="goalModal">
         <div class="modal-content">
-            <div class="section-header mb-md"><h3 class="modal-title">Nuevo Objetivo</h3><button onclick="closeModal('goalModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
+            <div class="section-header mb-md"><h3 class="modal-title">Nuevo Objetivo</h3><button data-shell-close="goalModal" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button></div>
             <div class="form-group"><label>Nombre del Objetivo</label><input type="text" id="goalName" placeholder="Ej: Vacaciones"></div>
             <div class="form-group"><label>Monto Objetivo</label><input type="text" id="goalTarget" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Ahorrado</label><input type="text" id="goalSaved" inputmode="decimal" pattern="[$ 0-9.,]*" oninput="formatCurrencyInput(this)" placeholder="$ 0"></div>
             <div class="form-group"><label>Fecha Límite</label><input type="date" id="goalDeadline"></div>
-            <button class="btn btn--primary btn--lg btn--block" onclick="saveGoal()">Guardar Objetivo</button>
+            <button class="btn btn--primary btn--lg btn--block" id="btnSaveGoal" data-shell-action="save-goal">Guardar Objetivo</button>
         </div>
     </div>
 
@@ -210,14 +211,14 @@
         <div class="modal-content modal-content--xs">
             <div class="section-header">
                 <h3 class="modal-title">📅 Programar Próxima Cuota</h3>
-                <button onclick="closeModal('pagoCuotaModal')" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
+                <button data-shell-close="pagoCuotaModal" class="btn btn--icon btn--ghost" aria-label="Cerrar">&times;</button>
             </div>
             <div class="payment-summary">
                 <div id="pagoCuotaInfo" class="payment-quota-info"></div>
             </div>
             <div class="modal-actions modal-actions--wide-gap">
-                <button class="btn btn--ghost btn--lg btn--full" onclick="closeModal('pagoCuotaModal')">Cancelar</button>
-                <button class="btn btn--primary btn--lg btn--full" onclick="confirmarPagoCuota()" id="btnConfirmarPagoCuota">💰 Confirmar Pago</button>
+                <button class="btn btn--ghost btn--lg btn--full" data-shell-close="pagoCuotaModal">Cancelar</button>
+                <button class="btn btn--primary btn--lg btn--full" data-shell-action="confirm-pago-cuota" id="btnConfirmarPagoCuota">💰 Confirmar Pago</button>
             </div>
         </div>
     </div>

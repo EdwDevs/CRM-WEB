@@ -35,7 +35,7 @@
                 <div id="auditScore" class="audit-score audit-score--warning">
                     <span>Estado visual</span>
                     <strong id="auditStatusLabel">Sin ejecutar</strong>
-                    <small id="auditStatusDetail">Ejecuta la auditoría para calcular consistencia.</small>
+                    <small id="auditStatusDetail">Ejecuta el análisis para calcular consistencia.</small>
                 </div>
                 <div class="audit-summary-card">
                     <span>Total de issues</span>
@@ -54,9 +54,9 @@
                 <!-- IMPORTANTE: estado inicial accionable para que el contenedor dinámico de auditoría no arranque en blanco. -->
                 <div class="empty-state" role="status">
                     <span class="empty-state__icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
-                    <strong class="empty-state__title">Auditoría pendiente.</strong>
+                    <strong class="empty-state__title">Análisis pendiente.</strong>
                     <p class="empty-state__message">Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.</p>
-                    <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="runConsistencyAudit()">Ejecutar auditoría</button>
+                    <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="runConsistencyAudit()">Ejecutar análisis</button>
                 </div>
             </div>
         </details>
