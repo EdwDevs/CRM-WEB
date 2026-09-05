@@ -1,37 +1,38 @@
 <div id="view-asistente" class="tab-content view-stack view-transition fade-in">
                 <header class="view-header">
                     <div>
-                        <h1 class="view-header__title">Asesor experto</h1>
-                        <p class="view-header__subtitle">Ejecuta una auditoría local de solvencia, liquidez y patrones de consumo.</p>
+                        <h1 class="view-header__title">Asesor IA</h1>
+                        <p class="view-header__subtitle">Revisa la salud de tus finanzas y recibe recomendaciones concretas.</p>
                     </div>
                     <div class="view-header__actions">
-                        <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Ejecutar auditoría</button>
+                        <button class="btn-ai-action" onclick="generateLocalAnalysis()"><i class="fas fa-search-dollar"></i> Analizar mis finanzas</button>
                     </div>
                 </header>
 
                 <div class="ai-welcome-card view-primary-card">
-                    <h2><i class="fas fa-brain"></i> Auditor Financiero</h2>
-                    <p>Análisis detallado de solvencia, liquidez y patrones de consumo. Ejecución 100% local y privada.</p>
+                    <h2><i class="fas fa-brain"></i> Tu analista financiero</h2>
+                    <p>Revisa tus ingresos, gastos y deudas de los últimos 30 días y te dice qué estás haciendo bien y qué mejorar. Todo se calcula en tu equipo, sin enviar datos a nadie.</p>
                 </div>
-                <div id="aiLoading" class="ai-loading"><div class="ai-spinner"></div><div class="ai-loading-text">Calculando ratios...</div></div>
-                <div id="aiResultContainer" class="ai-response-container view-secondary-stack">
-                    <details class="card collapsible-card" data-force-collapsed="true">
+                <div id="aiLoading" class="ai-loading"><div class="ai-spinner"></div><div class="ai-loading-text">Calculando...</div></div>
+                <!-- IMPORTANTE: aiResultContainer arranca oculto; generateLocalAnalysis() lo muestra al tener resultados reales (no se muestran plegados vacíos antes de analizar). -->
+                <div id="aiResultContainer" class="ai-response-container view-secondary-stack hidden">
+                    <details class="card collapsible-card" open>
                         <summary class="collapsible-card__summary">
                             <div class="ai-report-header">
-                                <div><h3 class="ai-report-title">Diagnóstico Integral</h3><span class="ai-report-subtitle">Basado en historial de 30 días</span></div>
+                                <div><h3 class="ai-report-title">Diagnóstico</h3><span class="ai-report-subtitle">Basado en tus últimos 30 días</span></div>
                                 <div id="aiScoreBadge" class="score-badge">SCORE: --</div>
                             </div>
                         </summary>
                         <!-- IMPORTANTE: generateLocalAnalysis() inyecta el diagnóstico en este contenedor. -->
                         <div id="aiContentBody" class="collapsible-card__content"></div>
                     </details>
-                    <details class="card prediction-card collapsible-card" data-force-collapsed="true" id="predictionCard">
+                    <details class="card prediction-card collapsible-card" open id="predictionCard">
                         <summary class="collapsible-card__summary">
-                            <div class="prediction-title"><i class="fas fa-crystal-ball"></i> Proyección / recomendaciones</div>
+                            <div class="prediction-title"><i class="fas fa-crystal-ball"></i> Pronóstico del próximo mes</div>
                         </summary>
                         <div class="collapsible-card__content">
                             <div class="prediction-value" id="predictedExpenses">$0</div>
-                            <div class="prediction-note">Gastos estimados basándose en tu historial</div>
+                            <div class="prediction-note">Gastos estimados según tu historial</div>
                         </div>
                     </details>
                 </div>

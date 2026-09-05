@@ -34,7 +34,7 @@
                                                             <option value="gasto">💸 Gasto</option>
                                                             <option value="ingreso">💰 Ingreso</option>
                                                             <option value="credito">💳 Crédito</option>
-                                                            <option value="pago_tarjeta">📉 Abono TC</option>
+                                                            <option value="pago_tarjeta">💳 Pago de tarjeta</option>
                                                             <option value="transferencia">🔄 Transferencia</option>
                                                         </select>
                                                         <!-- IMPORTANTE: los botones se sincronizan con #tipo vía syncTransactionTypeButtons(); el select es la fuente de verdad. -->
@@ -43,7 +43,7 @@
                                                             <button type="button" class="transaction-type-btn transaction-type-btn--gasto" data-value="gasto" aria-pressed="false">💸 Gasto</button>
                                                             <button type="button" class="transaction-type-btn transaction-type-btn--ingreso" data-value="ingreso" aria-pressed="false">💰 Ingreso</button>
                                                             <button type="button" class="transaction-type-btn transaction-type-btn--credito" data-value="credito" aria-pressed="false">💳 Crédito</button>
-                                                            <button type="button" class="transaction-type-btn transaction-type-btn--pago_tarjeta" data-value="pago_tarjeta" aria-pressed="false">📉 Abono TC</button>
+                                                            <button type="button" class="transaction-type-btn transaction-type-btn--pago_tarjeta" data-value="pago_tarjeta" aria-pressed="false">💳 Pago tarjeta</button>
                                                             <button type="button" class="transaction-type-btn transaction-type-btn--transferencia" data-value="transferencia" aria-pressed="false">🔄 Transferencia</button>
                                                         </div>
                                                         <p class="transaction-type-selector__hint">Toca una opción: el formulario muestra solo los campos que necesita.</p>
@@ -75,8 +75,8 @@
                                     <!-- IMPORTANTE: #miembro es leído por preSubmit(); mantener valores esperados por reportes. -->
                                     <label for="miembro">Responsable</label>
                                     <select id="miembro">
-                                        <option value="papa">Papá</option>
-                                        <option value="mama">Mamá</option>
+                                        <option value="papa">Papá (Edward)</option>
+                                        <option value="mama">Mamá (Eliana)</option>
                                         <option value="hijo1">Hijo/a 1</option>
                                         <option value="compartido">Compartido</option>
                                     </select>

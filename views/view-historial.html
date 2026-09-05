@@ -2,22 +2,22 @@
                 <header class="view-header">
                     <div>
                         <h1 class="view-header__title">Historial</h1>
-                        <p class="view-header__subtitle">Revisa movimientos en una tabla clara, con filtros disponibles sin saturar la vista inicial.</p>
+                        <p class="view-header__subtitle">Todos tus movimientos, ordenados y fáciles de filtrar.</p>
                     </div>
                     <div class="view-header__actions">
-                        <button class="btn btn--primary btn--md sticky-mobile-action" onclick="renderHistory()"><i class="fas fa-search"></i> Aplicar filtros</button>
+                        <button class="btn btn--ghost btn--md sticky-mobile-action" onclick="clearFilters()"><i class="fas fa-eraser"></i> Limpiar</button>
                     </div>
                 </header>
 
                 <!-- IMPORTANTE: estos IDs de resumen los actualiza renderHistory() con el resultado filtrado actual. -->
                 <section class="history-summary-grid skeleton-card loading-state" data-loading-label="Cargando historial" aria-label="Totales filtrados del historial">
                     <article class="summary-pill inc">
-                        <i class="fas fa-arrow-down"></i>
+                        <i class="fas fa-plus"></i>
                         <span>Ingresos</span>
                         <strong id="valFilteredInc">$0</strong>
                     </article>
                     <article class="summary-pill exp">
-                        <i class="fas fa-arrow-up"></i>
+                        <i class="fas fa-minus"></i>
                         <span>Gastos</span>
                         <strong id="valFilteredExp">$0</strong>
                     </article>
@@ -37,13 +37,16 @@
                     <summary class="collapsible-card__summary card-header">
                         <h3 class="card-title">
                             <i class="fas fa-filter text-primary"></i> Filtros
+                            <!-- IMPORTANTE: filterCountBadge muestra cuántos filtros están activos; se actualiza desde updateFilterCountBadge(). -->
+                            <span id="filterCountBadge" class="filter-count-badge hidden" aria-label="filtros activos"></span>
                         </h3>
+                        <span class="filter-summary-caption">Se aplican automáticamente</span>
                     </summary>
                     <div class="advanced-filters collapsible-card__content">
                         <div class="filter-row">
                             <div class="filter-group voice-search">
                                 <label>Buscar (Texto o Voz)</label>
-                                <!-- IMPORTANTE: el ID filterText es leído por renderHistory(), clearFilters() y toggleVoiceSearch(). -->
+                                <!-- IMPORTANTE: el ID filterText es leído por renderHistory(), clearFilters() y toggleVoiceSearch(); con auto-aplicación mediante initHistoryAutoFilters(). -->
                                 <input type="text" id="filterText" class="filter-control" placeholder="Ej: Cena, Netflix...">
                                 <button class="voice-search-btn" id="voiceSearchBtn" onclick="toggleVoiceSearch()"><i class="fas fa-microphone"></i></button>
                             </div>
@@ -55,7 +58,7 @@
                                     <option value="gasto">Gasto</option>
                                     <option value="ingreso">Ingreso</option>
                                     <option value="credito">Crédito</option>
-                                    <option value="pago_tarjeta">Pago TC</option>
+                                    <option value="pago_tarjeta">Pago de tarjeta</option>
                                     <option value="transferencia">Transferencia</option>
                                 </select>
                             </div>
@@ -81,9 +84,6 @@
                         </div>
                         <div class="filter-actions">
                             <button class="btn-clear" onclick="clearFilters()">Limpiar Filtros</button>
-                            <button class="btn btn--primary btn--md" onclick="renderHistory()">
-                                <i class="fas fa-search"></i> Aplicar
-                            </button>
                         </div>
                     </div>
                 </details>

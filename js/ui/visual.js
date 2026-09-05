@@ -67,6 +67,8 @@ function renderReminders(){
             );
 
             let nextPaymentDate = null;
+            // IMPORTANTE: crédito cuya cuota se paga próximamente; permite abrir el pago en 1 toque desde el recordatorio.
+            let nextDueCredit = null;
 
             if (cardCredits.length > 0) {
                 // Obtener todas las próximas fechas de pago
@@ -83,8 +85,9 @@ function renderReminders(){
                     }
                 });
                 // Ordenar y tomar la más antigua (la deuda más próxima)
-                dates.sort((a,b) => a - b);
-                nextPaymentDate = dates[0];
+                const ordered=dates.map((d,i)=>({d,i})).sort((a,b)=>a.d-b.d);
+                nextPaymentDate = ordered[0].d;
+                nextDueCredit = cardCredits[ordered[0].i];
             }
 
             // Fallback si algo falla
@@ -103,7 +106,9 @@ function renderReminders(){
                 debtLabel:formatMoney(globalDeudaPorTarjeta[card]),
                 desc:`Deuda actual: ${formatMoney(globalDeudaPorTarjeta[card])}`,
                 date:nextPaymentDate,
-                daysUntil:daysUntilPayment
+                daysUntil:daysUntilPayment,
+                // IMPORTANTE: datos para pagarCuota() en 1 toque desde el recordatorio del Panel.
+                dueCredit:nextDueCredit
             });
         }
     });
@@ -119,6 +124,15 @@ function renderReminders(){
     const detailItems=urgentReminders.map(r=>{
         const status=getReminderStatus(r);
         const dateLabel=r.date.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'});
+        // IMPORTANTE: botón "Pagar" abre pagarCuota() directamente; el pago pasa de 3 superficies anidadas a 1 toque.
+        const credit=r.dueCredit;
+        const cuotaNum=credit?(credit.cuotasPagadas||0)+1:0;
+        const cuotaTotal=credit?.cuotas||1;
+        const montoCuota=credit?((credit.totalDeuda||credit.monto)/cuotaTotal):0;
+        const safeCardNameBtn=escapeHtml(r.cardName.replace(/'/g,"\\'"));
+        const payAction=credit
+            ? `<button class="btn btn--primary btn--sm reminder-popover__pay" type="button" onclick="pagarCuota('${escapeHtml(credit.id)}',${cuotaNum},${montoCuota},'${safeCardNameBtn}')"><i class="fas fa-calendar-check" aria-hidden="true"></i> Pagar</button>`
+            : '';
         return `<div class="reminder-popover__item reminder-popover__item--${status}">
             <div class="reminder-popover__header">
                 <strong>${escapeHtml(r.cardName)}</strong>
@@ -126,6 +140,7 @@ function renderReminders(){
             </div>
             <div class="reminder-popover__meta"><i class="fas fa-calendar-day"></i> ${escapeHtml(dateLabel)}</div>
             <div class="reminder-popover__meta"><i class="fas fa-credit-card"></i> Deuda actual: ${escapeHtml(r.debtLabel)}</div>
+            ${payAction?`<div class="reminder-popover__actions">${payAction}</div>`:''}
         </div>`;
     }).join('');
     // IMPORTANTE: details mantiene la campanita compacta y revela únicamente el detalle urgente al tocarla.

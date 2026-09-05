@@ -6036,3 +6036,133 @@ body:not(.is-data-loading) .chart-loading-shell {
 
 /* ============================================================ */
 /* ============================================================ */
+
+/* ============================================================
+   FASE 1 · INTUITIVIDAD (2026-09)
+   Historial ligero, onboarding, badge de filtros, pago en 1 toque.
+   Capa final con !important solo donde pisa la capa móvil anterior.
+   ============================================================ */
+
+/* --- Historial: tabla ordenada pero ligera --- */
+#view-historial .table-container tbody tr.row-income td,
+#view-historial .table-container tbody tr.row-expense td,
+#view-historial .table-container tbody tr.row-credit td,
+#view-historial .table-container tbody tr.row-transfer td {
+    /* IMPORTANTE: fondo neutro por fila; el color vive solo en el badge de tipo y el monto. */
+    background: transparent !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-light) 55%, transparent) !important;
+}
+#view-historial .table-container tbody tr:hover td {
+    background: color-mix(in srgb, var(--bg-elevated) 70%, transparent) !important;
+}
+#view-historial .table-container td:nth-child(2) {
+    font-weight: 500;
+}
+#view-historial .table-container td:nth-child(1),
+#view-historial .table-container td:nth-child(4),
+#view-historial .table-container td:nth-child(5) {
+    /* IMPORTANTE: fecha, miembro y categoría pasan a gris discreto para reducir ruido visual. */
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    background: transparent !important;
+}
+#view-historial .history-date-group td {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.75;
+    padding-top: 14px;
+}
+
+/* --- Badge de filtros activos --- */
+.filter-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    margin-left: 8px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #1a1305;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+[data-theme="light"] .filter-count-badge {
+    background: #8a6d1d;
+    color: #fff;
+}
+.filter-summary-caption {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* --- Recordatorios: botón Pagar en 1 toque --- */
+.reminder-popover__actions {
+    margin-top: 8px;
+}
+.reminder-popover__pay {
+    width: 100%;
+}
+
+/* --- Onboarding: checklist de 3 pasos --- */
+.onboarding-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.onboarding-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-surface);
+    border: 1px solid color-mix(in srgb, var(--border-light) 70%, transparent);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.onboarding-step:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+.onboarding-step__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary) 18%, transparent);
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+[data-theme="light"] .onboarding-step__number {
+    color: #8a6d1d;
+}
+.onboarding-step strong {
+    display: block;
+    font-size: 0.95rem;
+}
+.onboarding-step small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+.onboarding-step > .fa-chevron-right {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* --- Débito sin asignar: tratarlo como dato secundario --- */
+.account-amount--muted {
+    color: var(--text-muted);
+    font-weight: 500;
+}

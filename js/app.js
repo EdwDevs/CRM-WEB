@@ -38,7 +38,7 @@
             dashboard:{fragment:'views/view-dashboard.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, ()=>{updateDashboard(); updateDailyCapIndicator();}]},
             transacciones:{fragment:'views/view-transacciones.html', onActivate:[initCollapsibleCards, initTransactionFormBindings]},
             estadisticas:{fragment:'views/view-estadisticas.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
-            historial:{fragment:'views/view-historial.html', focusMode:true, defaultCollapsedSections:['.history-filter-panel'], onActivate:[initCollapsibleCards, renderHistory]},
+            historial:{fragment:'views/view-historial.html', focusMode:true, defaultCollapsedSections:['.history-filter-panel'], onActivate:[initCollapsibleCards, renderHistory, initHistoryAutoFilters]},
             objetivos:{fragment:'views/view-objetivos.html', focusMode:true, defaultCollapsedSections:['.goal-history-details'], onActivate:[renderGoals, initCollapsibleCards]},
             asistente:{fragment:'views/view-asistente.html', onActivate:[initCollapsibleCards]}
         };
@@ -114,6 +114,7 @@
             document.getElementById('filterStart').value=firstDay;document.getElementById('filterEnd').value=lastDay;
             document.getElementById('goalDeadline').value=lastDay;
             loadCards();loadGoals();
+            updateFilterCountBadge();
         });
 
         function getStoredOfflineQueue(){try{return JSON.parse(localStorage.getItem('offlineQueue')||'[]');}catch(e){return [];}}
@@ -506,6 +507,7 @@
             const mm = String(t.getMonth()+1).padStart(2,'0');
             document.getElementById('filterStart').value = `${yyyy}-${mm}-01`;
             document.getElementById('filterEnd').value = formatLocalDate(new Date(yyyy, t.getMonth() + 1, 0));
+            updateFilterCountBadge();
             renderHistory();
         }
 
@@ -534,6 +536,45 @@
             return Boolean(filters.txt || filters.type !== 'all' || filters.method !== 'all' || filters.start || filters.end);
         }
 
+        // IMPORTANTE: badge con el número de filtros activos sobre el plegado "Filtros" del historial.
+        function updateFilterCountBadge(){
+            const badge=document.getElementById('filterCountBadge');
+            if(!badge)return;
+            const filters=getHistoryFilterState();
+            // IMPORTANTE: descuenta el rango del mes en curso que la app pone por defecto, no es un filtro elegido por el usuario.
+            const t=new Date();
+            const defaultStart=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-01`;
+            const defaultEnd=formatLocalDate(new Date(t.getFullYear(), t.getMonth()+1, 0));
+            const filtersInUse=[
+                filters.txt,
+                filters.type!=='all',
+                filters.method!=='all',
+                filters.start&&filters.start!==defaultStart,
+                filters.end&&filters.end!==defaultEnd
+            ].filter(Boolean).length;
+            badge.textContent=filtersInUse;
+            badge.classList.toggle('hidden', filtersInUse===0);
+        }
+
+        // IMPORTANTE: los filtros del historial se aplican solos al cambiar (debounce 300ms para el texto).
+        function initHistoryAutoFilters(){
+            const panel=document.querySelector('.history-filter-panel');
+            if(!panel||panel.dataset.autoFilters==='1')return;
+            panel.dataset.autoFilters='1';
+            let debounceTimer=null;
+            const apply=()=>{updateFilterCountBadge();renderHistory();};
+            ['filterText','filterType','filterMethod','filterStart','filterEnd'].forEach(id=>{
+                const el=document.getElementById(id);
+                if(!el)return;
+                el.addEventListener('input',()=>{
+                    clearTimeout(debounceTimer);
+                    debounceTimer=setTimeout(apply,300);
+                });
+                el.addEventListener('change',apply);
+            });
+            updateFilterCountBadge();
+        }
+
         function renderEmptyState({ icon, title, message, actionLabel, actionOnclick }) {
             // IMPORTANTE: helper único para estados vacíos dinámicos; evita pantallas en blanco y garantiza una acción recomendada.
             return `
@@ -553,7 +594,7 @@
         }
 
         function getMemberLabel(memberKey) {
-            const memberMap = {papa: 'Papá', mama: 'Mamá', hijo1: 'Hijo/a', compartido: 'Compartido'};
+            const memberMap = {papa: 'Papá (Edward)', mama: 'Mamá (Eliana)', hijo1: 'Hijo/a', compartido: 'Compartido'};
             return memberMap[memberKey] || memberKey || 'Compartido';
         }
 
@@ -963,6 +1004,12 @@
         }
 
         function updateDashboard(){let e=0,n=0,i=0,g=0; const debitBalances={edward:0,eliana:0,legacy:0,total:0}; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
+        // IMPORTANTE: onboarding en primera visita real (sin transacciones); el checklist de 3 pasos reemplaza los $0.
+        const onboarding=document.getElementById('onboardingChecklist');
+        if(onboarding){
+            const hasTransactions=transactions.length>0;
+            onboarding.classList.toggle('hidden', hasTransactions);
+        }
         const normalizeDebitAccount=(method)=>{
             const normalizedMethod=normalizePaymentMethodKey(method);
             if(['debito_edward','debit_edward','edward'].includes(normalizedMethod))return 'edward';

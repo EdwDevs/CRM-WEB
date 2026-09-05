@@ -4,11 +4,47 @@
     <header class="view-header">
         <div>
             <h1 class="view-header__title">Resumen financiero</h1>
-            <p class="view-header__subtitle">Lectura ejecutiva de patrimonio, flujo mensual, alertas y acciones clave con el detalle secundario en plegables.</p>
+            <p class="view-header__subtitle">Tu dinero de un vistazo: saldo, ingresos, gastos y alertas del mes.</p>
         </div>
     </header>
 
     <!-- IMPORTANTE: Bloque 1/4 - resumen principal; concentra KPIs consumidos por updateDashboard() sin cambiar IDs. -->
+    <!-- IMPORTANTE: onboardingChecklist se muestra en lugar de los $0 cuando no hay datos; updateDashboard() lo alterna. -->
+    <section id="onboardingChecklist" class="card view-primary-card onboarding-card hidden" aria-labelledby="onboarding-title">
+        <div class="card-header">
+            <div>
+                <h2 id="onboarding-title" class="card-title"><i class="fas fa-rocket" aria-hidden="true"></i> Empieza en 3 pasos</h2>
+                <p class="card-subtitle">Configura lo básico y el Panel se llenará solo.</p>
+            </div>
+        </div>
+        <div class="card-body onboarding-steps">
+            <button class="onboarding-step" type="button" onclick="switchView('tarjetas')" id="onboardingStepCards">
+                <span class="onboarding-step__number">1</span>
+                <div>
+                    <strong>Agrega tus tarjetas</strong>
+                    <small>Nombre, cupo y día de pago de cada tarjeta.</small>
+                </div>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <button class="onboarding-step" type="button" onclick="openArqueoModal()" id="onboardingStepArqueo">
+                <span class="onboarding-step__number">2</span>
+                <div>
+                    <strong>Cuadra tus saldos reales</strong>
+                    <small>Cuánto hay hoy en cada cuenta: débito, efectivo y Nequi.</small>
+                </div>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <button class="onboarding-step" type="button" onclick="goToAddTransaction()" id="onboardingStepFirst">
+                <span class="onboarding-step__number">3</span>
+                <div>
+                    <strong>Registra tu primer movimiento</strong>
+                    <small>Un ingreso o un gasto, y el historial empieza a trabajar para ti.</small>
+                </div>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+        </div>
+    </section>
+
     <section class="card view-primary-card dashboard-summary-card skeleton-card loading-state" data-loading-label="Sincronizando dashboard" aria-labelledby="dashboard-summary-title">
         <div class="card-header">
             <div>
@@ -31,7 +67,7 @@
                     <article class="dashboard-hero__metric dashboard-hero__metric--success">
                         <div class="mini-header">
                             <span class="mini-label">Ingresos</span>
-                            <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-arrow-down" aria-hidden="true"></i></div>
+                            <div class="mini-icon-wrapper icon-surface--success"><i class="fas fa-plus" aria-hidden="true"></i></div>
                         </div>
                         <!-- IMPORTANTE: totalIngresosMes es consumido por updateDashboard(); conservar el ID para evitar romper KPIs. -->
                         <div class="mini-value" id="totalIngresosMes">$0</div>
@@ -44,7 +80,7 @@
                     <article class="dashboard-hero__metric dashboard-hero__metric--danger">
                         <div class="mini-header">
                             <span class="mini-label">Gastos + TC</span>
-                            <div class="mini-icon-wrapper icon-surface--danger"><i class="fas fa-arrow-up" aria-hidden="true"></i></div>
+                            <div class="mini-icon-wrapper icon-surface--danger"><i class="fas fa-minus" aria-hidden="true"></i></div>
                         </div>
                         <!-- IMPORTANTE: totalGastosMes es consumido por updateDashboard(); conservar el ID para evitar romper KPIs. -->
                         <div class="mini-value" id="totalGastosMes">$0</div>
@@ -83,7 +119,7 @@
                 <article class="account-card account-card--compact">
                     <div class="account-icon icon-surface--info"><i class="fas fa-building-columns" aria-hidden="true"></i></div>
                     <div class="account-info">
-                        <span class="account-label">Débito Edward</span>
+                        <span class="account-label">Débito Edward (Papá)</span>
                         <!-- IMPORTANTE: saldoDebitoEdward separa movimientos nuevos asignados a la cuenta de Edward. -->
                         <span class="account-amount" id="saldoDebitoEdward">$0</span>
                     </div>
@@ -91,7 +127,7 @@
                 <article class="account-card account-card--compact">
                     <div class="account-icon icon-surface--info"><i class="fas fa-building-columns" aria-hidden="true"></i></div>
                     <div class="account-info">
-                        <span class="account-label">Débito Eliana</span>
+                        <span class="account-label">Débito Eliana (Mamá)</span>
                         <!-- IMPORTANTE: saldoDebitoEliana separa movimientos nuevos asignados a la cuenta de Eliana. -->
                         <span class="account-amount" id="saldoDebitoEliana">$0</span>
                     </div>
@@ -100,8 +136,8 @@
                     <div class="account-icon icon-surface--info"><i class="fas fa-landmark" aria-hidden="true"></i></div>
                     <div class="account-info">
                         <span class="account-label">Débito sin asignar</span>
-                        <!-- IMPORTANTE: saldoDebitoLegacy muestra movimientos antiguos guardados solo como debito. -->
-                        <span class="account-amount" id="saldoDebitoLegacy">$0</span>
+                        <!-- IMPORTANTE: saldoDebitoLegacy muestra movimientos antiguos guardados solo como debito; se agrupan aquí para no confundirlos con cuentas activas. -->
+                        <span class="account-amount account-amount--muted" id="saldoDebitoLegacy">$0</span>
                     </div>
                 </article>
                 <article class="account-card account-card--compact">
@@ -129,7 +165,7 @@
         <div class="card-header">
             <div>
                 <h2 id="dashboard-actions-title" class="card-title"><i class="fas fa-bolt" aria-hidden="true"></i> Acciones rápidas</h2>
-                <p class="card-subtitle">Atajos operativos para registrar movimientos, revisar cupos y navegar a módulos clave.</p>
+                <p class="card-subtitle">Atajos para lo que más haces: registrar, cuadrar y revisar.</p>
             </div>
         </div>
         <div class="card-body">
@@ -140,7 +176,7 @@
                 </button>
                 <button class="quick-action-card" type="button" onclick="openArqueoModal()">
                     <span class="quick-action-card__icon icon-surface--info"><i class="fas fa-balance-scale" aria-hidden="true"></i></span>
-                    <span class="quick-action-card__label">Arqueo</span>
+                    <span class="quick-action-card__label">Cuadrar cuentas</span>
                 </button>
                 <button class="quick-action-card" type="button" onclick="openQuotaModal()">
                     <span class="quick-action-card__icon icon-surface--warning"><i class="fas fa-credit-card" aria-hidden="true"></i></span>
@@ -214,11 +250,11 @@
                     </div>
                     <!-- IMPORTANTE: netCashFlow es consumido por updateDashboard(); conservar ID. -->
                     <div class="mini-value" id="netCashFlow">$0</div>
-                    <div class="mini-footer mini-footer--compact"><span class="mini-caption">Ingresos menos todos los gastos</span></div>
+                    <div class="mini-footer mini-footer--compact"><span class="mini-caption">Lo que te quedó del mes</span></div>
                 </div>
                 <div class="mini-stat">
                     <div class="mini-header">
-                        <span class="mini-label">Uso de TC</span>
+                        <span class="mini-label">Tarjetas usadas</span>
                         <div class="mini-icon-wrapper icon-surface--warning"><i class="fas fa-credit-card" aria-hidden="true"></i></div>
                     </div>
                     <!-- IMPORTANTE: creditUtilization es consumido por updateDashboard(); conservar ID. -->
