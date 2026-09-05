@@ -5442,6 +5442,9 @@ body:not(.is-data-loading) .chart-loading-shell {
    ============================================================ */
 
 /* --- Tarjetas KPI: objetivo táctil ≥48px en vertical --- */
+/* IMPORTANTE: Evolución premium - estos overrides táctiles eran GLOBALES y pisaban el diseño
+   de escritorio; se encapsulan en móvil (≤768px) que era su intención original. */
+@media (max-width: 768px) {
 .dashboard-hero__metric {
     min-height: 80px !important;        /* asegurar altura táctil vertical */
     display: flex !important;
@@ -5501,6 +5504,7 @@ body:not(.is-data-loading) .chart-loading-shell {
     justify-content: center !important;
     gap: 4px !important;
     padding: 8px !important;
+    border-radius: var(--radius-md) !important;
 }
 
 /* Icono de acción rápida más grande */
@@ -5538,6 +5542,8 @@ body:not(.is-data-loading) .chart-loading-shell {
     justify-content: center !important;
     gap: 4px !important;
     padding: 8px !important;
+    background: color-mix(in srgb, var(--bg-elevated) 40%, transparent) !important;
+    border-radius: var(--radius-sm) !important;
 }
 
 /* Icono de cuenta más grande */
@@ -5630,6 +5636,7 @@ body:not(.is-data-loading) .chart-loading-shell {
     .quick-action-card { min-height: 64px !important; }
     .account-card { min-height: 64px !important; }
     .mini-stat { min-height: 48px !important; }
+}
 }
 
 
@@ -6033,6 +6040,9 @@ body:not(.is-data-loading) .chart-loading-shell {
     #aiResultContainer > .card > .card-body,
     #predictionCard > .card > .card-body { padding: 10px !important; }
     #predictedExpenses { font-size: 1.1rem !important; }
+}
+/* IMPORTANTE: FIX crítico — este @media 320px quedó abierto y anidaba dentro todos los
+   bloques FASE 1-4 de abajo (solo aplicaban en pantallas ≤320px). Se cierra aquí. */
 
 /* ============================================================ */
 /* ============================================================ */
@@ -6343,3 +6353,262 @@ body:not(.is-data-loading) .chart-loading-shell {
 
 /* --- Contraste: grises muted más legibles en claro (antes #64748B sobre claro, limítrofe) --- */
 /* (el gris muted claro ya se define en tokens.css) */
+
+/* ============================================================
+   EVOLUCIÓN PREMIUM DEL TEMA DORADO (2026-09)
+   Menos cajas, más aire: jerarquía por tipografía y espacio.
+   Los tokens de sombra ya son planos (sin inset highlight).
+   ============================================================ */
+
+/* --- Paso 1: .card plano y aireado --- */
+.card {
+    background: var(--bg-surface);
+    border: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-base);
+}
+.card:hover {
+    /* IMPORTANTE: sin elevación ni lift; el hover solo enfatiza el borde. */
+    transform: none;
+    box-shadow: var(--shadow-sm);
+    border-color: color-mix(in srgb, var(--border-light) 75%, transparent);
+}
+.view-primary-card {
+    border-color: color-mix(in srgb, var(--primary) 24%, transparent);
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- Paso 2: hero del Panel sin sub-cajas glass --- */
+.dashboard-hero {
+    background: var(--bg-elevated);
+    border: 1px solid color-mix(in srgb, var(--border-light) 55%, transparent);
+    box-shadow: none;
+    padding: clamp(20px, 3.5vw, 36px);
+}
+.dashboard-hero::before {
+    /* IMPORTANTE: fuera el blob radial dorado; la superficie plana respira. */
+    display: none;
+}
+.dashboard-hero__balance,
+.dashboard-hero__metric {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+.dashboard-hero__balance {
+    min-height: 0;
+    padding: 0;
+}
+.dashboard-hero__metric {
+    padding: clamp(16px, 2.5vw, 24px) clamp(14px, 2vw, 20px);
+    border-left: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+}
+.dashboard-hero__metric::after {
+    /* IMPORTANTE: fuera la barra de color inferior; la tipografía manda. */
+    display: none;
+}
+.dashboard-hero__amount {
+    text-shadow: none;
+}
+/* IMPORTANTE: separador hairline entre balance y KPIs en la composición hero. */
+.dashboard-hero__balance {
+    border-right: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+    padding-right: clamp(20px, 3vw, 36px);
+}
+@media (max-width: 1100px) {
+    .dashboard-hero__balance {
+        border-right: 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+        padding-right: 0;
+        padding-bottom: 18px;
+    }
+}
+
+/* --- mini-icon: el último azul hardcodeado fuera; tokens dorados --- */
+.mini-icon-wrapper {
+    background: color-mix(in srgb, var(--primary) 12%, transparent) !important;
+    color: var(--primary) !important;
+    border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent) !important;
+}
+[data-theme="light"] .mini-icon-wrapper {
+    color: var(--primary-ink) !important;
+}
+
+/* --- mini-stat descajado: tipografía y aire --- */
+.mini-stat {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: clamp(16px, 2.5vw, 24px) clamp(14px, 2vw, 20px);
+    border-left: 2px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+    border-radius: 0;
+}
+.mini-stat:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- Paso 3: cuentas como lista abierta --- */
+.account-summary-grid {
+    border-top: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+    padding-top: clamp(16px, 2.5vw, 24px);
+}
+.account-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 6px 4px;
+    gap: 12px;
+}
+.account-card:hover {
+    transform: none;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--bg-elevated) 45%, transparent);
+    border-radius: var(--radius-sm);
+}
+.account-card--compact {
+    padding: 6px 4px;
+}
+
+/* --- Paso 4: acciones rápidas como chips horizontales --- */
+.quick-actions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.quick-action-card {
+    width: auto;
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+    border-radius: var(--radius-full);
+    box-shadow: none;
+    padding: 10px 18px;
+    gap: 10px;
+}
+.quick-action-card:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+    background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+.quick-action-card__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+}
+.quick-action-card__label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* --- Paso 5: quota-card (Tarjetas) con tokens, fuera white-alpha --- */
+.quota-card {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+    box-shadow: none;
+    padding: clamp(14px, 2vw, 20px) 4px;
+    border-radius: 0;
+}
+.quota-card:hover {
+    background: color-mix(in srgb, var(--bg-elevated) 45%, transparent);
+    border-color: color-mix(in srgb, var(--border-light) 45%, transparent);
+}
+.quota-header {
+    color: var(--text-primary);
+}
+/* --- member-card (resumen familiar) descajado --- */
+.member-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: clamp(14px, 2vw, 20px) 10px;
+}
+.member-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+.member-avatar {
+    background: var(--bg-elevated);
+    border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+    box-shadow: none;
+}
+
+/* --- Paso 6: scrollbar fina + hover sutil de filas --- */
+.quota-list-scroll::-webkit-scrollbar,
+.table-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.quota-list-scroll::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+    border-radius: 999px;
+}
+.quota-list-scroll::-webkit-scrollbar-track,
+.table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+#view-historial .table-container tbody tr:hover td {
+    background: color-mix(in srgb, var(--bg-elevated) 40%, transparent) !important;
+}
+
+/* --- Neutralización de overrides de tema oscuro que pisan la capa premium
+       (mayor especificidad: [data-theme="dark"] .account-card, .member-avatar, etc.) --- */
+[data-theme="dark"] .account-card {
+    background: transparent;
+    backdrop-filter: none;
+}
+[data-theme="dark"] .dashboard-hero__balance,
+[data-theme="dark"] .dashboard-hero__metric {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+[data-theme="dark"] .dashboard-hero {
+    background: var(--bg-elevated);
+    box-shadow: none;
+}
+[data-theme="dark"] .mini-stat {
+    background: transparent;
+    border: 0;
+    border-left: 2px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+    box-shadow: none;
+}
+[data-theme="dark"] .quota-card {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent);
+    box-shadow: none;
+}
+[data-theme="dark"] .member-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+[data-theme="dark"] .quick-action-card {
+    background: transparent;
+    box-shadow: none;
+}
+[data-theme="dark"] .card {
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- Separadores hairline del hero (última capa; un solo lugar de verdad) ---
+       Escritorio: balance | KPIs (vertical). Móvil (<1100px): apilado (horizontal abajo). --- */
+.dashboard-hero__balance {
+    border-right: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent) !important;
+}
+@media (max-width: 1100px) {
+    .dashboard-hero__balance {
+        border-right: 0 !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-light) 45%, transparent) !important;
+    }
+}
