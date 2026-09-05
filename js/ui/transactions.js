@@ -39,6 +39,21 @@ function handleTipoChange(){
             Object.keys(categorias[g]).forEach(k=>{cat.add(new Option(categorias[g][k].icon+' '+k.toUpperCase().replace(/_/g,' '),k));});
         }
     }
+    syncTransactionTypeButtons();
+}
+
+// IMPORTANTE: los botones visibles son la única superficie; el select oculto es la fuente de verdad.
+// Se sincroniza SIEMPRE desde handleTipoChange() para que form.reset(), cancelEdit() y editTransaction()
+// no dejen un botón resaltado que no coincide con el tipo realmente guardado (causaba registros como gasto).
+function syncTransactionTypeButtons(){
+    const select=document.getElementById('tipo');
+    if(!select)return;
+    const buttons=select.parentElement?.querySelectorAll('.transaction-type-btn')||[];
+    buttons.forEach(btn=>{
+        const isActive=btn.dataset.value===select.value;
+        btn.classList.toggle('active',isActive);
+        btn.setAttribute('aria-pressed',isActive);
+    });
 }
 
 function preSubmit(){
@@ -158,37 +173,28 @@ function initTransactionTypeButtons() {
     const buttonsContainer = select.parentElement.querySelector('.transaction-type-buttons');
     if (!buttonsContainer) return;
 
-    const buttons = buttonsContainer.querySelectorAll('.transaction-type-btn');
-
-    // Establecer estado inicial basado en el valor del select
-    const setActiveButton = (value) => {
-        buttons.forEach(btn => {
-            const isActive = btn.dataset.value === value;
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-pressed', isActive);
-        });
-    };
-
-    // Actualizar botones cuando cambie el select (por ejemplo, al cargar datos al editar)
-    select.addEventListener('change', () => {
-        setActiveButton(select.value);
-    });
+    // IMPORTANTE: switchView('transacciones') re-ejecuta este init en cada visita; el guard evita listeners duplicados.
+    if (select.dataset.typeButtonsBound === '1') {
+        syncTransactionTypeButtons();
+        return;
+    }
+    select.dataset.typeButtonsBound = '1';
 
     // Cuando se haga clic en un botón, actualizar el select y disparar su evento change
-    buttons.forEach(button => {
+    buttonsContainer.querySelectorAll('.transaction-type-btn').forEach(button => {
         button.addEventListener('click', () => {
             const value = button.dataset.value;
             if (select.value !== value) {
                 select.value = value;
                 select.dispatchEvent(new Event('change')); // Dispara handleTipoChange()
-                // Actualizar estado visual inmediatamente (evita doble parpadeo)
-                setActiveButton(value);
+            } else {
+                syncTransactionTypeButtons();
             }
         });
     });
 
     // Inicializar estado visual
-    setActiveButton(select.value);
+    syncTransactionTypeButtons();
 }
 
 function initCategorySelector() {
@@ -221,7 +227,12 @@ function initCategorySelector() {
 }
 
 // IMPORTANTE: compatibilidad temporal con HTML inline de transacciones hasta reemplazar onchange/onclick por listeners.
+// IMPORTANTE: initTransactionTypeButtons/initCategorySelector DEBEN exportarse: app.js los invoca desde initTransactionFormBindings();
+// sin exportación se lanza ReferenceError y los botones de tipo quedan sin listeners (todo se registraba como gasto).
 window.handleTipoChange=handleTipoChange;
+window.syncTransactionTypeButtons=syncTransactionTypeButtons;
+window.initTransactionTypeButtons=initTransactionTypeButtons;
+window.initCategorySelector=initCategorySelector;
 window.preSubmit=preSubmit;
 window.saveTransaction=saveTransaction;
 window.cancelEdit=cancelEdit;

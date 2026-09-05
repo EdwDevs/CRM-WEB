@@ -1,0 +1,2450 @@
+// IMPORTANTE: FirebaseService mantiene helpers y aliases globales temporales para compatibilidad con funciones legacy en este archivo.
+
+        let transactions=[], cardsList=[], editingTransactionId=null, chartInstance=null, trendChartInstance=null, trendBarChartInstance=null, topCategoriesChartInstance=null, tempTransactionData=null, globalDeudaPorTarjeta={}, currentViewDate=new Date(), goals=[], offlineQueue=[], currentDetailCardName=null, consistencyAudit={issues:[], corrections:[], lastRunAt:null}, currentQuotaTab='cards', returnToQuotaModal=false;
+        const debugState={enabled:isLocalDebugEnvironment(),expanded:false,lastEvents:[],lastErrors:[]};
+        // IMPORTANTE: aliases locales para compatibilidad con funciones existentes, sincronizados por suscripción del store.
+        function syncLocalStateFromStore(){
+            const state=AppStore.getState();
+            transactions=state.transactions;
+            cardsList=state.cards;
+            goals=state.goals;
+            consistencyAudit=state.audit;
+            currentViewDate=state.viewDate;
+        }
+        AppStore.subscribe((nextState, prevState)=>{
+            syncLocalStateFromStore();
+            if(nextState.cards!==prevState.cards){ populateCardSelects(); populateMethodFilter(); }
+            if(nextState.transactions!==prevState.transactions){ updateDashboard(); updateDailyCapIndicator(); renderHistory(); renderCharts(); renderTrendChart(); }
+            if(nextState.goals!==prevState.goals){ renderGoals(); }
+            renderDebugPanel();
+        });
+        syncLocalStateFromStore();
+        function isLocalDebugEnvironment(){ return ['localhost','127.0.0.1'].includes(window.location.hostname); }
+        // IMPORTANTE: registrar acciones críticas en un único formato simplifica depuración y seguimiento.
+        function logEvent(type,payload={}){ const entry={type,payload,at:new Date().toISOString()}; console.info('[crm-web:event]',entry); debugState.lastEvents=[entry,...debugState.lastEvents].slice(0,12); renderDebugPanel(); return entry; }
+        function registerDebugError(scope,error){ const entry={scope,message:error?.message||String(error),at:new Date().toISOString()}; debugState.lastErrors=[entry,...debugState.lastErrors].slice(0,8); renderDebugPanel(); }
+        function toggleDebugPanel(){ debugState.expanded=!debugState.expanded; renderDebugPanel(); }
+        let syncCardIdMap=null;
+        const confirmActionState = { onConfirm: null };
+        let isSyncingOfflineQueue = false;
+        
+        const categories={gasto:{'vivienda':{icon:'🏠',subcategorias:['Arriendo/Hipoteca','Administración','Reparaciones 🛠️','Muebles 🛋️','Electrodomésticos 📺','Artículos Aseo 🧹','Decoración 🖼️','Impuesto Predial 📄']},'servicios_publicos':{icon:'💡',subcategorias:['Energía ⚡','Agua 💧','Gas 🔥','Internet 🌐','Plan Celular 📱','Streaming (Netflix/Disney) 🎬','Spotify/Music 🎵','Nube (Google/iCloud) ☁️','Servicio Doméstico 🧹']},'alimentacion':{icon:'🍔',subcategorias:['Mercado General 🛒','Carnes y Pescados 🥩','Frutas y Verduras 🥦','Panadería 🥖','Restaurantes 🍽️','Domicilios (Rappi/Uber) 🛵','Café/Snacks ☕','Licores 🍺']},'transporte':{icon:'🚗',subcategorias:['Gasolina ⛽','Transporte Público 🚌','Taxi/Uber/DiDi 🚖','Parqueadero 🅿️','Peajes 🚧','Mantenimiento/Taller 🔧','Lavado Auto 🚿','SOAT/Seguro 🛡️','Licencia/Trámites 📝']},'educacion':{icon:'📚',subcategorias:['Pensión Escolar/U 🎓','Cursos Online 💻','Libros/Ebooks 📖','Útiles/Papelería ✏️','Uniformes 👕','Transporte Escolar 🚌','Idiomas 🗣️']},'salud':{icon:'⚕️',subcategorias:['Medicina Prepagada 🏥','Citas Médicas 🩺','Medicamentos 💊','Odontología 🦷','Optometría 👓','Laboratorio/Exámenes 💉','Terapia/Psicología 🧠']},'vestuario':{icon:'👕',subcategorias:['Ropa Casual 👚','Ropa Formal 👔','Ropa Deportiva 🏃','Calzado 👟','Accesorios (Bolsos/Joyas) 👜','Lavandería/Sastrería 🧵']},'cuidado_personal':{icon:'💄',subcategorias:['Peluquería/Barbería 💇','Manicure/Pedicure 💅','Cosméticos/Maquillaje 💄','Cuidado Piel (Skincare) 🧴','Aseo Personal 🧼','Masajes/Spa 💆']},'entretenimiento':{icon:'🎬',subcategorias:['Cine 🍿','Salidas/Bares 🍻','Conciertos/Eventos 🎟️','Videojuegos 🎮','Libros/Hobbies 🎨','Paseos/Turismo ✈️','Suscripciones (Música/Juegos) 🎧']},'mascotas':{icon:'🐶',subcategorias:['Comida Mascota 🦴','Veterinaria 🩺','Juguetes/Accesorios 🎾','Guardería/Paseador 🐕','Medicamentos 💊']},'tecnologia':{icon:'💻',subcategorias:['Celulares/Tablets 📱','Computadores 💻','Accesorios (Cables/Audífonos) 🎧','Software/Suscripciones 💾','Mantenimiento 🔧']},'otros':{icon:'📦',subcategorias:['Gastos Improvisados 🎲','Comisiones/Bancos 🏦','Impuestos 📄','Otros 🔖']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste negativo por arqueo']}},ingreso:{'salario':{icon:'💼',subcategorias:['Salario Principal 💰','Bonificaciones 🎁','Horas Extras ⏰','Propinas 🤝']},'inversiones':{icon:'📈',subcategorias:['Dividendos 📊','Intereses 💵','Ganancias Bolsillo 📉','Alquileres 🏘️']},'negocio':{icon:'🏪',subcategorias:['Ventas 🛒','Servicios Prestados 🤝','Comisiones 💲','Otros Negocio 📦']},'otros_ingreso':{icon:'🎁',subcategorias:['Regalos 🎉','Préstamos Recibidos 🤝','Reembolsos 💳','Herencia 💎','Otros Ingresos 🎁']},'ajuste_de_arqueo':{icon:'⚖️',subcategorias:['Ajuste positivo por arqueo']}}};
+        const categorias=categories;
+
+
+        // IMPORTANTE: Mapa centralizado entre vista, archivo fragmento, hooks y comportamiento visual inicial.
+        // IMPORTANTE: focusMode/defaultCollapsedSections reducen ruido al entrar a cada vista; mantener sincronizado con las secciones secundarias del HTML.
+        const VIEW_CONFIG={
+            dashboard:{fragment:'views/view-dashboard.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, ()=>{updateDashboard(); updateDailyCapIndicator();}]},
+            transacciones:{fragment:'views/view-transacciones.html', onActivate:[initCollapsibleCards, initTransactionFormBindings]},
+            estadisticas:{fragment:'views/view-estadisticas.html', focusMode:true, defaultCollapsedSections:['.view-secondary-stack > details'], onActivate:[initCollapsibleCards, renderCharts, renderTrendChart]},
+            historial:{fragment:'views/view-historial.html', focusMode:true, defaultCollapsedSections:['.history-filter-panel'], onActivate:[initCollapsibleCards, renderHistory]},
+            objetivos:{fragment:'views/view-objetivos.html', focusMode:true, defaultCollapsedSections:['.goal-history-details'], onActivate:[renderGoals, initCollapsibleCards]},
+            asistente:{fragment:'views/view-asistente.html', onActivate:[initCollapsibleCards]}
+        };
+        const loadedViews=new Set();
+
+        async function loadView(viewId){
+            const config=VIEW_CONFIG[viewId];
+            if(!config)throw new Error(`Vista no registrada: ${viewId}`);
+            if(loadedViews.has(viewId))return;
+            const host=document.getElementById('viewsHost');
+            if(!host)throw new Error('No existe #viewsHost para montar vistas');
+            const html=await fetch(config.fragment).then(r=>{if(!r.ok)throw new Error(`No se pudo cargar ${config.fragment}`); return r.text();});
+            host.insertAdjacentHTML('beforeend',html);
+            loadedViews.add(viewId);
+        }
+
+        async function preloadViews(){
+            // IMPORTANTE: cargamos todas las vistas al inicio para preservar IDs y compatibilidad con lógica existente.
+            await Promise.all(Object.keys(VIEW_CONFIG).map(loadView));
+            // IMPORTANTE: las vistas precargadas también reciben su comportamiento visual inicial antes de enlazar plegables.
+            Object.keys(VIEW_CONFIG).forEach(applyViewVisualConfig);
+        }
+        function applyViewVisualConfig(viewId){
+            const config=VIEW_CONFIG[viewId];
+            const viewRoot=document.getElementById('view-'+viewId);
+            if(!config||!viewRoot)return;
+            viewRoot.dataset.focusMode=config.focusMode?'true':'false'; // IMPORTANTE: expone el modo de enfoque por vista para CSS/QA sin duplicar lógica.
+            (config.defaultCollapsedSections||[]).forEach(selector=>{
+                viewRoot.querySelectorAll(selector).forEach(section=>{
+                    // IMPORTANTE: estas marcas identifican secciones secundarias que deben iniciar plegadas para reducir ruido visual.
+                    section.dataset.forceCollapsed='true';
+                    section.dataset.secondarySection='true';
+                    if(section.tagName==='DETAILS')section.open=false;
+                });
+            });
+        }
+
+        function toggleTheme(){const d=document.documentElement;const isDark=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',isDark?'light':'dark');localStorage.setItem('theme',isDark?'light':'dark');updateThemeIcon();} // IMPORTANTE: persistencia manual del tema híbrido
+        function updateThemeIcon(){
+            const isDark=document.documentElement.getAttribute('data-theme')==='dark'; // IMPORTANTE: una sola fuente de verdad para el estado visual
+            const iconClass = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            if(document.getElementById('themeIcon')) {
+                document.getElementById('themeIcon').className=iconClass;
+                document.getElementById('themeText').textContent=isDark?'Modo Claro':'Modo Oscuro';
+            }
+            if(document.getElementById('mobileThemeIcon')) {
+                document.getElementById('mobileThemeIcon').className=iconClass;
+            }
+        }
+        
+        function initTheme(){const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);updateThemeIcon();} // IMPORTANTE: priorizamos dark premium en primera carga
+        function formatLocalDate(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
+        function setDataLoadingState(isLoading){
+            // IMPORTANTE: esta clase global activa skeletons iniciales sin cambiar IDs consumidos por Firebase, Chart.js y renderizadores.
+            document.body.classList.toggle('is-data-loading', Boolean(isLoading));
+        }
+
+
+        function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
+        function closeSidebar(){document.body.classList.remove('sidebar-open');}
+        
+        function initKeyboardShortcuts(){document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='n'){e.preventDefault();goToAddTransaction();}if(e.key==='Escape'){cancelEdit();closeModal('creditModal');closeModal('quotaModal');closeConfirmActionModal();closeModal('goalModal');closeModal('pagoCuotaModal');}});}
+        
+        document.addEventListener('DOMContentLoaded', async () => { 
+            initTheme();initKeyboardShortcuts();initOfflineSupport();runFirestoreHealthCheck();
+            await preloadViews();
+            initCollapsibleCards(); // IMPORTANTE: dashboard inicia activo sin pasar por switchView(), por eso enlazamos plegables tras precargar.
+            const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0');
+            const todayLocal=new Date(yyyy, t.getMonth(), t.getDate());
+            document.getElementById('dashboardMonth').value=`${yyyy}-${mm}`;document.getElementById('fecha').valueAsDate=todayLocal;
+            const firstDay=`${yyyy}-${mm}-01`;const lastDay=formatLocalDate(new Date(yyyy,t.getMonth()+1,0));
+            // IMPORTANTE: filterStart/filterEnd inicializan los filtros de view-historial.html antes del primer renderHistory().
+            document.getElementById('filterStart').value=firstDay;document.getElementById('filterEnd').value=lastDay;
+            document.getElementById('goalDeadline').value=lastDay;
+            loadCards();loadGoals();
+        });
+
+        function getStoredOfflineQueue(){try{return JSON.parse(localStorage.getItem('offlineQueue')||'[]');}catch(e){return [];}}
+        function setStoredOfflineQueue(data){localStorage.setItem('offlineQueue',JSON.stringify(data));}
+        function getStoredCachedTransactions(){try{return JSON.parse(localStorage.getItem('cachedTransactions')||'[]');}catch(e){return [];}}
+        function setStoredCachedTransactions(data){localStorage.setItem('cachedTransactions',JSON.stringify(data));}
+        function getStoredCardsCache(){try{return JSON.parse(localStorage.getItem('cardsCache')||'[]');}catch(e){return [];}}
+        function setStoredCardsCache(data){localStorage.setItem('cardsCache',JSON.stringify(data));}
+        function generateQueueId(){return `q_${Date.now()}_${Math.random().toString(16).slice(2,8)}`;}
+        function normalizeSyncError(error){
+            if(!error)return 'Error desconocido';
+            return error.message || error.code || 'Error desconocido';
+        }
+        function getPermanentSyncErrorCode(error){
+            const code=(error?.code||'').toString().toLowerCase();
+            const msg=(error?.message||'').toString().toLowerCase();
+            if(code.includes('permission-denied')||msg.includes('permission-denied'))return 'permission-denied';
+            if(code.includes('unauthenticated')||msg.includes('unauthenticated'))return 'unauthenticated';
+            if(code.includes('failed-precondition')||msg.includes('failed-precondition'))return 'failed-precondition';
+            if(code.includes('not-found')||msg.includes('not-found')||msg.includes('not found'))return 'not-found';
+            if(code.includes('conflict')||msg.includes('conflict'))return 'conflict';
+            if(code.includes('already-exists')||msg.includes('already-exists')||msg.includes('already exists'))return 'already-exists';
+            return null;
+        }
+        function getActionableSyncErrorMessage(error){
+            const errorCode=getPermanentSyncErrorCode(error);
+            if(errorCode==='permission-denied')return 'Sin permisos para sincronizar. Revisa reglas/permisos de Firestore y vuelve a intentar.';
+            if(errorCode==='unauthenticated')return 'Tu sesión expiró. Inicia sesión de nuevo y luego pulsa "Reintentar".';
+            if(errorCode==='failed-precondition')return 'No se cumple una precondición de Firestore. Revisa reglas, índices o estado del dato antes de reintentar.';
+            if(errorCode==='not-found')return 'El recurso ya no existe en la nube. Actualiza tus datos antes de reintentar.';
+            if(errorCode==='conflict'||errorCode==='already-exists')return 'Hay un conflicto con un cambio remoto. Revisa el dato y vuelve a intentarlo.';
+            return normalizeSyncError(error);
+        }
+        function isPermanentSyncError(error){
+            return Boolean(getPermanentSyncErrorCode(error));
+        }
+        function persistOfflineQueue(){
+            setStoredOfflineQueue(offlineQueue);
+            updateSyncIndicator();
+        }
+        function initOfflineSupport(){
+            offlineQueue=getStoredOfflineQueue();
+            updateSyncIndicator();
+            window.addEventListener('online',()=>{syncOfflineQueue();});
+            window.addEventListener('offline',()=>{updateSyncIndicator();});
+            if(navigator.onLine){syncOfflineQueue();}else{updateSyncIndicator();}
+        }
+        function updateSyncIndicator(statusOverride){
+            const indicator=document.getElementById('syncIndicator');
+            const text=document.getElementById('syncText');
+            const count=document.getElementById('syncPendingCount');
+            const retry=document.getElementById('syncRetryBtn');
+            const failures=document.getElementById('syncFailures');
+            const notice=document.getElementById('syncNotice');
+            if(!indicator)return;
+            const pendingItems=offlineQueue.filter(item=>item.status!=='synced');
+            const failedItems=pendingItems.filter(item=>item.status==='failed');
+            const status=statusOverride || (isSyncingOfflineQueue
+                ? 'syncing'
+                : (failedItems.length
+                    ? 'failed'
+                    : (!navigator.onLine ? 'offline' : 'online')));
+            indicator.className=`sync-indicator ${status}`;
+            if(text){
+                text.textContent=status==='online'
+                    ? 'Conectado'
+                    : status==='syncing'
+                        ? 'Sincronizando...'
+                        : status==='failed'
+                            ? 'Fallos de sincronización'
+                            : 'Sin conexión';
+            }
+            if(count){
+                count.textContent=`${pendingItems.length} pendientes`;
+                count.style.display=pendingItems.length? 'inline-flex':'none';
+            }
+            if(retry){
+                retry.style.display=pendingItems.length? 'inline-flex':'none';
+                retry.disabled=isSyncingOfflineQueue;
+            }
+            if(notice){
+                if(failedItems.length){
+                    notice.textContent='Hay elementos con error permanente. Corrige el problema (sesión/permisos/reglas) y pulsa "Reintentar".';
+                }else if(!navigator.onLine && pendingItems.length){
+                    notice.textContent='Guardado local. Se sincronizará al reconectar.';
+                }else if(isSyncingOfflineQueue){
+                    notice.textContent='Aplicando cambios en la nube...';
+                }else{
+                    notice.textContent='';
+                }
+            }
+            if(failures){
+                if(failedItems.length){
+                    failures.style.display='flex';
+                    failures.innerHTML=failedItems.map(item=>`
+                        <div class="sync-indicator__failure">
+                            ${item.entity} · ${item.action} · ${item.payload?.id || item.localId || 'nuevo'}: ${item.error || 'Error desconocido'}
+                        </div>
+                    `).join('');
+                }else{
+                    failures.style.display='none';
+                    failures.innerHTML='';
+                }
+            }
+        }
+        async function executeFirestoreAction({entity, action, payload}){
+                    if(entity==='cards'){
+                        const cardsRef = await getUserCardsCollection();
+                        if(action==='add')return cardsRef.doc(payload.localId).set(payload.data).then(()=>({id:payload.localId}));
+                        if(action==='update')return cardsRef.doc(payload.id).update(payload.data);
+                        if(action==='delete')return cardsRef.doc(payload.id).delete();
+                    }
+                    if(entity==='transactions'){
+                        const transactionsRef = await getUserTransactionsCollection();
+                        if(action==='add')return transactionsRef.doc(payload.localId).set(payload.data).then(()=>({id:payload.localId}));
+                        if(action==='update')return transactionsRef.doc(payload.id).update(payload.data);
+                        if(action==='delete')return transactionsRef.doc(payload.id).delete();
+                    }
+                    throw new Error('Acción offline no soportada');
+                }
+        function updateCachedTransactions(action, payload, queueId){
+            const cached=getStoredCachedTransactions();
+            if(action==='add'){
+                cached.unshift({id:`offline-${queueId}`,...payload.data,pendingSync:true});
+            }else if(action==='update'){
+                const idx=cached.findIndex(t=>t.id===payload.id);
+                if(idx>-1){
+                    cached[idx]={...cached[idx],...payload.data};
+                }else if(payload.id && String(payload.id).startsWith('offline-')){
+                    cached.unshift({id:payload.id,...payload.data,pendingSync:true});
+                }
+            }else if(action==='delete'){
+                            const idx=cached.findIndex(t=>t.id===payload.id);
+                            if(idx>-1)cached.splice(idx,1);
+                        }
+                        setStoredCachedTransactions(cached);
+        }
+        function updateCachedCards(action, payload, queueId){
+            const cached=getStoredCardsCache();
+            if(action==='add'){
+                cached.push({id:`offline-${queueId}`,...payload.data,pendingSync:true});
+            }else if(action==='update'){
+                const idx=cached.findIndex(c=>c.id===payload.id);
+                if(idx>-1){
+                    cached[idx]={...cached[idx],...payload.data};
+                }else if(payload.id && String(payload.id).startsWith('offline-')){
+                    cached.push({id:payload.id,...payload.data,pendingSync:true});
+                }
+            }else if(action==='delete'){
+                const idx=cached.findIndex(c=>c.id===payload.id);
+                if(idx>-1)cached.splice(idx,1);
+            }
+            setStoredCardsCache(cached);
+        }
+        function mergeOfflineQueueIntoTransactions(list){
+            let result=[...list];
+            const queueItems=offlineQueue.filter(item=>item.entity==='transactions'&&item.status!=='synced');
+            queueItems.forEach(item=>{
+                if(item.action==='add'){
+                    const offlineId=`offline-${item.localId}`;
+                    if(!result.some(t=>t.id===offlineId)){
+                        const mappedData={...item.payload.data};
+                        if(mappedData.cardId&&syncCardIdMap?.realToOffline?.has(mappedData.cardId)){
+                            mappedData.cardId=syncCardIdMap.realToOffline.get(mappedData.cardId);
+                        }
+                        result.unshift({id:offlineId,...mappedData,pendingSync:true});
+                    }
+                }
+            });
+            queueItems.forEach(item=>{
+                if(item.action==='update'){
+                    const targetId=item.payload.id;
+                    const idx=result.findIndex(t=>t.id===targetId);
+                    if(idx>-1){
+                        const mappedData={...item.payload.data};
+                        if(mappedData.cardId&&syncCardIdMap?.realToOffline?.has(mappedData.cardId)){
+                            mappedData.cardId=syncCardIdMap.realToOffline.get(mappedData.cardId);
+                        }
+                        result[idx]={...result[idx],...mappedData,pendingSync:true};
+                    }
+                }
+                if(item.action==='delete'){
+                    const idx=result.findIndex(t=>t.id===item.payload.id);
+                    if(idx>-1){
+                        result[idx]={...result[idx],pendingDelete:true};
+                    }
+                }
+            });
+            return result;
+        }
+        function mergeOfflineQueueIntoCards(list){
+            let result=[...list];
+            const queueItems=offlineQueue.filter(item=>item.entity==='cards'&&item.status!=='synced');
+            queueItems.forEach(item=>{
+                if(item.action==='add'){
+                    const offlineId=`offline-${item.localId}`;
+                    if(!result.some(c=>c.id===offlineId)){
+                        result.push({id:offlineId,...item.payload.data,pendingSync:true});
+                    }
+                }
+            });
+            queueItems.forEach(item=>{
+                if(item.action==='update'){
+                    const idx=result.findIndex(c=>c.id===item.payload.id);
+                    if(idx>-1){
+                        result[idx]={...result[idx],...item.payload.data,pendingSync:true};
+                    }
+                }
+                if(item.action==='delete'){
+                    result=result.filter(c=>c.id!==item.payload.id);
+                }
+            });
+            return result;
+        }
+        function updateQueuedAddPayload(entity, localId, data){
+            const idx=offlineQueue.findIndex(item=>item.entity===entity&&item.action==='add'&&item.localId===localId);
+            if(idx>-1){
+                const normalizedData={...data};
+                if(entity==='transactions'&&normalizedData.cardId&&syncCardIdMap?.offlineToReal?.has(normalizedData.cardId)){
+                    normalizedData.cardId=syncCardIdMap.offlineToReal.get(normalizedData.cardId);
+                }
+                offlineQueue[idx].payload.data={...offlineQueue[idx].payload.data,...normalizedData};
+                offlineQueue[idx].status='pending';
+                offlineQueue[idx].error='';
+                persistOfflineQueue();
+                return true;
+            }
+            return false;
+        }
+        function removeQueuedAdd(entity, localId){
+            const idx=offlineQueue.findIndex(item=>item.entity===entity&&item.action==='add'&&item.localId===localId);
+            if(idx>-1){
+                offlineQueue.splice(idx,1);
+                persistOfflineQueue();
+                return true;
+            }
+            return false;
+        }
+        async function enqueueOrExecute({entity, action, payload, silent=false}){
+                    const queueId=generateQueueId();
+                    const localId=queueId;
+                    // IMPORTANTE: los 'add' usan un ID determinístico generado por el cliente (localId)
+                    // para que los reintentos (timeout/corte de red) sean idempotentes y no creen duplicados.
+                    if(action==='add'&&payload&&typeof payload==='object'&&!payload.localId){
+                        payload={...payload,localId};
+                    }
+                    const queuedItem={
+                        id:queueId,
+                        localId,
+                        entity,
+                        action,
+                        payload,
+                        createdAt:new Date().toISOString(),
+                        status:navigator.onLine?'processing':'pending',
+                        error:''
+                    };
+            if(action==='update'&&payload.id&&String(payload.id).startsWith('offline-')){
+                const localRef=String(payload.id).replace('offline-','');
+                if(updateQueuedAddPayload(entity, localRef, payload.data)){
+                    if(entity==='transactions')updateCachedTransactions('update',{id:payload.id,data:payload.data});
+                    if(entity==='cards')updateCachedCards('update',{id:payload.id,data:payload.data});
+                    updateSyncIndicator();
+                    return {queued:true,localOnly:true};
+                }
+            }
+            if(action==='delete'&&payload.id&&String(payload.id).startsWith('offline-')){
+                const localRef=String(payload.id).replace('offline-','');
+                if(removeQueuedAdd(entity, localRef)){
+                    if(entity==='transactions')updateCachedTransactions('delete',{id:payload.id});
+                    if(entity==='cards')updateCachedCards('delete',{id:payload.id});
+                    updateSyncIndicator();
+                    return {queued:true,localOnly:true};
+                }
+            }
+            if(!navigator.onLine){
+                if(action==='add')queuedItem.payload={...payload,localId};
+                offlineQueue.push(queuedItem);
+                persistOfflineQueue();
+                if(entity==='transactions')updateCachedTransactions(action, payload, localId);
+                if(entity==='cards')updateCachedCards(action, payload, localId);
+                if(!silent){
+                    showToast('Guardado local. Se sincronizará al reconectar.', 'info');
+                }
+                return {queued:true};
+            }
+            try{
+                await executeFirestoreAction({entity, action, payload});
+                return {queued:false};
+            }catch(error){
+                queuedItem.status='pending';
+                queuedItem.error=normalizeSyncError(error);
+                if(action==='add')queuedItem.payload={...payload,localId};
+                offlineQueue.push(queuedItem);
+                persistOfflineQueue();
+                if(entity==='transactions')updateCachedTransactions(action, payload, localId);
+                if(entity==='cards')updateCachedCards(action, payload, localId);
+                if(!silent){
+                    showToast('No se pudo guardar en línea. Se sincronizará al reconectar.', 'warning');
+                }
+                return {queued:true,error};
+            }
+        }
+        async function syncOfflineQueue({includeFailed=false}={}){
+            if(isSyncingOfflineQueue||!navigator.onLine)return;
+            const syncCandidates=offlineQueue.filter(item=>includeFailed || item.status!=='failed');
+            if(!syncCandidates.length){
+                updateSyncIndicator();
+                return;
+            }
+            isSyncingOfflineQueue=true;
+            syncCardIdMap={offlineToReal:new Map(),realToOffline:new Map()};
+            updateSyncIndicator('syncing');
+            if(includeFailed){
+                offlineQueue=offlineQueue.map(item=>item.status==='failed'?{...item,status:'pending'}:item);
+                persistOfflineQueue();
+            }
+            const queueSnapshot=[...offlineQueue.filter(item=>includeFailed || item.status!=='failed')];
+            const orderedItems=[
+                ...queueSnapshot.filter(item=>item.entity==='cards'&&(item.action==='add'||item.action==='update')),
+                ...queueSnapshot.filter(item=>item.entity==='transactions'&&(item.action==='add'||item.action==='update')),
+                ...queueSnapshot.filter(item=>item.action==='delete')
+            ];
+            let cardsTouched=false;
+            let transactionsTouched=false;
+            for(const item of orderedItems){
+                try{
+                    let payload=item.payload;
+                    if(item.entity==='transactions'&&(item.action==='add'||item.action==='update')&&payload?.data?.cardId){
+                        const mappedId=syncCardIdMap.offlineToReal.get(payload.data.cardId);
+                        if(mappedId){
+                            payload={...payload,data:{...payload.data,cardId:mappedId}};
+                            const queueIdx=offlineQueue.findIndex(q=>q.id===item.id);
+                            if(queueIdx>-1){
+                                offlineQueue[queueIdx].payload={...offlineQueue[queueIdx].payload,data:{...offlineQueue[queueIdx].payload.data,cardId:mappedId}};
+                                persistOfflineQueue();
+                            }
+                        }
+                    }
+                    const response=await executeFirestoreAction({entity:item.entity, action:item.action, payload});
+                    if(item.entity==='cards'&&item.action==='add'&&response?.id){
+                        const offlineCardId=`offline-${item.localId}`;
+                        syncCardIdMap.offlineToReal.set(offlineCardId,response.id);
+                        syncCardIdMap.realToOffline.set(response.id,offlineCardId);
+                        let queueWasUpdated=false;
+                        offlineQueue=offlineQueue.map(queuedItem=>{
+                            if(queuedItem.entity==='transactions'&&(queuedItem.action==='add'||queuedItem.action==='update')&&queuedItem.payload?.data?.cardId===offlineCardId){
+                                queueWasUpdated=true;
+                                return {
+                                    ...queuedItem,
+                                    payload:{...queuedItem.payload,data:{...queuedItem.payload.data,cardId:response.id}}
+                                };
+                            }
+                            return queuedItem;
+                        });
+                        if(queueWasUpdated)persistOfflineQueue();
+                    }
+                    offlineQueue=offlineQueue.filter(q=>q.id!==item.id);
+                    persistOfflineQueue();
+                    if(item.entity==='cards')cardsTouched=true;
+                    if(item.entity==='transactions')transactionsTouched=true;
+                }catch(error){
+                    const idx=offlineQueue.findIndex(q=>q.id===item.id);
+                    if(idx>-1){
+                        offlineQueue[idx].error=isPermanentSyncError(error)?getActionableSyncErrorMessage(error):normalizeSyncError(error);
+                        offlineQueue[idx].status=isPermanentSyncError(error)?'failed':'pending';
+                    }
+                    persistOfflineQueue();
+                    if(isPermanentSyncError(error)){
+                        continue;
+                    }
+                    break;
+                }
+            }
+            isSyncingOfflineQueue=false;
+            syncCardIdMap=null;
+            updateSyncIndicator();
+            if(cardsTouched)await loadCards();
+            if(transactionsTouched)await loadTransactions();
+            if(cardsTouched||transactionsTouched){
+                showToast('Sincronización completada','success');
+            }
+        }
+        function clearFilters() {
+            // IMPORTANTE: estos IDs pertenecen a views/view-historial.html; mantenerlos sincronizados con el markup de filtros.
+            document.getElementById('filterText').value = '';
+            document.getElementById('filterType').value = 'all';
+            document.getElementById('filterMethod').value = 'all';
+            const t = new Date();
+            const yyyy = t.getFullYear();
+            const mm = String(t.getMonth()+1).padStart(2,'0');
+            document.getElementById('filterStart').value = `${yyyy}-${mm}-01`;
+            document.getElementById('filterEnd').value = formatLocalDate(new Date(yyyy, t.getMonth() + 1, 0));
+            renderHistory();
+        }
+
+        function populateMethodFilter() {
+            // IMPORTANTE: filterMethod debe conservarse porque renderHistory() y clearFilters() dependen de este ID exacto.
+            const sel = document.getElementById('filterMethod');
+            sel.innerHTML = '<option value="all">Cualquiera</option>';
+            // IMPORTANTE: Débito total es un filtro agregado; no modifica movimientos antiguos ni reemplaza cuentas separadas.
+            sel.add(new Option('Débito total', DEBIT_TOTAL_FILTER_VALUE));
+            PAYMENT_METHOD_OPTIONS.forEach(({ value, label }) => sel.add(new Option(label, value)));
+            cardsList.forEach(c => sel.add(new Option('💳 ' + c.name, c.name)));
+        }
+
+        function getHistoryFilterState() {
+            // IMPORTANTE: los IDs filterText/filterType/filterMethod/filterStart/filterEnd viven en view-historial.html y son contrato con filtros, resumen y exportación.
+            return {
+                txt: document.getElementById('filterText').value.trim().toLowerCase(),
+                type: document.getElementById('filterType').value,
+                method: document.getElementById('filterMethod').value,
+                start: document.getElementById('filterStart').value,
+                end: document.getElementById('filterEnd').value
+            };
+        }
+
+        function hasActiveHistoryFilters(filters) {
+            return Boolean(filters.txt || filters.type !== 'all' || filters.method !== 'all' || filters.start || filters.end);
+        }
+
+        function renderEmptyState({ icon, title, message, actionLabel, actionOnclick }) {
+            // IMPORTANTE: helper único para estados vacíos dinámicos; evita pantallas en blanco y garantiza una acción recomendada.
+            return `
+                <div class="empty-state" role="status">
+                    <span class="empty-state__icon" aria-hidden="true"><i class="${icon}"></i></span>
+                    <strong class="empty-state__title">${title}</strong>
+                    <p class="empty-state__message">${message}</p>
+                    <button class="btn btn--primary btn--sm empty-state__action" type="button" onclick="${actionOnclick}">${actionLabel}</button>
+                </div>`;
+        }
+
+        function getHistoryTransactionsSource() {
+            // IMPORTANTE: renderHistory() usa datos fusionados para reflejar altas/ediciones/eliminaciones pendientes offline sin esperar sincronización.
+            return mergeOfflineQueueIntoTransactions(transactions)
+                .map(t => t.tipo === 'credito' ? {...t, cardName: resolveCreditCardName(t)} : t)
+                .sort((a, b) => (a.fecha || '') < (b.fecha || '') ? 1 : -1);
+        }
+
+        function getMemberLabel(memberKey) {
+            const memberMap = {papa: 'Papá', mama: 'Mamá', hijo1: 'Hijo/a', compartido: 'Compartido'};
+            return memberMap[memberKey] || memberKey || 'Compartido';
+        }
+
+        function formatHistoryDateLabel(dateValue) {
+            if (!dateValue) return 'Sin fecha';
+            const [year, month, day] = dateValue.split('-').map(Number);
+            const date = new Date(year, (month || 1) - 1, day || 1);
+            return date.toLocaleDateString('es-CO', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
+        }
+
+        function matchesHistoryMethodFilter(t, selectedMethod) {
+            if (selectedMethod === 'all') return true;
+            const transactionMethods = [t.metodoPago, t.metodoDestino, t.tarjetaDestino].filter(Boolean);
+            if (selectedMethod === 'family:debito') {
+                // IMPORTANTE: el filtro de familia débito incluye cuentas individuales y el método histórico `debito`.
+                return transactionMethods.some(method => isDebitMethod(method));
+            }
+            if (t.tipo === 'credito' && resolveCreditCardName(t) === selectedMethod) return true;
+            return transactionMethods.includes(selectedMethod);
+        }
+
+        function getHistoryMethodLabel(t) {
+            if (t.tipo === 'credito') {
+                const creditName = resolveCreditCardName(t);
+                return t.cuotas ? `${creditName} (${t.cuotas}x)` : creditName;
+            }
+            if (t.tipo === 'pago_tarjeta' || t.tipo === 'transferencia') {
+                const sourceLabel = getPaymentMethodLabel(t.metodoPago);
+                const destinationLabel = t.tarjetaDestino || getPaymentMethodLabel(t.metodoDestino);
+                // IMPORTANTE: origen y destino se exportan/renderizan legibles para no exponer valores internos como debito_edward.
+                return `${sourceLabel || '-'} ➔ ${destinationLabel || '-'}`;
+            }
+            return getPaymentMethodLabel(t.metodoPago);
+        }
+
+        function getFilteredHistoryData() {
+            const filters = getHistoryFilterState();
+            let inc = 0, exp = 0;
+            const sourceTransactions = getHistoryTransactionsSource();
+            const filtered = sourceTransactions.filter(t => {
+                if (filters.start && t.fecha < filters.start) return false;
+                if (filters.end && t.fecha > filters.end) return false;
+                if (filters.type !== 'all' && t.tipo !== filters.type) return false;
+                const description = (t.descripcion || '').toLowerCase();
+                const category = (t.categoria || '').toLowerCase();
+                const subcategory = (t.subcategoria || '').toLowerCase();
+                const textMatch = !filters.txt || description.includes(filters.txt) || category.includes(filters.txt) || subcategory.includes(filters.txt);
+                if (!textMatch) return false;
+                if (filters.method !== 'all') {
+                    const creditName = t.tipo === 'credito' ? resolveCreditCardName(t) : null;
+                    // IMPORTANTE: el filtro agregado de débito revisa origen y destino para incluir `debito`, `debito_edward` y `debito_eliana`.
+                    const m1 = t.tipo !== 'credito' && matchesPaymentMethodFilter(t.metodoPago, filters.method);
+                    const m2 = t.tipo === 'credito' && creditName === filters.method;
+                    const m3 = (t.tipo === 'pago_tarjeta' || t.tipo === 'transferencia') && (t.tarjetaDestino === filters.method || matchesPaymentMethodFilter(t.metodoDestino, filters.method));
+                    if (!(m1 || m2 || m3)) return false;
+                }
+                const m = parseFloat(t.monto);
+                if (t.tipo === 'ingreso') inc += m;
+                if (t.tipo === 'gasto' || t.tipo === 'credito') exp += m;
+                return true;
+            });
+            return { filtered, filters, inc, exp, sourceTransactions };
+        }
+
+        function setHistoryEmptyState({ hasTransactions, hasResults, hasFilters }) {
+            const noTransactionsState = document.getElementById('historyNoTransactionsState');
+            const noFilterResultsState = document.getElementById('historyNoFilterResultsState');
+            // IMPORTANTE: estos estados vacíos evitan que el historial quede como una tabla en blanco sin siguiente paso.
+            if (noTransactionsState) noTransactionsState.classList.toggle('hidden', hasTransactions);
+            if (noFilterResultsState) noFilterResultsState.classList.toggle('hidden', !hasTransactions || hasResults || !hasFilters);
+        }
+
+        function renderHistory() {
+            // IMPORTANTE: transactionList es el ID de tbody definido en view-historial.html; no cambiar sin actualizar esta función.
+            const tbody = document.getElementById('transactionList');
+            const { filtered, filters, inc, exp, sourceTransactions } = getFilteredHistoryData();
+            const hasTransactions = sourceTransactions.length > 0;
+            const hasResults = filtered.length > 0;
+            const hasFilters = hasActiveHistoryFilters(filters);
+            document.getElementById('valFilteredInc').textContent = formatMoney(inc);
+            document.getElementById('valFilteredExp').textContent = formatMoney(exp);
+            const balanceEl = document.getElementById('valFilteredBalance');
+            const countEl = document.getElementById('historyFilteredCount');
+            if (balanceEl) balanceEl.textContent = formatMoney(inc - exp);
+            if (countEl) countEl.textContent = filtered.length.toString();
+            setHistoryEmptyState({ hasTransactions, hasResults, hasFilters });
+            if (!hasResults) {
+                // IMPORTANTE: renderHistory() reemplaza el contenido dinámico para que los estados vacíos sean los únicos visibles.
+                tbody.innerHTML = '';
+                return;
+            }
+            let currentDateGroup = '';
+            const rowsHtml = filtered.map(t => {
+                let color = t.tipo==='ingreso'?'text-success':(t.tipo==='pago_tarjeta'?'text-credit':'text-danger');
+                let symbol = t.tipo==='ingreso'?'+':'-'; if(t.tipo==='transferencia'){color='text-main';symbol='';}
+                const met=getHistoryMethodLabel(t);
+                const pendingLabel=t.pendingSync
+                    ? '<span class="pending-label">Pendiente</span>'
+                    : t.pendingDelete
+                        ? '<span class="pending-label pending-delete-label">Pendiente de eliminación</span>'
+                        : '';
+                const safeId = escapeHtml(t.id);
+                const actionButtons=t.pendingSync || t.pendingDelete
+                    ? `<span class="pending-badge ${t.pendingDelete?'text-danger':'text-warning'}">Pendiente</span>`
+                    : `<button onclick="editTransaction('${safeId}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteTransaction('${safeId}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button>`;
+                const typeClassMap={
+                    ingreso:'row-income',
+                    gasto:'row-expense',
+                    credito:'row-credit',
+                    transferencia:'row-transfer',
+                    pago_tarjeta:'row-transfer'
+                };
+                const rowClass=[typeClassMap[t.tipo], t.pendingDelete?'pending-delete-row':''].filter(Boolean).join(' ');
+                const dateGroup = t.fecha || 'Sin fecha';
+                const groupHeader = dateGroup !== currentDateGroup
+                    ? `<tr class="history-date-group"><td colspan="8">${escapeHtml(formatHistoryDateLabel(t.fecha))}</td></tr>`
+                    : '';
+                currentDateGroup = dateGroup;
+                return `${groupHeader}<tr class="${rowClass}">
+                    <!-- IMPORTANTE: data-label permite que .responsive-table-card convierta la tabla en cards legibles agrupadas por fecha en móvil. -->
+                    <td data-label="Fecha">${escapeHtml(t.fecha || '-')}</td>
+                    <td data-label="Tipo"><span class="type-badge type-${escapeHtml(t.tipo)}">${escapeHtml((t.tipo || '').replace('_',' '))}</span></td>
+                    <td data-label="Método" class="history-method">${escapeHtml(met || '-')}</td>
+                    <td data-label="Miembro">${escapeHtml(getMemberLabel(t.miembro))}</td>
+                    <td data-label="Categoría">${escapeHtml(t.categoria || '-')}</td>
+                    <td data-label="Descripción">${escapeHtml(t.descripcion || '-')} ${pendingLabel}</td>
+                    <td data-label="Monto" class="${color} text-bold">${symbol} ${formatMoney(t.monto)}</td>
+                    <td data-label="Acciones" class="text-right">
+                        ${actionButtons}
+                    </td>
+                </tr>`;
+            }).join('');
+            // IMPORTANTE: renderHistory() reemplaza aquí todo el tbody con filas de tabla desktop y separadores usados como grupos de cards en móvil.
+            tbody.innerHTML = rowsHtml;
+        }
+
+        function generateLocalAnalysis(){
+            const btn=document.querySelector('.btn-ai-action');const loader=document.getElementById('aiLoading');const result=document.getElementById('aiResultContainer');
+            btn.disabled=true;loader.style.display='flex';result.style.display='none';
+            setTimeout(()=>{
+                const d=prepareFinancialContext();
+                let score=100; if(d.cashFlow<0)score-=30; if(d.income>0&&(d.cashFlow/d.income)<0.1)score-=10; if(d.totalDebt>d.income)score-=20;
+                let debtHTML=d.totalDebt===0?`<div class="insight-item"><div class="insight-val text-success">Sin Deuda</div></div>`:`<div class="insight-grid"><div class="insight-item"><div class="insight-label">Deuda</div><div class="insight-val text-danger">${formatMoney(d.totalDebt)}</div></div><div class="insight-item"><div class="insight-label">Ratio</div><div class="insight-val">${(d.income>0?(d.totalDebt/d.income)*100:0).toFixed(0)}%</div></div></div>`;
+                const html=`<div class="report-section"><h4><i class="fas fa-heartbeat report-icon--danger"></i> Diagnóstico</h4><div class="insight-grid"><div class="insight-item"><div class="insight-label">Ingresos</div><div class="insight-val text-success">${formatMoney(d.income)}</div></div><div class="insight-item"><div class="insight-label">Gastos</div><div class="insight-val text-danger">${formatMoney(d.expenses)}</div></div><div class="insight-item"><div class="insight-label">Flujo</div><div class="insight-val">${formatMoney(d.cashFlow)}</div></div></div></div><div class="report-section"><h4><i class="fas fa-shield-alt report-icon--warning"></i> Deudas</h4>${debtHTML}</div><div class="report-section"><h4><i class="fas fa-lightbulb report-icon--amber"></i> Recomendaciones</h4><ul class="ai-list">${generateRecommendations(d)}</ul></div>`;
+                document.getElementById('aiContentBody').innerHTML=html; document.getElementById('aiScoreBadge').textContent=`SCORE: ${score}/100`;
+                predictNextMonthExpenses();
+                loader.style.display='none';result.style.display='block';btn.disabled=false;
+            },1000);
+        }
+
+        function generateRecommendations(d){let rec=[];if(d.cashFlow<0)rec.push('Tu flujo de efectivo es negativo. Considera reducir gastos no esenciales.');if(d.totalDebt>0)rec.push('Tienes deudas activas. Prioriza pagar las de mayor interés primero.');if(d.income>0&&(d.cashFlow/d.income)<0.1&&d.cashFlow>0)rec.push('Tu tasa de ahorro es baja. Intenta aumentarla al 10% de tus ingresos.');if(d.expenses> d.income * 0.8)rec.push('Estás gastando más del 80% de tus ingresos. Revisa tus categorías más altas.');if(rec.length===0)rec.push('¡Excelente! Tu situación financiera está equilibrada.');return rec.map(r=>`<li>${r}</li>`).join('');}
+        
+        function predictNextMonthExpenses(){const months={};transactions.filter(t=>t.tipo==='gasto'||t.tipo==='credito').forEach(t=>{const k=t.fecha.substring(0,7);if(!months[k])months[k]=0;months[k]+=parseFloat(t.monto);});const vals=Object.keys(months).sort().map(k=>months[k]);if(vals.length<2){document.getElementById('predictedExpenses').textContent='Datos insuficientes';return;}const avg=vals.reduce((a,b)=>a+b,0)/vals.length;const trend=vals.length>=2?vals[vals.length-1]-vals[vals.length-2]:0;const prediction=Math.round(avg+trend);document.getElementById('predictedExpenses').textContent=formatMoney(Math.max(0,prediction));}
+
+        function prepareFinancialContext(){
+            let i=0,e=0,dt={...globalDeudaPorTarjeta},td=0;const t=new Date();const p=new Date();p.setDate(t.getDate()-30);const rt=transactions.filter(x=>{const fx=FinanceEngine.parseTxDate(x);return !!fx&&fx>=p;});
+            rt.forEach(x=>{const m=parseFloat(x.monto);if(x.tipo==='ingreso')i+=m;if(x.tipo==='gasto'||x.tipo==='credito')e+=m;});
+            Object.values(dt).forEach(x=>td+=x); let cm={}; rt.filter(x=>x.tipo==='gasto').forEach(x=>{cm[x.categoria]=(cm[x.categoria]||0)+parseFloat(x.monto);});
+            const tc=Object.entries(cm).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>({category:k,amount:v}));
+            return {income:i,expenses:e,cashFlow:i-e,totalDebt:td,debtCards:Object.values(dt).filter(x=>x>0).length,topExpenses:tc};
+        }
+
+        function formatMoney(n){return '$ '+parseFloat(n).toLocaleString('es-CO',{maximumFractionDigits:0});}
+        function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+        function formatCurrencyInput(i){let v=i.value.replace(/\D/g,"");if(v===""){i.value="";return;}i.value="$ "+new Intl.NumberFormat('es-CO').format(v);}
+        function parseCurrencyInput(v){return v?parseFloat(v.replace(/\D/g,'')):0;}
+        function isValidPositiveAmount(m){return Number.isFinite(m)&&m>0;}
+        function showToast(m,t){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),4000);}
+        function requireOnline(action){
+            if(navigator.onLine)return true;
+            const label=action||'Esta acción';
+            showToast(`Sin conexión. ${label} requiere estar en línea.`, 'error');
+            return false;
+        }
+
+        function findCardById(cardId){return cardsList.find(c=>c.id===cardId);}
+        function resolveCreditCardId(credit){
+            if(credit.cardId)return credit.cardId;
+            const legacyName=credit.cardName||credit.metodoPago;
+            if(!legacyName)return '';
+            const card=cardsList.find(c=>c.name===legacyName);
+            return card?card.id:'';
+        }
+        function resolveCreditCardName(credit){
+            if(credit.cardId){
+                const card=findCardById(credit.cardId);
+                if(card)return card.name;
+            }
+            return credit.cardName||credit.metodoPago||'';
+        }
+        function isValidCardName(name){
+            return typeof name==='string'&&name.trim().length>0;
+        }
+
+        function calculateDebtByCard(){
+            let dm={};
+            cardsList.forEach(c=>dm[c.name]=0);
+            transactions.forEach(t=>{
+                const m=parseFloat(t.monto);
+                if(t.tipo==='pago_tarjeta'){
+                    if(dm[t.tarjetaDestino]!==undefined)dm[t.tarjetaDestino]-=m;
+                    return;
+                }
+                if(!t.esCredito)return;
+                const c=resolveCreditCardName(t);
+                if(!isValidCardName(c))return;
+                if(dm[c]!==undefined){
+                    const totalDeuda=t.totalDeuda||m;
+                    const cuotas=t.cuotas||1;
+                    const pagadas=t.cuotasPagadas||0;
+                    const porPagar=Math.max(0,cuotas-pagadas);
+                    if (t.valorCuotaManual && t.valorCuotaManual > 0) {
+                        dm[c]+= t.valorCuotaManual * porPagar;
+                    } else {
+                        dm[c]+=(totalDeuda/cuotas)*porPagar;
+                    }
+                }
+            });
+            return dm;
+        }
+
+        function calculateAvailableQuota(card, debtMap=globalDeudaPorTarjeta){
+            const debt=debtMap[card.name]||0;
+            const adjustment=card.ajusteDisponible||0;
+            return (card.quota||0)-debt+adjustment;
+        }
+
+        function openCardDetail(cardName){
+            currentDetailCardName=cardName;
+            renderCardDetail();
+            document.getElementById('cardDetailModal').style.display='flex';
+        }
+
+        function openCardDetailFromModal(cardName){
+            closeModal('quotaModal');
+            openCardDetail(cardName);
+        }
+
+        function renderCardDetail(){
+            if(!currentDetailCardName)return;
+            const cardName=currentDetailCardName;
+            const card=cardsList.find(c=>c.name===cardName);
+            const creditos=transactions.filter(t=>t.tipo==='credito'&&t.esCredito&&resolveCreditCardName(t)===cardName);
+            const detailBody=document.getElementById('cardDetailTransactions');
+            const summary=document.getElementById('cardDetailSummary');
+            const meta=document.getElementById('cardDetailMeta');
+            document.getElementById('cardDetailName').textContent=`${cardName}`;
+            meta.textContent=`Cupo: ${formatMoney(card?.quota||0)} · Día pago: ${card?.diaPago||'No configurado'}`;
+
+            let totalDebt=0;
+            let nextInstallment=0;
+            detailBody.innerHTML='';
+
+            if(creditos.length===0){
+                detailBody.innerHTML='<tr><td colspan="7" class="table-empty-cell">Sin compras a crédito registradas.</td></tr>';
+            }else{
+                creditos.forEach(cred=>{
+                    const total=cred.totalDeuda||cred.monto||0;
+                    const cuotas=cred.cuotas||1;
+                    const pagadas=cred.cuotasPagadas||0;
+                    const montoCuota=total/cuotas;
+                    const saldoPendiente=Math.max(0, montoCuota*(cuotas-pagadas));
+                    if(pagadas<cuotas){
+                        nextInstallment+=montoCuota;
+                    }
+                    totalDebt+=saldoPendiente;
+                    detailBody.innerHTML+=`<tr>
+                        <td>${formatDate(cred.fecha)}</td>
+                        <td>${escapeHtml(cred.descripcion||'Compra crédito')}</td>
+                        <td>${formatMoney(total)}</td>
+                        <td>${cuotas}</td>
+                        <td>${pagadas}</td>
+                        <td>${formatMoney(saldoPendiente)}</td>
+                        <td>
+                            <div class="card-detail-actions">
+                                <button onclick="editCreditTransaction('${cred.id}')" class="btn-icon-action btn-icon-action--info" title="Editar compra" aria-label="Editar compra"><i class="fas fa-pen"></i></button>
+                                <button onclick="editCreditTransaction('${cred.id}','cuotasPagadas')" class="btn-icon-action btn-icon-action--success" title="Actualizar cuotas pagadas" aria-label="Actualizar cuotas pagadas"><i class="fas fa-check-circle"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            const available=card?calculateAvailableQuota(card):0;
+            summary.innerHTML=`
+                <div class="summary-tile">
+                    <div class="summary-label">Deuda total</div>
+                    <div class="summary-value summary-value--danger">${formatMoney(totalDebt)}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="summary-label">Cuota siguiente estimada</div>
+                    <div class="summary-value">${formatMoney(nextInstallment)}</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="summary-label">Cupo disponible</div>
+                    <div class="summary-value summary-value--success">${formatMoney(available)}</div>
+                </div>`;
+        }
+
+        function editCreditTransaction(id, focusField=null){
+            closeModal('cardDetailModal');
+            editTransaction(id);
+            if(focusField){
+                setTimeout(()=>{
+                    const target=document.getElementById(focusField);
+                    if(target){
+                        target.focus();
+                        if(typeof target.select==='function'){
+                            target.select();
+                        }
+                    }
+                },200);
+            }
+        }
+
+        function updateDailyCapIndicator(){
+            const dailyCapValue=document.getElementById('dailyCapValue');
+            const dailySpendValue=document.getElementById('dailySpendValue');
+            const dailyCapStatus=document.getElementById('dailyCapStatus');
+            if(!dailyCapValue||!dailySpendValue||!dailyCapStatus)return;
+
+            let d=0,e=0,n=0;
+            transactions.forEach(t=>{
+                const m=parseFloat(t.monto);
+                if(t.tipo==='pago_tarjeta'){
+                    if(isDebitMethod(t.metodoPago))d-=m;
+                    if(t.metodoPago==='efectivo')e-=m;
+                    if(t.metodoPago==='nequi')n-=m;
+                }else if(!t.esCredito){
+                    if(t.tipo==='ingreso'){
+                        if(isDebitMethod(t.metodoPago))d+=m;
+                        if(t.metodoPago==='efectivo')e+=m;
+                        if(t.metodoPago==='nequi')n+=m;
+                    }else if(t.tipo==='gasto'){
+                        if(isDebitMethod(t.metodoPago))d-=m;
+                        if(t.metodoPago==='efectivo')e-=m;
+                        if(t.metodoPago==='nequi')n-=m;
+                    }else if(t.tipo==='transferencia'){
+                        if(isDebitMethod(t.metodoPago))d-=m;
+                        if(t.metodoPago==='efectivo')e-=m;
+                        if(t.metodoPago==='nequi')n-=m;
+                        if(isDebitMethod(t.metodoDestino))d+=m;
+                        if(t.metodoDestino==='efectivo')e+=m;
+                        if(t.metodoDestino==='nequi')n+=m;
+                    }
+                }
+            });
+            const saldoDisponible=d+e+n;
+
+            const vm=currentViewDate.getMonth();
+            const vy=currentViewDate.getFullYear();
+            const daysInMonth=new Date(vy, vm+1, 0).getDate();
+            const excludedCategories=new Set(['vivienda','servicios_publicos']);
+            const today=new Date();
+            const isCurrentMonth=today.getMonth()===vm&&today.getFullYear()===vy;
+            const currentDay=isCurrentMonth?Math.min(today.getDate(),daysInMonth):1;
+            let gastoDia=0;
+
+            transactions.forEach(t=>{
+                if(t.tipo!=='gasto'&&t.tipo!=='credito')return;
+                const categoryId=(t.categoria||'').toLowerCase();
+                if(excludedCategories.has(categoryId))return;
+                const [ty,tm,td]=t.fecha.split('-').map(Number);
+                if((tm-1)!==vm||ty!==vy)return;
+                const monto=parseFloat(t.monto);
+                if(td===currentDay){
+                    gastoDia+=monto;
+                }
+            });
+
+            const diasRestantesIncluyendoHoy=daysInMonth-currentDay+1;
+            const topeDia=Math.max(0,saldoDisponible/diasRestantesIncluyendoHoy);
+            const excedido=gastoDia>topeDia;
+
+            dailyCapValue.textContent=formatMoney(topeDia);
+            dailySpendValue.textContent=formatMoney(gastoDia);
+            dailyCapStatus.textContent=excedido?'Excedido':'OK';
+            dailyCapStatus.style.color=excedido?'var(--danger)':'var(--success)';
+
+            const dailySpendProgressBar = document.getElementById('dailySpendProgressBar');
+            if(dailySpendProgressBar) {
+                const percent = topeDia > 0 ? (gastoDia / topeDia) * 100 : 0;
+                dailySpendProgressBar.style.width = Math.min(100, Math.max(0, percent)) + '%';
+                dailySpendProgressBar.style.background = excedido ? 'var(--danger)' : (percent > 80 ? 'var(--warning)' : 'var(--success)');
+            }
+        }
+
+        function calculateMonthlyTotals(targetDate){let income=0, expenses=0; const month=targetDate.getMonth(); const year=targetDate.getFullYear();
+        transactions.forEach(t=>{const amount=parseFloat(t.monto); const[ty,tm]=t.fecha.split('-').map(Number); if((tm-1)!==month||ty!==year)return;
+        if(t.tipo==='ingreso'&&!t.esCredito){income+=amount;} else if(t.esCredito){expenses+=amount;} else if(t.tipo==='gasto'){expenses+=amount;}}); return {income,expenses};}
+
+        function formatMoMDelta(current, previous, positiveIsGood){
+            const diff=current-previous;
+            const isImprovement=positiveIsGood?diff>=0:diff<=0;
+            const arrow=diff===0?'':(diff>0?'<i class="fas fa-arrow-trend-up"></i>':'<i class="fas fa-arrow-trend-down"></i>');
+            const sign=diff===0?'':(diff>0?'+':'-');
+            const absValue=formatMoney(Math.abs(diff));
+            let percentText='';
+            if(previous===0){percentText=current===0?'0%':'N/A';}else{percentText=`${Math.abs((diff/previous)*100).toFixed(1)}%`;}
+            return {
+                html:`${arrow} ${sign}${absValue} (${percentText})`,
+                isImprovement,
+                diff,
+                isNeutral: diff===0
+            };
+        }
+
+        function updateDashboard(){let e=0,n=0,i=0,g=0; const debitBalances={edward:0,eliana:0,legacy:0,total:0}; const dm=calculateDebtByCard(); const vm=currentViewDate.getMonth(); const vy=currentViewDate.getFullYear();
+        const normalizeDebitAccount=(method)=>{
+            const normalizedMethod=normalizePaymentMethodKey(method);
+            if(['debito_edward','debit_edward','edward'].includes(normalizedMethod))return 'edward';
+            if(['debito_eliana','debit_eliana','eliana'].includes(normalizedMethod))return 'eliana';
+            if(normalizedMethod==='debito')return 'legacy';
+            return null;
+        };
+        const applyAccountMovement=(method,amount,direction)=>{
+            const signedAmount=amount*direction;
+            const debitAccount=normalizeDebitAccount(method);
+            // IMPORTANTE: los débitos antiguos guardados como `debito` se preservan en legacy y también suman al total general.
+            if(debitAccount){debitBalances[debitAccount]+=signedAmount;debitBalances.total+=signedAmount;return;}
+            const normalizedMethod=normalizePaymentMethodKey(method);
+            if(normalizedMethod==='efectivo')e+=signedAmount;
+            if(normalizedMethod==='nequi')n+=signedAmount;
+        };
+        transactions.forEach(t=>{const m=parseFloat(t.monto); const[ty,tm]=(t.fecha||'').split('-').map(Number); const iv=(tm-1)===vm&&ty===vy;
+        if(t.tipo==='pago_tarjeta'){applyAccountMovement(t.metodoPago,m,-1);}
+        else if(!t.esCredito){if(t.tipo==='ingreso'){applyAccountMovement(t.metodoPago,m,1);if(iv)i+=m;}else if(t.tipo==='gasto'){applyAccountMovement(t.metodoPago,m,-1);if(iv)g+=m;}else if(t.tipo==='transferencia'){applyAccountMovement(t.metodoPago,m,-1);applyAccountMovement(t.metodoDestino,m,1);}}else{if(iv)g+=m;}});
+        const daysInMonth=new Date(vy, vm+1, 0).getDate();
+        const avgDailySpend=daysInMonth>0?g/daysInMonth:0;
+        const savingsRatePercent=i===0?0:((i-g)/i)*100;
+        const deudaTotal=Object.values(dm).reduce((sum,value)=>sum+value,0);
+        const cupoTotal=cardsList.reduce((sum,card)=>sum+(parseFloat(card.quota)||0),0);
+        const creditUtilizationPercent=cupoTotal>0?(deudaTotal/cupoTotal)*100:0;
+        const formatPercentValue=(value,fallback='--')=>{
+            if(!Number.isFinite(value))return fallback;
+            return `${value.toFixed(1)}%`;
+        };
+        const prevDate=new Date(vy, vm-1, 1);
+        const prevTotals=calculateMonthlyTotals(prevDate);
+        const incomeDelta=formatMoMDelta(i, prevTotals.income, true);
+        const expenseDelta=formatMoMDelta(g, prevTotals.expenses, false);
+        const incomeDeltaEl=document.getElementById('deltaIncomeMoM');
+        const expenseDeltaEl=document.getElementById('deltaExpenseMoM');
+        incomeDeltaEl.innerHTML=incomeDelta.html;
+        expenseDeltaEl.innerHTML=expenseDelta.html;
+
+        incomeDeltaEl.className = 'mini-delta ' + (incomeDelta.isNeutral ? 'delta-neutral' : (incomeDelta.isImprovement ? 'delta-positive' : 'delta-negative'));
+        expenseDeltaEl.className = 'mini-delta ' + (expenseDelta.isNeutral ? 'delta-neutral' : (expenseDelta.isImprovement ? 'delta-positive' : 'delta-negative'));
+
+        // Actualizar barras de progreso (Nuevas KPIs visuales)
+        const savingsBar = document.getElementById('savingsProgressBar');
+        if (savingsBar) {
+            savingsBar.style.width = Math.min(100, Math.max(0, savingsRatePercent)) + '%';
+        }
+
+        const balanceBar = document.getElementById('balanceProgressBar');
+        if (balanceBar) {
+            // Un aproximado visual del balance respecto al ingreso
+            const balanceRatio = i > 0 ? ((i - g) / i) * 100 : 0;
+            const balanceWidth = Math.min(100, Math.max(0, balanceRatio));
+            balanceBar.style.width = balanceWidth + '%';
+            balanceBar.style.background = balanceRatio > 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        const creditUtilizationBar = document.getElementById('creditUtilizationBar');
+        if (creditUtilizationBar) {
+            creditUtilizationBar.style.width = Math.min(100, Math.max(0, creditUtilizationPercent)) + '%';
+            creditUtilizationBar.style.background = creditUtilizationPercent > 80 ? 'var(--danger)' : (creditUtilizationPercent > 50 ? 'var(--warning)' : 'var(--success)');
+        }
+
+        globalDeudaPorTarjeta=dm; document.getElementById('saldoDebito').textContent=formatMoney(debitBalances.total); document.getElementById('saldoEfectivo').textContent=formatMoney(e); document.getElementById('saldoNequi').textContent=formatMoney(n); document.getElementById('saldoTotal').textContent=formatMoney(debitBalances.total+e+n); document.getElementById('totalIngresosMes').textContent=formatMoney(i); document.getElementById('totalGastosMes').textContent=formatMoney(g); document.getElementById('balanceMes').textContent=formatMoney(i-g);
+        const saldoDebitoEdwardEl=document.getElementById('saldoDebitoEdward');
+        const saldoDebitoElianaEl=document.getElementById('saldoDebitoEliana');
+        const saldoDebitoLegacyEl=document.getElementById('saldoDebitoLegacy');
+        // IMPORTANTE: estos IDs nuevos son opcionales para no romper vistas antiguas cargadas desde caché.
+        if(saldoDebitoEdwardEl)saldoDebitoEdwardEl.textContent=formatMoney(debitBalances.edward);
+        if(saldoDebitoElianaEl)saldoDebitoElianaEl.textContent=formatMoney(debitBalances.eliana);
+        if(saldoDebitoLegacyEl)saldoDebitoLegacyEl.textContent=formatMoney(debitBalances.legacy);
+
+        const netCashFlowEl=document.getElementById('netCashFlow');
+        if(netCashFlowEl) netCashFlowEl.textContent=formatMoney(i-g);
+
+        const avgDailySpendEl=document.getElementById('avgDailySpend');
+        if(avgDailySpendEl) avgDailySpendEl.textContent=formatMoney(avgDailySpend);
+        const savingsRateEl=document.getElementById('savingsRate');
+        if(savingsRateEl) savingsRateEl.textContent=formatPercentValue(savingsRatePercent);
+        const creditUtilizationEl=document.getElementById('creditUtilization');
+        if(creditUtilizationEl) creditUtilizationEl.textContent=formatPercentValue(creditUtilizationPercent);
+        updateDailyCapIndicator();
+        const dv=document.getElementById('cardsBreakdown'); dv.innerHTML=''; let td=0; 
+        
+        // Get all credit transactions grouped by card
+        const creditosPorTarjeta={}; 
+        transactions
+            .filter(t=>t.tipo==='credito'&&t.esCredito)
+            .forEach(t=>{
+                const creditName=resolveCreditCardName(t);
+                if(!isValidCardName(creditName))return;
+                const normalizedName=creditName.trim();
+                if(!creditosPorTarjeta[normalizedName])creditosPorTarjeta[normalizedName]=[];
+                creditosPorTarjeta[normalizedName].push(t);
+            });
+        const cuotaSiguientePorTarjeta={};
+        const fechaSiguientePorTarjeta={};
+        const today=new Date();
+        const parseIsoDate=(value)=>{const parts=value.split('-');return new Date(parts[0], parts[1]-1, parts[2]);};
+        const buildPaymentDate=(year,monthIndex,day)=>{
+            const lastDay=new Date(year, monthIndex+1, 0).getDate();
+            return new Date(year, monthIndex, Math.min(day, lastDay));
+        };
+        const resolveNextPaymentDate=(cred,paymentDay,baseDate)=>{
+            if(cred.proximaFechaPago){
+                return parseIsoDate(cred.proximaFechaPago);
+            }
+            const base=baseDate||today;
+            let next=buildPaymentDate(base.getFullYear(), base.getMonth(), paymentDay);
+            if(next < today){
+                next=buildPaymentDate(base.getFullYear(), base.getMonth()+1, paymentDay);
+            }
+            return next;
+        };
+
+        Object.keys(creditosPorTarjeta).forEach(cardName=>{
+            if(!isValidCardName(cardName))return;
+            const cardData=cardsList.find(c=>c.name===cardName);
+            const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
+            const creditos=creditosPorTarjeta[cardName]||[];
+            let totalCuota=0;
+            let nearestDate=null;
+
+            creditos.forEach(cred=>{
+                const cuotas=cred.cuotas||1;
+                const pagadas=cred.cuotasPagadas||0;
+                if(pagadas>=cuotas)return;
+                const montoCuota=(cred.totalDeuda||cred.monto)/cuotas;
+                totalCuota+=montoCuota;
+
+                const nextPaymentDate=resolveNextPaymentDate(cred, paymentDay, today);
+
+                if(!nearestDate || nextPaymentDate < nearestDate){
+                    nearestDate=nextPaymentDate;
+                }
+            });
+
+            cuotaSiguientePorTarjeta[cardName]=totalCuota;
+            fechaSiguientePorTarjeta[cardName]=nearestDate;
+        });
+        
+        const resumenCuotas=Object.keys(cuotaSiguientePorTarjeta)
+            .map(cardName=>({cardName,cuota:cuotaSiguientePorTarjeta[cardName]||0,fecha:fechaSiguientePorTarjeta[cardName]}))
+            .filter(item=>isValidCardName(item.cardName))
+            .filter(item=>item.cuota>0)
+            .sort((a,b)=>{
+                if(!a.fecha&&!b.fecha)return 0;
+                if(!a.fecha)return 1;
+                if(!b.fecha)return -1;
+                return a.fecha-b.fecha;
+            });
+        if(resumenCuotas.length>0){
+            const totalResumen=resumenCuotas.reduce((sum,item)=>sum+item.cuota,0);
+            const resumenItems=resumenCuotas.map(item=>`<div class="credit-installment-row">
+                <span>💳 ${escapeHtml(item.cardName)} - Próxima cuota aprox.</span>
+                <strong>${formatMoney(item.cuota)}</strong>
+            </div>`).join('');
+            dv.innerHTML+=`<div class="credit-installment-summary">
+                ${resumenItems}
+                <div class="credit-installment-total">
+                    <span>Total general</span>
+                    <span>${formatMoney(totalResumen)}</span>
+                </div>
+            </div>`;
+        }
+
+        Object.keys(dm).forEach(k=>{
+            const creditos=creditosPorTarjeta[k]||[];
+            if(dm[k]!==0||creditos.length>0){
+                td+=dm[k];
+                const cuotaSiguiente=cuotaSiguientePorTarjeta[k]||0;
+                const fechaSiguiente=fechaSiguientePorTarjeta[k];
+                const cuotaLabel=cuotaSiguiente>0?formatMoney(cuotaSiguiente):'Sin cuotas pendientes';
+                const fechaLabel=cuotaSiguiente>0&&fechaSiguiente?`Fecha estimada: ${fechaSiguiente.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}`:'';
+                const safeCardName=escapeHtml(k.replace(/'/g,"\\'"));
+                dv.innerHTML+=`<div class="credit-summary-card" id="credit-summary-${k.replace(/\s/g,'_')}">
+            <div class="credit-summary-header"><span class="credit-card-name">💳 ${escapeHtml(k)}</span><div class="inline-actions">
+                <button class="btn btn--ghost btn--sm" onclick="openCardDetail('${safeCardName}')"><i class="fas fa-eye"></i> Detalle</button>
+                <span class="credit-card-debt">${formatMoney(dm[k])}</span></div></div>
+            <div class="next-installment-section">
+                <div class="next-installment-title"><i class="fas fa-calendar-alt"></i> Próxima cuota estimada</div>
+                <div class="next-installment-value">${cuotaLabel}</div>
+                ${fechaLabel?`<div class="next-installment-date">${fechaLabel}</div>`:''}
+            </div>
+            ${creditos.length>0?`<div class="cuotas-section"><div class="cuotas-title"><i class="fas fa-credit-card"></i> Gestión de Cuotas</div>
+            <div id="cuotas-list-${k.replace(/\s/g,'_')}"></div></div>`:''}
+        </div>`;
+            }
+        }); 
+        document.getElementById('deudaTotalTC').textContent=formatMoney(td);
+        const cardsEmptyState=document.getElementById('cardsEmptyState');
+        if(cardsEmptyState) cardsEmptyState.classList.toggle('hidden', td>0);
+        
+        // Simple payment option - one per credit
+        Object.keys(creditosPorTarjeta).forEach(cardName=>{
+            const creditos=creditosPorTarjeta[cardName];const container=document.getElementById(`cuotas-list-${cardName.replace(/\s/g,'_')}`);
+            if(!container)return;container.innerHTML='';const today=new Date();const cardData=cardsList.find(c=>c.name===cardName);
+            const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago):15;
+            
+            creditos.forEach((cred,idx)=>{const cuotaTotal=cred.cuotas||1;const pagadas=cred.cuotasPagadas||0;const siguienteCuota=pagadas+1;
+                if(siguienteCuota>cuotaTotal)return; // Skip if all paid
+                const montoPorCuota=(cred.totalDeuda||cred.monto)/cuotaTotal;
+                const safeCardNameBtn=escapeHtml(cardName.replace(/'/g,"\\'"));
+                
+                // --- CORRECCIÓN DE FECHA ---
+                const nextPaymentDate=resolveNextPaymentDate(cred, paymentDay, today);
+                // ---------------------------
+                
+                const isVencida=today>nextPaymentDate;
+                const diasRestantes=Math.ceil((nextPaymentDate-today)/(1000*60*60*24));
+                
+                container.innerHTML+=`<div class="installment-card">
+                    <div class="section-header mb-sm">
+                        <div><span class="installment-desc">${escapeHtml(cred.descripcion||'Crédito')}</span>
+                        <div class="installment-meta">Cuota ${siguienteCuota} de ${cuotaTotal}</div></div>
+                        <div class="text-right"><span class="installment-amount">${formatMoney(montoPorCuota)}</span>
+                        <div class="installment-date ${isVencida?'text-danger':'text-success'}">${isVencida?'Vencida':'Pago: '+nextPaymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</div></div>
+                    </div>
+                    <div class="inline-actions inline-actions--sm">
+                        <button class="btn-cuota-pagar btn--full" onclick="pagarCuota('${cred.id}',${siguienteCuota},${montoPorCuota},'${safeCardNameBtn}','${paymentDay}')"><i class="fas fa-calendar-check"></i> Pago</button>
+                        <button class="btn btn--secondary btn--full btn-cuota-edit" onclick="editTransaction('${cred.id}')"><i class="fas fa-edit"></i> Editar</button>
+                    </div>
+                </div>`;
+            });
+        });
+        
+        updateDailyCapIndicator();updateFamilySummary();checkBudgetAlerts();renderReminders();
+        if(currentDetailCardName){
+            renderCardDetail();
+        }
+        }
+        
+        function updateFamilySummary(){const cont=document.getElementById('familySummary');const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const miembros={papa:{name:'Papá',icon:'👨'},mama:{name:'Mamá',icon:'👩'},hijo1:{name:'Hijo/a',icon:'👶'},compartido:{name:'Compartido',icon:'👨‍👩‍👧‍👦'}};const stats={};Object.keys(miembros).forEach(m=>stats[m]={gastos:0,ingresos:0});
+        transactions.forEach(t=>{const[ty,tm]=t.fecha.split('-').map(Number);if((tm-1)===vm&&ty===vy){const m=parseFloat(t.monto);const mem=t.miembro||'compartido';if(t.tipo==='gasto'||t.tipo==='credito')stats[mem].gastos+=m;if(t.tipo==='ingreso')stats[mem].ingresos+=m;}});
+        let html='';Object.keys(stats).forEach(k=>{const mem=miembros[k];const net=stats[k].ingresos-stats[k].gastos;html+=`<div class="member-card"><div class="member-avatar">${mem.icon}</div><div class="member-name">${mem.name}</div><div class="member-stat-line">Gastos: <span class="member-total gastos">${formatMoney(stats[k].gastos)}</span></div><div class="member-stat-line">Ingresos: <span class="member-total ingresos">${formatMoney(stats[k].ingresos)}</div></div>`;});cont.innerHTML=html;}
+        
+        function checkBudgetAlerts(){const vm=currentViewDate.getMonth();const vy=currentViewDate.getFullYear();const budgets={};transactions.filter(t=>{const[ty,tm]=t.fecha.split('-').map(Number);return(t.tipo==='gasto'||t.tipo==='credito')&&(tm-1)===vm&&ty===vy;}).forEach(t=>{budgets[t.categoria]=(budgets[t.categoria]||0)+parseFloat(t.monto);});
+        let exceeded=null;Object.keys(budgets).forEach(cat=>{if(budgets[cat]>1000000&&!exceeded){exceeded=cat;}});const alertDiv=document.getElementById('budgetAlert');if(exceeded){alertDiv.classList.remove('hidden');document.getElementById('budgetAlertDesc').textContent=`Has excedido $1,000,000 en ${exceeded.toUpperCase().replace(/_/g,' ')}`;}else{alertDiv.classList.add('hidden');}}
+        
+        
+        let tempPagoCuotaData=null;
+        function buildPaymentDate(year,monthIndex,day){
+            const lastDay=new Date(year, monthIndex+1, 0).getDate();
+            return new Date(year, monthIndex, Math.min(day, lastDay));
+        }
+        function resolveCurrentPaymentDate(credito,paymentDay){
+            if(credito.proximaFechaPago){
+                const parts=credito.proximaFechaPago.split('-');
+                return new Date(parts[0], parts[1]-1, parts[2]);
+            }
+            const today=new Date();
+            let next=buildPaymentDate(today.getFullYear(), today.getMonth(), paymentDay);
+            if(next < today){
+                next=buildPaymentDate(today.getFullYear(), today.getMonth()+1, paymentDay);
+            }
+            return next;
+        }
+        function addNextPaymentMonth(baseDate,paymentDay){
+            const year=baseDate.getFullYear();
+            const month=baseDate.getMonth()+1;
+            return buildPaymentDate(year, month, paymentDay);
+        }
+        
+        // Función unificada para pagar cuota
+        window.pagarCuota = function(creditId, cuotaNum, monto, cardName, paymentDay) {
+            const credito = transactions.find(t => t.id === creditId);
+            if (!credito) {
+                showToast('Crédito no encontrado', 'error');
+                return;
+            }
+            // Importante: Guardar el ID correctamente
+            const resolvedPaymentDay=parseInt(paymentDay, 10) || 15;
+            const paymentDate=resolveCurrentPaymentDate(credito, resolvedPaymentDay);
+            tempPagoCuotaData = { creditId, cuotaNum, monto, cardName, paymentDay: resolvedPaymentDay, paymentDate };
+            
+            const infoDiv = document.getElementById('pagoCuotaInfo');
+            infoDiv.innerHTML = `Cuota <strong>${cuotaNum}</strong> de ${credito.cuotas||1} - <strong>${formatMoney(monto)}</strong><br>Tarjeta: ${escapeHtml(cardName)}<br>Fecha de pago automática: <strong>${paymentDate.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}</strong>`;
+            
+            document.getElementById('pagoCuotaModal').style.display = 'flex';
+        }
+        
+        window.confirmarPagoCuota = async function() {
+            if (!tempPagoCuotaData) return;
+            const paymentDate=tempPagoCuotaData.paymentDate;
+            const año=paymentDate.getFullYear();
+            const mes=String(paymentDate.getMonth() + 1).padStart(2, '0');
+            const dia=String(paymentDate.getDate()).padStart(2, '0');
+            const fechaPagoActual=`${año}-${mes}-${dia}`;
+            const btn = document.getElementById('btnConfirmarPagoCuota');
+            if (btn) btn.classList.add('is-loading');
+            
+            try {
+                const credito = transactions.find(t => t.id === tempPagoCuotaData.creditId);
+                const nuevasPagadas = Math.max(credito.cuotasPagadas || 0, tempPagoCuotaData.cuotaNum);
+                const totalCuotas = credito.cuotas || 1;
+                let result=null;
+                if (nuevasPagadas >= totalCuotas) {
+                    result=await enqueueOrExecute({
+                        entity: 'transactions',
+                        action: 'delete',
+                        payload: { id: tempPagoCuotaData.creditId }
+                    });
+                } else {
+                    const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
+                    const añoProximo = proximaFecha.getFullYear();
+                    const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
+                    const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
+                    const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
+                    result=await enqueueOrExecute({
+                        entity: 'transactions',
+                        action: 'update',
+                        payload: {
+                            id: tempPagoCuotaData.creditId,
+                            data: {
+                                cuotasPagadas: nuevasPagadas,
+                                proximaFechaPago: nuevaFecha
+                            }
+                        }
+                    });
+                }
+                
+                closeModal('pagoCuotaModal');
+                if (!result?.queued) {
+                    if (nuevasPagadas >= totalCuotas) {
+                        showToast(`✅ Crédito liquidado con el pago de la cuota ${tempPagoCuotaData.cuotaNum} (${formatDate(fechaPagoActual)})`, 'success');
+                    } else {
+                        const proximaFecha = addNextPaymentMonth(paymentDate, tempPagoCuotaData.paymentDay);
+                        const añoProximo = proximaFecha.getFullYear();
+                        const mesProximo = String(proximaFecha.getMonth() + 1).padStart(2, '0');
+                        const diaProximo = String(proximaFecha.getDate()).padStart(2, '0');
+                        const nuevaFecha = `${añoProximo}-${mesProximo}-${diaProximo}`;
+                        showToast(`✅ Cuota ${tempPagoCuotaData.cuotaNum} registrada (${formatDate(fechaPagoActual)}). Próximo pago: ${formatDate(nuevaFecha)}`, 'success');
+                    }
+                }
+                loadTransactions();
+            } catch (e) {
+                console.error(e);
+                showToast('Error al actualizar', 'error');
+            } finally {
+                if (btn) btn.classList.remove('is-loading');
+            }
+        }
+        
+        function escapeGoalText(value){return escapeHtml(value);}
+
+        function getGoalVisualState(goal){
+            const target=Number(goal.target)||0;
+            const saved=Number(goal.saved)||0;
+            // IMPORTANTE: el porcentaje se limita entre 0 y 100 para que la barra visual nunca se desborde aunque el ahorro supere la meta.
+            const pct=target>0?Math.min(100,Math.max(0,Math.round((saved/target)*100))):0;
+            const today=new Date();today.setHours(0,0,0,0);
+            const deadlineDate=goal.deadline?new Date(`${goal.deadline}T00:00:00`):null;
+            const daysLeft=deadlineDate&&!Number.isNaN(deadlineDate.getTime())?Math.ceil((deadlineDate-today)/(1000*60*60*24)):null;
+            let statusClass='goal-status--on-track';
+            let statusLabel='En curso';
+            let statusIcon='fa-arrow-trend-up';
+            // IMPORTANTE: el estado visual prioriza completado y vencido; riesgo se calcula por fecha cercana o avance bajo.
+            if(pct>=100){statusClass='goal-status--completed';statusLabel='Completado';statusIcon='fa-circle-check';}
+            else if(daysLeft!==null&&daysLeft<0){statusClass='goal-status--overdue';statusLabel='Vencido';statusIcon='fa-calendar-xmark';}
+            else if((daysLeft!==null&&daysLeft<=14)||pct<35){statusClass='goal-status--risk';statusLabel='En riesgo';statusIcon='fa-triangle-exclamation';}
+            return {pct,daysLeft,statusClass,statusLabel,statusIcon};
+        }
+
+        function renderGoalCard(goal,visual,isFeatured=false){
+            const safeName=escapeGoalText(goal.name||'Objetivo sin nombre');
+            const goalIdForAction=escapeGoalText(JSON.stringify(String(goal.id)));
+            const deadlineText=goal.deadline?formatDate(goal.deadline):'Sin fecha límite';
+            const daysText=visual.daysLeft===null?'Sin fecha definida':(visual.daysLeft>0?`${visual.daysLeft} días restantes`:(visual.daysLeft===0?'Vence hoy':'Vencido'));
+            const remaining=Math.max(0,(Number(goal.target)||0)-(Number(goal.saved)||0));
+            return `<article class="goal-card ${isFeatured?'featured-goal-card':''}">
+                <div class="goal-card__topline">
+                    <span class="goal-status ${visual.statusClass}"><i class="fas ${visual.statusIcon}"></i> ${visual.statusLabel}</span>
+                    <span class="goal-deadline"><i class="far fa-calendar"></i> ${deadlineText}</span>
+                </div>
+                <div class="goal-header">
+                    <div>
+                        <div class="goal-name">${safeName}</div>
+                        <div class="goal-helper">${isFeatured?'Meta prioritaria del hogar':daysText}</div>
+                    </div>
+                    <div class="goal-percent">${visual.pct}%</div>
+                </div>
+                <!-- IMPORTANTE: data-goal-progress representa el porcentaje calculado en getGoalVisualState(); applyGoalProgressStyles() lo traduce a width dinámico. -->
+                <div class="goal-progress"><div class="goal-progress-bar" data-goal-progress="${visual.pct}"></div></div>
+                <div class="goal-stats">
+                    <span><strong>${formatMoney(Number(goal.saved)||0)}</strong><small>Ahorrado</small></span>
+                    <span><strong>${formatMoney(Number(goal.target)||0)}</strong><small>Meta</small></span>
+                    <span><strong>${formatMoney(remaining)}</strong><small>Faltante</small></span>
+                </div>
+                <div class="goal-actions">
+                    <button class="btn btn--primary btn--sm" onclick="addToGoal(${goalIdForAction})"><i class="fas fa-plus"></i> Agregar</button>
+                    <button class="btn btn--danger btn--sm" onclick="deleteGoal(${goalIdForAction})" aria-label="Eliminar ${safeName}"><i class="fas fa-trash"></i></button>
+                </div>
+            </article>`;
+        }
+
+        function applyGoalProgressStyles(scope){
+            // IMPORTANTE: el ancho depende de datos JS por objetivo; se aplica tras renderizar para evitar atributos de estilo inline dentro del template.
+            scope.querySelectorAll('[data-goal-progress]').forEach(bar=>{
+                const pct=Number(bar.dataset.goalProgress)||0;
+                bar.style.width=`${Math.min(100,Math.max(0,pct))}%`;
+            });
+        }
+
+        function renderGoals(){const cont=document.getElementById('goalsContainer');const goalsEmptyState=document.getElementById('goalsEmptyState');if(!cont)return;if(goals.length===0){cont.innerHTML='';if(goalsEmptyState)goalsEmptyState.classList.remove('hidden');return;}if(goalsEmptyState)goalsEmptyState.classList.add('hidden');
+            const mappedGoals=goals.map((goal,index)=>({goal,index,visual:getGoalVisualState(goal)}));
+            const upcomingGoals=mappedGoals.filter(item=>item.visual.pct<100&&item.visual.daysLeft!==null&&item.visual.daysLeft>=0).sort((a,b)=>a.visual.daysLeft-b.visual.daysLeft||b.visual.pct-a.visual.pct);
+            // IMPORTANTE: el destacado elige primero la meta más próxima; si no hay próximas, usa la de mayor porcentaje de avance.
+            const featured=upcomingGoals[0]||[...mappedGoals].sort((a,b)=>b.visual.pct-a.visual.pct||((a.visual.daysLeft??9999)-(b.visual.daysLeft??9999)))[0];
+            const remainingGoals=mappedGoals.filter(item=>item.index!==featured.index);
+            // IMPORTANTE: si solo existe una meta, el grid secundario muestra una acción para crear otro objetivo y no queda vacío.
+            const remainingHtml=remainingGoals.length?remainingGoals.map(item=>renderGoalCard(item.goal,item.visual)).join(''):renderEmptyState({icon:'fas fa-bullseye',title:'Solo tienes una meta activa.',message:'Crea otro objetivo para comparar prioridades del hogar.',actionLabel:'Crear objetivo',actionOnclick:'openGoalModal()'});
+            cont.innerHTML=`<div class="goals-featured-wrap"><div class="goals-section-kicker">Objetivo destacado</div>${renderGoalCard(featured.goal,featured.visual,true)}</div><details class="card collapsible-card goals-rest-section goal-history-details" data-force-collapsed="true" data-secondary-section="true"><summary class="collapsible-card__summary goals-section-header"><div><span class="goals-section-kicker">Detalles históricos</span><h2>Seguimiento general</h2></div><span>${remainingGoals.length} objetivo${remainingGoals.length===1?'':'s'}</span></summary><div class="goals-grid collapsible-card__content">${remainingHtml}</div></details>`;
+            applyViewVisualConfig('objetivos'); // IMPORTANTE: renderGoals() reconstruye el bloque histórico; reponemos marcas y plegado inicial.
+            initCollapsibleCards(); // IMPORTANTE: las metas se renderizan dinámicamente y necesitan enlazar su details secundario tras cada actualización.
+            applyGoalProgressStyles(cont);
+        }
+        
+        function loadGoals(){const stored=localStorage.getItem('goals');if(stored){goals=JSON.parse(stored);AppStore.setGoals(goals);}else{AppStore.setGoals([]);}}
+        async function saveGoal(){const name=document.getElementById('goalName').value.trim();const target=parseCurrencyInput(document.getElementById('goalTarget').value);const saved=parseCurrencyInput(document.getElementById('goalSaved').value);const deadline=document.getElementById('goalDeadline').value;if(!name||target<=0){showToast('Completa los campos correctamente','error');return;}
+        const goal={id:Date.now().toString(),name,target,saved,deadline};goals.push(goal);localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);closeModal('goalModal');showToast('Objetivo guardado','success');}
+        async function addToGoal(id){const g=goals.find(goal=>goal.id===id);if(!g)return;const amount=prompt(`¿Cuánto quieres agregar a "${g.name}"?`);if(!amount)return;const val=parseCurrencyInput(amount);if(val<=0){showToast('Monto inválido','error');return;}g.saved+=val;localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);showToast('Ahorro actualizado','success');}
+        async function deleteGoal(id){if(!confirm('¿Eliminar este objetivo?'))return;goals=goals.filter(g=>g.id!==id);localStorage.setItem('goals',JSON.stringify(goals));AppStore.setGoals(goals);showToast('Objetivo eliminado','success');}
+        function openGoalModal(){document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalSaved').value='';document.getElementById('goalModal').style.display='flex';}
+
+        function escapeCSVValue(value){return `"${String(value ?? '').replace(/"/g,'""')}"`;}
+        function exportToCSV(){const { filtered }=getFilteredHistoryData();let csv='Fecha,Tipo,Método,Categoría,Subcategoría,Responsable,Descripción,Monto\n';filtered.forEach(t=>{const m=t.monto;const metodo=getHistoryMethodLabel(t);csv+=`${escapeCSVValue(t.fecha)},${escapeCSVValue(t.tipo)},${escapeCSVValue(metodo)},${escapeCSVValue(t.categoria||'')},${escapeCSVValue(t.subcategoria||'')},${escapeCSVValue(t.miembro||'')},${escapeCSVValue(t.descripcion)},${escapeCSVValue(m)}\n`;});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='crm_financiero_filtrado.csv';a.click();URL.revokeObjectURL(url);showToast(`CSV exportado (${filtered.length} movimientos)`,'success');}
+        function exportToPDF(){window.print();showToast('Usa Ctrl+P para guardar como PDF','info');}
+
+        function toggleVoiceSearch(){const btn=document.getElementById('voiceSearchBtn');if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){showToast('Búsqueda por voz no soportada','error');return;}
+        const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;const recognition=new SpeechRecognition();recognition.lang='es-CO';recognition.interimResults=false;
+        if(btn.classList.contains('recording')){recognition.stop();btn.classList.remove('recording');return;}
+        recognition.start();btn.classList.add('recording');recognition.onresult=(event=>{const text=event.results[0][0].transcript;// IMPORTANTE: filterText conecta búsqueda por voz con los filtros del historial.
+        document.getElementById('filterText').value=text;renderHistory();btn.classList.remove('recording');showToast(`Buscando: "${text}"`,'success');});recognition.onerror=()=>{btn.classList.remove('recording');showToast('Error en reconocimiento','error');};recognition.onend=()=>{btn.classList.remove('recording');};}
+
+        function openArqueoModal() {
+            let debitoEdward = 0, debitoEliana = 0, debitoLegacy = 0, e = 0, n = 0;
+            const applyDebitMovement = (method, amount) => {
+                // IMPORTANTE: separar las cuentas de débito evita que el arqueo de una persona ajuste el saldo de la otra.
+                if (method === 'debito_edward') debitoEdward += amount;
+                else if (method === 'debito_eliana') debitoEliana += amount;
+                else if (method === 'debito') debitoLegacy += amount;
+            };
+
+            transactions.forEach(t => {
+                const m = parseFloat(t.monto);
+                if (t.tipo === 'pago_tarjeta') {
+                    applyDebitMovement(t.metodoPago, -m);
+                    if (t.metodoPago === 'efectivo') e -= m;
+                    if (t.metodoPago === 'nequi') n -= m;
+                } else if (!t.esCredito) {
+                    if (t.tipo === 'ingreso') {
+                        applyDebitMovement(t.metodoPago, m);
+                        if (t.metodoPago === 'efectivo') e += m;
+                        if (t.metodoPago === 'nequi') n += m;
+                    } else if (t.tipo === 'gasto') {
+                        applyDebitMovement(t.metodoPago, -m);
+                        if (t.metodoPago === 'efectivo') e -= m;
+                        if (t.metodoPago === 'nequi') n -= m;
+                    } else if (t.tipo === 'transferencia') {
+                        applyDebitMovement(t.metodoPago, -m);
+                        if (t.metodoPago === 'efectivo') e -= m;
+                        if (t.metodoPago === 'nequi') n -= m;
+                        applyDebitMovement(t.metodoDestino, m);
+                        if (t.metodoDestino === 'efectivo') e += m;
+                        if (t.metodoDestino === 'nequi') n += m;
+                    }
+                }
+            });
+
+            const debitoTotal = debitoEdward + debitoEliana + debitoLegacy;
+            document.getElementById('arqueoCurrentDebitoEdward').textContent = formatMoney(debitoEdward);
+            document.getElementById('arqueoCurrentDebitoEliana').textContent = formatMoney(debitoEliana);
+            document.getElementById('arqueoCurrentDebito').textContent = formatMoney(debitoTotal);
+            document.getElementById('arqueoCurrentEfectivo').textContent = formatMoney(e);
+            document.getElementById('arqueoCurrentNequi').textContent = formatMoney(n);
+
+            // IMPORTANTE: debitoLegacy conserva movimientos históricos en "debito" sin generar ajustes nuevos sobre esa cuenta.
+            window.currentArqueoBalances = { debitoEdward, debitoEliana, debitoLegacy, efectivo: e, nequi: n };
+
+            document.getElementById('arqueoRealDebitoEdward').value = '';
+            document.getElementById('arqueoRealDebitoEliana').value = '';
+            document.getElementById('arqueoRealEfectivo').value = '';
+            document.getElementById('arqueoRealNequi').value = '';
+
+            document.getElementById('arqueoModal').style.display='flex';
+        }
+
+        async function submitArqueo() {
+            const valDebitoEdward = document.getElementById('arqueoRealDebitoEdward').value.trim();
+            const valDebitoEliana = document.getElementById('arqueoRealDebitoEliana').value.trim();
+            const valEfectivo = document.getElementById('arqueoRealEfectivo').value.trim();
+            const valNequi = document.getElementById('arqueoRealNequi').value.trim();
+
+            const curr = window.currentArqueoBalances;
+
+            const realDebitoEdward = valDebitoEdward === '' ? curr.debitoEdward : parseCurrencyInput(valDebitoEdward);
+            const realDebitoEliana = valDebitoEliana === '' ? curr.debitoEliana : parseCurrencyInput(valDebitoEliana);
+            const realEfectivo = valEfectivo === '' ? curr.efectivo : parseCurrencyInput(valEfectivo);
+            const realNequi = valNequi === '' ? curr.nequi : parseCurrencyInput(valNequi);
+
+            const diffDebitoEdward = realDebitoEdward - curr.debitoEdward;
+            const diffDebitoEliana = realDebitoEliana - curr.debitoEliana;
+            const diffEfectivo = realEfectivo - curr.efectivo;
+            const diffNequi = realNequi - curr.nequi;
+
+            const t=new Date(); const yyyy=t.getFullYear(); const mm=String(t.getMonth()+1).padStart(2,'0'); const dd=String(t.getDate()).padStart(2,'0');
+            const fechaArqueo = `${yyyy}-${mm}-${dd}`;
+
+            const createArqueoAdjustment = async (diff, metodoPago, label) => {
+                if (Math.abs(diff) <= 0.01) return;
+
+                // IMPORTANTE: cada ajuste usa el método exacto para mantener trazabilidad por cuenta en reportes y filtros.
+                await saveTransaction({
+                    tipo: diff > 0 ? 'ingreso' : 'gasto',
+                    monto: Math.abs(diff),
+                    categoria: 'ajuste_de_arqueo',
+                    metodoPago,
+                    descripcion: diff > 0 ? `Ajuste positivo por arqueo - ${label}` : `Ajuste negativo por arqueo - ${label}`,
+                    fecha: fechaArqueo,
+                    miembro: 'compartido'
+                });
+            };
+
+            try {
+                await createArqueoAdjustment(diffDebitoEdward, 'debito_edward', 'Débito Edward');
+                await createArqueoAdjustment(diffDebitoEliana, 'debito_eliana', 'Débito Eliana');
+                await createArqueoAdjustment(diffEfectivo, 'efectivo', 'Efectivo');
+                await createArqueoAdjustment(diffNequi, 'nequi', 'Nequi');
+
+                closeModal('arqueoModal');
+                showToast('Arqueo completado exitosamente', 'success');
+            } catch (error) {
+                console.error("Error en arqueo:", error);
+                showToast('Error al procesar el arqueo', 'error');
+            }
+        }
+
+        function updateDashboardView(){const v=document.getElementById('dashboardMonth').value; if(v){const[y,m]=v.split('-'); AppStore.updateViewDate(new Date(parseInt(y),parseInt(m)-1,1));}}
+        function isCanvasInsideClosedCollapsible(canvas){
+            const parentDetails=canvas?.closest('details.collapsible-card');
+            return Boolean(parentDetails&&!parentDetails.open);
+        }
+
+        
+        async function loadCards(){
+            try{
+                const cardsRef = await getUserCardsCollection();
+                const s=await cardsRef.orderBy('name').get();
+                cardsList=[];
+                s.forEach(d=>cardsList.push({id:d.id,...d.data()}));
+                if(cardsList.length===0){
+                    await seedDefaultCards();
+                    return;
+                }
+                setStoredCardsCache(cardsList);
+                AppStore.setCards(cardsList);
+            }catch(e){
+                console.error(e);
+                const cached=getStoredCardsCache();
+                if(cached.length){
+                    cardsList=cached;
+                }
+                updateSyncIndicator('offline');
+            }
+            cardsList=mergeOfflineQueueIntoCards(cardsList);
+            AppStore.setCards(cardsList);
+            loadTransactions();
+        }
+        async function seedDefaultCards(){
+                    const cards=[{name:'Exito',diaPago:5},{name:'Nu',diaPago:15},{name:'Falabella',diaPago:20}];
+                    // IMPORTANTE: evitar re-sembrar tarjetas ya existentes (en Firestore o pendientes en cola offline) para no duplicarlas.
+                    const existingNames=new Set(cardsList.map(c=>c.name).filter(Boolean));
+                    const queuedNames=new Set(offlineQueue
+                        .filter(i=>i.entity==='cards'&&i.action==='add')
+                        .map(i=>i.payload?.data?.name)
+                        .filter(Boolean));
+                    for(const card of cards){
+                        if(existingNames.has(card.name)||queuedNames.has(card.name))continue;
+                        await enqueueOrExecute({
+                            entity:'cards',
+                            action:'add',
+                            payload:{data:{name:card.name,quota:0,diaPago:card.diaPago,ajusteDisponible:0}},
+                            silent:true
+                        });
+                    }
+                    loadCards();
+                }
+        function populateCardSelects(){const s1=document.getElementById('tarjetaCredito'); const s2=document.getElementById('tarjetaDestinoPago'); s1.innerHTML=''; s2.innerHTML=''; cardsList.forEach(c=>{s1.add(new Option(c.name,c.id));s2.add(new Option(c.name,c.name));});}
+        async function loadTransactions(){
+            // IMPORTANTE: loadTransactions controla el fin de los skeletons iniciales porque historial, dashboard y charts dependen de estos datos.
+            setDataLoadingState(true);
+            let fetchedTransactions=[];
+            try{
+                const transactionsRef = await getUserTransactionsCollection();
+                const s=await transactionsRef.orderBy('fecha','desc').get();
+                s.forEach(d=>fetchedTransactions.push({id:d.id,...d.data()}));
+                setStoredCachedTransactions(fetchedTransactions);
+            }catch(e){
+                console.error('Load transactions error:',e);
+                const cachedTransactions=getStoredCachedTransactions();
+                if(cachedTransactions.length>0){
+                    fetchedTransactions=cachedTransactions;
+                }
+            }finally{
+                const mergedTransactions=mergeOfflineQueueIntoTransactions(fetchedTransactions);
+                const normalizedTransactions=mergedTransactions.map(t=>{
+                    if(t.tipo==='credito'){
+                        const legacyName=t.cardName||t.metodoPago;
+                        const cardId=t.cardId||cardsList.find(c=>c.name===legacyName)?.id||'';
+                        const cardName=cardId?(findCardById(cardId)?.name||legacyName):legacyName||'';
+                        return {...t,cardId,cardName};
+                    }
+                    return t;
+                }).sort((a,b)=>a.fecha<b.fecha?1:-1);
+                AppStore.setTransactions(normalizedTransactions);
+                const quotaModal=document.getElementById('quotaModal');
+                if(quotaModal&&quotaModal.style.display==='flex'){
+                    openQuotaModal();
+                }
+                setDataLoadingState(false);
+            }
+        }
+        function getDefaultCreditPaymentDate(cardId, baseDateValue=''){
+            const cardData=findCardById(cardId);
+            const paymentDay=cardData?.diaPago?parseInt(cardData.diaPago,10):15;
+            const baseDate=baseDateValue?parseIsoDate(baseDateValue):new Date();
+            const baseLocal=new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate());
+            let paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth(), paymentDay);
+            if(paymentDate<baseLocal){
+                paymentDate=buildPaymentDate(baseLocal.getFullYear(), baseLocal.getMonth()+1, paymentDay);
+            }
+            return formatLocalDate(paymentDate);
+        }
+
+        function syncCreditPaymentDateField(force=false){
+            const dateInput=document.getElementById('creditoFechaPago');
+            if(!dateInput)return;
+            if(dateInput.value && !force)return;
+            const cardId=document.getElementById('tarjetaCredito').value;
+            const txDate=document.getElementById('fecha').value;
+            dateInput.value=getDefaultCreditPaymentDate(cardId, txDate);
+        }
+
+        function initTransactionFormBindings(){
+            const category=document.getElementById('categoria');
+            const creditCard=document.getElementById('tarjetaCredito');
+            const dateInput=document.getElementById('fecha');
+            if(!category||!creditCard||!dateInput)return;
+            // IMPORTANTE: los métodos de pago se pintan desde js/payment-methods.js para mantener origen/destino alineados con filtros y reportes.
+            populatePaymentMethodSelect(document.getElementById('metodoPago'));
+            populatePaymentMethodSelect(document.getElementById('metodoDestino'));
+            if(category.dataset.bound==='1')return;
+            category.dataset.bound='1';
+            category.addEventListener('change',function(){const t=document.getElementById('tipo').value;if(t==='pago_tarjeta'||t==='transferencia')return;const k=this.value;const s=document.getElementById('subcategoria');const d=document.getElementById('subcategoriaDiv');const g=t==='credito'?'gasto':t;if(k&&categorias[g][k]){d.classList.remove('hidden');s.innerHTML='';categorias[g][k].subcategorias.forEach(x=>s.add(new Option(x,x)));}else d.classList.add('hidden');});
+            creditCard.addEventListener('change',()=>syncCreditPaymentDateField(true));
+            dateInput.addEventListener('change',()=>syncCreditPaymentDateField(true));
+            handleTipoChange();
+                        initTransactionTypeButtons();
+                        initCategorySelector();
+                        logEvent('switchView',{view:'transacciones-bindings-ready'});
+        }
+        function confirmSaveTransaction(){
+            const btn=document.getElementById('btnConfirmCredit');
+            if(btn&&btn.disabled)return;
+            if(btn)btn.disabled=true;
+            if(tempTransactionData)saveTransaction(tempTransactionData).finally(()=>{if(btn)btn.disabled=false;});
+            else if(btn)btn.disabled=false;
+            tempTransactionData=null;
+            closeModal('creditModal');
+        }
+        window.editTransaction=function(id){const t=transactions.find(x=>x.id===id);if(!t)return;editingTransactionId=id;switchView('transacciones');document.getElementById('tipo').value=t.tipo;handleTipoChange();const m=document.getElementById('monto');m.value=t.monto;formatCurrencyInput(m);document.getElementById('descripcion').value=t.descripcion;document.getElementById('fecha').value=t.fecha;document.getElementById('miembro').value=t.miembro;if(t.tipo==='credito'){document.getElementById('tarjetaCredito').value=resolveCreditCardId(t);document.getElementById('cuotas').value=t.cuotas;document.getElementById('cuotasPagadas').value=t.cuotasPagadas||0;document.getElementById('creditoFechaPago').value=t.proximaFechaPago||getDefaultCreditPaymentDate(resolveCreditCardId(t), t.fecha);}else if(t.tipo==='pago_tarjeta'){document.getElementById('metodoPago').value=t.metodoPago;document.getElementById('tarjetaDestinoPago').value=t.tarjetaDestino;}else{document.getElementById('metodoPago').value=t.metodoPago;if(t.tipo==='transferencia')document.getElementById('metodoDestino').value=t.metodoDestino;}document.getElementById('formTitle').textContent='Editar';document.getElementById('btnSubmitText').textContent='Actualizar';document.getElementById('btnCancelar').classList.remove('hidden');setTimeout(()=>{document.getElementById('categoria').value=t.categoria;const e=new Event('change');document.getElementById('categoria').dispatchEvent(e);setTimeout(()=>{if(t.subcategoria)document.getElementById('subcategoria').value=t.subcategoria;},50);},100);}
+        async function performDeleteTransaction(id,{skipConfirm=false}={}){
+            if(!skipConfirm && !confirm("¿Estás seguro?\nEsta acción no se puede deshacer."))return;
+            try{
+                const result=await enqueueOrExecute({
+                    entity: 'transactions',
+                    action: 'delete',
+                    payload: { id }
+                });
+                await loadTransactions();
+                if(!result?.queued){
+                    showToast('Borrado','success');
+                }
+            }catch(e){
+                console.error(e);
+                showToast('Error al eliminar. Verifica tu conexión.', 'error');
+            }
+        }
+        window.deleteTransaction=async function(id){
+            const tx = transactions.find(item => item.id === id);
+            if (tx?.tipo === 'credito') {
+                const body = buildCreditDeleteBody(tx);
+                openConfirmActionModal({
+                    title: 'Eliminar crédito',
+                    body,
+                    confirmLabel: 'Eliminar',
+                    confirmClass: 'btn--danger',
+                    onConfirm: async () => {
+                        await performDeleteTransaction(id, { skipConfirm: true });
+                    }
+                });
+                return;
+            }
+            await performDeleteTransaction(id);
+        }
+
+        function queueConsistencyCorrection(map, entry) {
+            const key = `${entry.entity}:${entry.id}`;
+            if (!map.has(key)) {
+                map.set(key, { ...entry, reasons: entry.reasons || [] });
+                return;
+            }
+            const existing = map.get(key);
+            existing.data = { ...existing.data, ...entry.data };
+            existing.reasons = Array.from(new Set([...(existing.reasons || []), ...(entry.reasons || [])]));
+            if (entry.label) {
+                existing.label = existing.label ? `${existing.label}; ${entry.label}` : entry.label;
+            }
+        }
+
+        function buildFinancialAuditInsights() {
+            const audit = FinanceEngine.buildAuditInsights({
+                transactions,
+                viewDate: currentViewDate,
+                cards: cardsList,
+                debtMap: calculateDebtByCard(),
+                formatMoney
+            });
+            return audit.insights;
+        }
+
+        function runConsistencyAudit() {
+            logEvent('runConsistencyAudit', { txCount: transactions.length, cardCount: cardsList.length });
+            const issues = [];
+            const correctionMap = new Map();
+            const debtMap = calculateDebtByCard();
+            const creditTransactions = transactions.filter(t => t.tipo === 'credito' && t.esCredito && !t.pendingDelete);
+
+            // IMPORTANTE: validaciones de entrada para evitar distorsiones por datos inválidos.
+            transactions.forEach(tx => {
+                if (tx?.pendingDelete) return;
+                if (!FinanceEngine.parseTxDate(tx)) {
+                    issues.push({ title: 'Transacción con fecha inválida', badge: 'Datos', badgeClass: 'audit-badge--danger', body: `ID: ${tx?.id || 'N/A'} · Fecha: ${tx?.fecha || 'vacía'}.`, meta: 'Corrige la fecha para incluir la transacción en cálculos.' });
+                }
+                if (tx?.monto === null || tx?.monto === undefined || Number.isNaN(Number(tx?.monto))) {
+                    issues.push({ title: 'Transacción con monto nulo/inválido', badge: 'Datos', badgeClass: 'audit-badge--danger', body: `ID: ${tx?.id || 'N/A'} · Monto: ${tx?.monto ?? 'vacío'}.`, meta: 'Asigna un monto válido mayor o igual a cero.' });
+                }
+                if (!FinanceEngine.isCompleteTx(tx)) {
+                    issues.push({ title: 'Transacción incompleta', badge: 'Datos', badgeClass: 'audit-badge--danger', body: `ID: ${tx?.id || 'N/A'} · Tipo: ${tx?.tipo || 'vacío'} · Fecha: ${tx?.fecha || 'vacía'}.`, meta: 'Completa campos mínimos para mantener consistencia.' });
+                }
+            });
+
+            cardsList.forEach(card => {
+                const debt = debtMap[card.name] || 0;
+                const baseAvailable = (card.quota || 0) - debt;
+                const adjustment = card.ajusteDisponible || 0;
+                const adjustedAvailable = baseAvailable + adjustment;
+                const diff = adjustment;
+                if (Math.abs(diff) > 0.01) {
+                    issues.push({
+                        title: `${card.name} · Cupo vs deuda`,
+                        badge: 'Cupo',
+                        badgeClass: '',
+                        body: `Deuda calculada: ${formatMoney(debt)} · Cupo disponible ajustado: ${formatMoney(adjustedAvailable)} · Diferencia: ${formatMoney(diff)}.`,
+                        meta: `Sugerencia: ajustar ajusteDisponible a ${formatMoney(0)} para alinear cálculos.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'cards',
+                        id: card.id,
+                        data: { ajusteDisponible: 0 },
+                        label: `Ajuste de cupo en ${card.name} → ${formatMoney(0)}`,
+                        reasons: ['Ajuste distinto a la deuda calculada.']
+                    });
+                }
+            });
+
+            creditTransactions.forEach(tx => {
+                if (String(tx.id).startsWith('offline-')) {
+                    return;
+                }
+                const cuotasRaw = Number(tx.cuotas);
+                const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
+                const pagadasRaw = Number(tx.cuotasPagadas || 0);
+                const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
+                const totalRaw = Number(tx.totalDeuda || 0);
+                const monto = Number(tx.monto || 0);
+                const total = totalRaw > 0 ? totalRaw : monto;
+                const remaining = Math.max(0, cuotas - pagadas);
+                const remainingDebt = (total / cuotas) * remaining;
+                const label = tx.descripcion ? `${tx.descripcion}` : 'Compra crédito';
+
+                if (cuotasRaw !== cuotas) {
+                    issues.push({
+                        title: `${label} · Cuotas inválidas`,
+                        badge: 'Cuotas',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Cuotas registradas: ${Number.isFinite(cuotasRaw) ? cuotasRaw : 'N/A'}. Se recomienda usar ${cuotas}.`,
+                        meta: `Sugerencia: ajustar cuotas a ${cuotas}.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'transactions',
+                        id: tx.id,
+                        data: { cuotas },
+                        label: `Cuotas corregidas en ${label} → ${cuotas}`,
+                        reasons: ['Cuotas inválidas.']
+                    });
+                }
+
+                if (pagadasRaw !== pagadas) {
+                    issues.push({
+                        title: `${label} · Cuotas pagadas fuera de rango`,
+                        badge: 'Cuotas',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Cuotas pagadas: ${pagadasRaw}. Rango esperado: 0 - ${cuotas}.`,
+                        meta: `Sugerencia: ajustar cuotasPagadas a ${pagadas}.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'transactions',
+                        id: tx.id,
+                        data: { cuotasPagadas: pagadas },
+                        label: `Cuotas pagadas corregidas en ${label} → ${pagadas}`,
+                        reasons: ['Cuotas pagadas fuera de rango.']
+                    });
+                }
+
+                if (totalRaw <= 0 && monto > 0) {
+                    issues.push({
+                        title: `${label} · Total deuda vacío`,
+                        badge: 'Deuda',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Total deuda registrado: ${formatMoney(totalRaw)} · Monto: ${formatMoney(monto)}.`,
+                        meta: `Sugerencia: registrar totalDeuda como ${formatMoney(monto)}.`
+                    });
+                    queueConsistencyCorrection(correctionMap, {
+                        entity: 'transactions',
+                        id: tx.id,
+                        data: { totalDeuda: monto },
+                        label: `Total deuda corregido en ${label} → ${formatMoney(monto)}`,
+                        reasons: ['Total deuda faltante.']
+                    });
+                }
+
+                if (remainingDebt > total + 1) {
+                    issues.push({
+                        title: `${label} · Cuotas restantes vs deuda`,
+                        badge: 'Deuda',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Suma de cuotas restantes: ${formatMoney(remainingDebt)} · Deuda total registrada: ${formatMoney(total)}.`,
+                        meta: 'Revisa cuotas o totalDeuda para evitar sobreestimación.'
+                    });
+                }
+            });
+
+            cardsList.forEach(card => {
+                const cardCredits = creditTransactions.filter(t => resolveCreditCardName(t) === card.name);
+                if (!cardCredits.length) return;
+                const totalDebtRecorded = cardCredits.reduce((sum, tx) => sum + Number(tx.totalDeuda || tx.monto || 0), 0);
+                const remainingSum = cardCredits.reduce((sum, tx) => {
+                    const cuotas = Number(tx.cuotas) > 0 ? Number(tx.cuotas) : 1;
+                    const pagadas = Math.min(Math.max(Number(tx.cuotasPagadas || 0), 0), cuotas);
+                    const total = Number(tx.totalDeuda || tx.monto || 0);
+                    return sum + (total / cuotas) * Math.max(0, cuotas - pagadas);
+                }, 0);
+
+                if (remainingSum > totalDebtRecorded + 1) {
+                    issues.push({
+                        title: `${card.name} · Cuotas restantes vs deuda`,
+                        badge: 'Deuda',
+                        badgeClass: 'audit-badge--danger',
+                        body: `Suma de cuotas restantes: ${formatMoney(remainingSum)} · Deuda total registrada: ${formatMoney(totalDebtRecorded)}.`,
+                        meta: 'Revisa totales de crédito para ajustar el saldo real.'
+                    });
+                }
+            });
+
+            const financialInsights = buildFinancialAuditInsights();
+            issues.push(...financialInsights);
+
+            consistencyAudit = { issues, corrections: Array.from(correctionMap.values()), lastRunAt: new Date().toISOString() };
+            AppStore.setAudit(consistencyAudit);
+            renderConsistencyAlerts();
+            logEvent('runConsistencyAudit', { issues: issues.length, corrections: consistencyAudit.corrections.length });
+        }
+
+        function getAuditIssueSeverity(issue) {
+            const badgeClass = String(issue?.badgeClass || '');
+            const badge = String(issue?.badge || '').toLowerCase();
+            const title = String(issue?.title || '').toLowerCase();
+            // IMPORTANTE: esta clasificación centralizada mantiene alineados el resumen visual y los grupos por severidad.
+            if (['danger', 'warning', 'ok'].includes(issue?.severity)) return issue.severity;
+            // IMPORTANTE: los badges de peligro representan inconsistencias que pueden afectar cálculos o datos persistidos.
+            if (badgeClass.includes('danger') || badge.includes('riesgo') || title.includes('inválid')) return 'danger';
+            // IMPORTANTE: las alertas no críticas se muestran como warning para revisión manual antes de corregir.
+            return 'warning';
+        }
+
+        function escapeAuditHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+        }
+
+        function formatAuditLastRun(lastRunAt) {
+            if (!lastRunAt) return 'Pendiente';
+            const date = new Date(lastRunAt);
+            if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+            return date.toLocaleString();
+        }
+
+        function updateAuditSummary(issues, corrections, lastRunAt) {
+            const score = document.getElementById('auditScore');
+            const statusLabel = document.getElementById('auditStatusLabel');
+            const statusDetail = document.getElementById('auditStatusDetail');
+            const issueTotal = document.getElementById('auditIssueTotal');
+            const correctionTotal = document.getElementById('auditCorrectionTotal');
+            const lastRun = document.getElementById('auditLastRun');
+            const severityCounts = issues.reduce((acc, issue) => {
+                const severity = getAuditIssueSeverity(issue);
+                acc[severity] = (acc[severity] || 0) + 1;
+                return acc;
+            }, { danger: 0, warning: 0 });
+            const statusClass = !lastRunAt
+                ? 'audit-score--warning'
+                : severityCounts.danger > 0
+                    ? 'audit-score--danger'
+                    : issues.length > 0
+                        ? 'audit-score--warning'
+                        : 'audit-score--ok';
+            const label = !lastRunAt ? 'Sin ejecutar' : severityCounts.danger > 0 ? 'Riesgo alto' : issues.length > 0 ? 'Revisión' : 'OK';
+            const detail = !lastRunAt
+                ? 'Ejecuta la auditoría para calcular consistencia.'
+                : `${severityCounts.danger} críticas · ${severityCounts.warning} advertencias`;
+
+            if (score) score.className = `audit-score ${statusClass}`;
+            if (statusLabel) statusLabel.textContent = label;
+            if (statusDetail) statusDetail.textContent = detail;
+            if (issueTotal) issueTotal.textContent = issues.length;
+            if (correctionTotal) correctionTotal.textContent = corrections.length;
+            if (lastRun) lastRun.textContent = formatAuditLastRun(lastRunAt);
+        }
+
+        function renderConsistencyAlerts() {
+            const container = document.getElementById('consistencyAlertList');
+            const btn = document.getElementById('btnApplyConsistencyCorrections');
+            const issues = Array.isArray(consistencyAudit.issues) ? consistencyAudit.issues : [];
+            const corrections = Array.isArray(consistencyAudit.corrections) ? consistencyAudit.corrections : [];
+            if (!container) return;
+            updateAuditSummary(issues, corrections, consistencyAudit.lastRunAt);
+            if (!issues.length) {
+                // IMPORTANTE: el panel de consistencia nunca queda en blanco; ofrece ejecutar/repetir auditoría como acción segura.
+                container.innerHTML = renderEmptyState({
+                    icon: consistencyAudit.lastRunAt ? 'fas fa-circle-check' : 'fas fa-shield-halved',
+                    title: consistencyAudit.lastRunAt ? 'Sin inconsistencias detectadas.' : 'Auditoría pendiente.',
+                    message: consistencyAudit.lastRunAt ? 'Puedes repetir la revisión si agregaste nuevas transacciones o editaste cupos.' : 'Ejecuta una revisión para detectar diferencias de cupos, cuotas y saldos.',
+                    actionLabel: 'Ejecutar auditoría',
+                    actionOnclick: 'runConsistencyAudit()'
+                });
+                if (btn) btn.disabled = true;
+                return;
+            }
+            const severityLabels = { danger: 'Críticas', warning: 'Advertencias', ok: 'Informativas' };
+            const groupedIssues = issues.reduce((groups, issue) => {
+                const severity = getAuditIssueSeverity(issue);
+                if (!groups[severity]) groups[severity] = [];
+                groups[severity].push(issue);
+                return groups;
+            }, {});
+            // IMPORTANTE: el orden prioriza las incidencias críticas para que el usuario actúe primero sobre cálculos sensibles.
+            container.innerHTML = ['danger', 'warning', 'ok'].filter(severity => groupedIssues[severity]?.length).map(severity => `
+                <section class="audit-group audit-group--${severity}">
+                    <div class="audit-group-header">
+                        <span>${severityLabels[severity] || severity}</span>
+                        <strong>${groupedIssues[severity].length}</strong>
+                    </div>
+                    ${groupedIssues[severity].map(issue => `
+                        <div class="audit-item">
+                            <div class="audit-item-header">
+                                <span class="audit-item-title">${escapeAuditHtml(issue.title)}</span>
+                                <span class="audit-badge ${escapeAuditHtml(issue.badgeClass || '')}">${escapeAuditHtml(issue.badge)}</span>
+                            </div>
+                            <div class="audit-item-body">${escapeAuditHtml(issue.body)}</div>
+                            <div class="audit-item-meta">${escapeAuditHtml(issue.meta || 'Sin acción sugerida.')}</div>
+                        </div>
+                    `).join('')}
+                </section>
+            `).join('');
+            if (btn) btn.disabled = !corrections.length;
+        }
+
+        async function applyConsistencyCorrections() {
+            const corrections = consistencyAudit.corrections || [];
+            if (!corrections.length) {
+                showToast('No hay correcciones disponibles', 'info');
+                return;
+            }
+            const summary = corrections.map(c => `• ${c.label}`).join('\n');
+            if (!confirm(`Se aplicarán ${corrections.length} correcciones:\n${summary}\n\n¿Deseas continuar?`)) return;
+            const btn = document.getElementById('btnApplyConsistencyCorrections');
+            if (btn) btn.classList.add('is-loading');
+            try {
+                let queued=false;
+                for (const correction of corrections) {
+                    if (correction.entity === 'cards') {
+                        const result=await enqueueOrExecute({
+                            entity: 'cards',
+                            action: 'update',
+                            payload: {
+                                id: correction.id,
+                                data: {
+                                    ...correction.data,
+                                    auditUpdatedAt: new Date().toISOString()
+                                }
+                            },
+                            silent: true
+                        });
+                        if(result?.queued)queued=true;
+                    }
+                    if (correction.entity === 'transactions') {
+                        const result=await enqueueOrExecute({
+                            entity: 'transactions',
+                            action: 'update',
+                            payload: {
+                                id: correction.id,
+                                data: {
+                                    ...correction.data,
+                                    auditUpdatedAt: new Date().toISOString()
+                                }
+                            },
+                            silent: true
+                        });
+                        if(result?.queued)queued=true;
+                    }
+                }
+                if(queued){
+                    showToast('Correcciones guardadas localmente. Se sincronizarán al reconectar.', 'info');
+                }else{
+                    showToast('Correcciones aplicadas', 'success');
+                }
+                loadCards();
+                setTimeout(() => {
+                    openQuotaModal();
+                    runConsistencyAudit();
+                }, 500);
+            } catch (e) {
+                console.error(e);
+                showToast('Error al aplicar correcciones', 'error');
+            } finally {
+                if (btn) btn.classList.remove('is-loading');
+            }
+        }
+
+        function setQuotaTab(tab) {
+            currentQuotaTab = tab;
+            const tabs = document.querySelectorAll('#quotaModal .modal-tab');
+            tabs.forEach(btn => {
+                const isActive = btn.dataset.tab === tab;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            const cardsSection = document.getElementById('quotaTabCards');
+            const creditsSection = document.getElementById('quotaTabCredits');
+            if (cardsSection) cardsSection.classList.toggle('active', tab === 'cards');
+            if (creditsSection) creditsSection.classList.toggle('active', tab === 'credits');
+        }
+
+        function renderQuotaCreditList() {
+            const tbody = document.getElementById('quotaCreditList');
+            if (!tbody) return;
+            const creditTransactions = transactions.filter(t => t.tipo === 'credito' && !t.pendingDelete);
+            if (!creditTransactions.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="table-empty-cell">Sin créditos registrados.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = creditTransactions.map(tx => {
+                const cardName = resolveCreditCardName(tx) || 'Sin tarjeta';
+                const total = Number(tx.totalDeuda || tx.monto || 0);
+                const cuotasRaw = Number(tx.cuotas);
+                const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
+                const pagadasRaw = Number(tx.cuotasPagadas || 0);
+                const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
+                const saldoPendiente = (total / cuotas) * Math.max(0, cuotas - pagadas);
+                const cuotasLabel = `${pagadas}/${cuotas}`;
+                const actionButtons = tx.pendingSync
+                    ? '<span class="pending-badge">Pendiente</span>'
+                    : `<button onclick="openAdjustPaymentDateModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Ajustar fecha de pago" aria-label="Ajustar fecha de pago"><i class="fas fa-calendar-alt"></i></button>
+                       <button onclick="editCreditFromQuotaModal('${tx.id}')" class="btn-icon-action btn-icon-action--info" title="Editar crédito" aria-label="Editar crédito"><i class="fas fa-pen"></i></button>
+                       <button onclick="requestCreditDelete('${tx.id}')" class="btn-icon-action btn-icon-action--danger" title="Eliminar crédito" aria-label="Eliminar crédito"><i class="fas fa-trash"></i></button>`;
+                return `
+                    <tr class="row-credit">
+                        <td>${escapeHtml(cardName)}</td>
+                        <td>${formatDate(tx.fecha)}</td>
+                        <td>${escapeHtml(tx.descripcion || 'Compra crédito')}</td>
+                        <td>${cuotasLabel}</td>
+                        <td class="text-danger text-strong">${formatMoney(total)}</td>
+                        <td>${formatMoney(saldoPendiente)}</td>
+                        <td class="text-right">${actionButtons}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function editCreditFromQuotaModal(id) {
+            closeModal('quotaModal');
+            returnToQuotaModal = true;
+            editTransaction(id);
+        }
+
+        function buildCreditDeleteBody(tx) {
+            const cardName = resolveCreditCardName(tx) || 'Sin tarjeta';
+            const total = Number(tx.totalDeuda || tx.monto || 0);
+            const cuotasRaw = Number(tx.cuotas);
+            const cuotas = Number.isFinite(cuotasRaw) && cuotasRaw > 0 ? cuotasRaw : 1;
+            const pagadasRaw = Number(tx.cuotasPagadas || 0);
+            const pagadas = Math.min(Math.max(pagadasRaw, 0), cuotas);
+            const saldoPendiente = (total / cuotas) * Math.max(0, cuotas - pagadas);
+
+            return `
+                <p>¿Deseas eliminar este crédito? Esta acción no se puede deshacer.</p>
+                <div class="modal-details modal-details--flush">
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${escapeHtml(cardName)}</strong></div>
+                    <div class="modal-row"><span>Fecha:</span><span>${formatDate(tx.fecha)}</span></div>
+                    <div class="modal-row"><span>Descripción:</span><span>${escapeHtml(tx.descripcion || 'Compra crédito')}</span></div>
+                    <div class="modal-row"><span>Monto:</span><span>${formatMoney(total)}</span></div>
+                    <div class="modal-row total"><span>Saldo pendiente:</span><span>${formatMoney(saldoPendiente)}</span></div>
+                </div>
+            `;
+        }
+
+        function requestCreditDelete(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+            const body = buildCreditDeleteBody(tx);
+            openConfirmActionModal({
+                title: 'Eliminar crédito',
+                body,
+                confirmLabel: 'Eliminar',
+                confirmClass: 'btn--danger',
+                onConfirm: async () => {
+                    await performDeleteTransaction(id, { skipConfirm: true });
+                    openQuotaModal();
+                }
+            });
+        }
+
+        function openAdjustPaymentDateModal(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+            const cardName = resolveCreditCardName(tx) || 'Sin tarjeta';
+            const cardData = tx.cardId ? findCardById(tx.cardId) : cardsList.find(c => c.name === cardName);
+            const paymentDay = cardData?.diaPago ? parseInt(cardData.diaPago, 10) : 15;
+            const resolvedDate = tx.proximaFechaPago || formatLocalDate(resolveCurrentPaymentDate(tx, paymentDay));
+            const body = `
+                <p>Selecciona la fecha de pago para este crédito. Se usará como próxima fecha de pago.</p>
+                <div class="modal-details modal-details--flush">
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${escapeHtml(cardName)}</strong></div>
+                    <div class="modal-row"><span>Crédito:</span><span>${escapeHtml(tx.descripcion || 'Compra crédito')}</span></div>
+                </div>
+                <div class="form-group mt-sm">
+                    <label for="adjustPaymentDateInput">Nueva fecha de pago</label>
+                    <input type="date" id="adjustPaymentDateInput" value="${resolvedDate}">
+                </div>
+            `;
+            openConfirmActionModal({
+                title: 'Ajustar fecha de pago',
+                body,
+                confirmLabel: 'Guardar fecha',
+                confirmClass: 'btn--primary',
+                onConfirm: async () => {
+                    const dateInput = document.getElementById('adjustPaymentDateInput');
+                    const newDate = dateInput?.value;
+                    if (!newDate) {
+                        throw new Error('Selecciona una fecha válida.');
+                    }
+                    try {
+                        const result=await enqueueOrExecute({
+                            entity: 'transactions',
+                            action: 'update',
+                            payload: { id, data: { proximaFechaPago: newDate } }
+                        });
+                        await loadTransactions();
+                        openQuotaModal();
+                        if(!result?.queued){
+                            showToast('Fecha de pago actualizada', 'success');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        throw new Error('No se pudo actualizar la fecha de pago.');
+                    }
+                }
+            });
+        }
+        function openQuotaModal(){
+            const d=document.getElementById('quotaListContainer');
+            d.innerHTML='';
+            cardsList.forEach(c=>{
+                const db=globalDeudaPorTarjeta[c.name]||0;
+                const av=calculateAvailableQuota(c);
+                const safeName=escapeHtml(c.name.replace(/'/g,"\\'"));
+                const el=document.createElement('div');
+                el.className='quota-card';
+                el.innerHTML=`<div class="quota-header"><span>${escapeHtml(c.name)}</span><div><button onclick="editCard('${c.id}','${safeName}','${c.quota}','${c.ajusteDisponible||0}','${c.diaPago||''}')" class="btn-icon-action btn-icon-action--info"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteCard('${c.id}')" class="btn-icon-action btn-icon-action--danger"><i class="fas fa-trash"></i></button></div></div><div class="quota-details"><span class="text-danger">Deuda a la fecha: ${formatMoney(db)}</span><span class="text-success">Cupo disponible: ${formatMoney(av)}</span></div>`;
+                d.appendChild(el);
+            });
+            document.getElementById('cardNameInput').value='';
+            document.getElementById('cardQuotaInput').value='';
+            document.getElementById('cardAvailableAdjustmentInput').value='';
+            document.getElementById('cardPaymentDayInput').value='';
+            document.getElementById('editCardId').value='';
+            document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-plus"></i>';
+            consistencyAudit = { issues: [], corrections: [], lastRunAt: null };
+            AppStore.setAudit(consistencyAudit);
+            renderConsistencyAlerts();
+            renderQuotaCreditList();
+            setQuotaTab(currentQuotaTab);
+            document.getElementById('quotaModal').style.display='flex';
+        }
+        function openConfirmActionModal({ title, body, confirmLabel = 'Confirmar', confirmClass = 'btn--primary', onConfirm }) {
+            const modal = document.getElementById('confirmActionModal');
+            const titleEl = document.getElementById('confirmActionTitle');
+            const bodyEl = document.getElementById('confirmActionBody');
+            const confirmBtn = document.getElementById('confirmActionConfirmBtn');
+            const cancelBtn = document.getElementById('confirmActionCancelBtn');
+            const errorEl = document.getElementById('confirmActionError');
+            const loadingEl = document.getElementById('confirmActionLoading');
+
+            confirmActionState.onConfirm = onConfirm;
+            if (titleEl) titleEl.textContent = title || 'Confirmar acción';
+            if (bodyEl) bodyEl.innerHTML = body || '';
+            if (confirmBtn) {
+                confirmBtn.textContent = confirmLabel;
+                confirmBtn.className = `btn ${confirmClass} btn--md`;
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('is-loading');
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeConfirmActionModal() {
+            const modal = document.getElementById('confirmActionModal');
+            const confirmBtn = document.getElementById('confirmActionConfirmBtn');
+            const cancelBtn = document.getElementById('confirmActionCancelBtn');
+            const errorEl = document.getElementById('confirmActionError');
+            const loadingEl = document.getElementById('confirmActionLoading');
+
+            confirmActionState.onConfirm = null;
+            if (confirmBtn) {
+                confirmBtn.classList.remove('is-loading');
+                confirmBtn.disabled = false;
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function confirmActionModalConfirm() {
+            const confirmBtn = document.getElementById('confirmActionConfirmBtn');
+            const cancelBtn = document.getElementById('confirmActionCancelBtn');
+            const errorEl = document.getElementById('confirmActionError');
+            const loadingEl = document.getElementById('confirmActionLoading');
+
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            if (loadingEl) loadingEl.style.display = 'flex';
+            if (confirmBtn) {
+                confirmBtn.classList.add('is-loading');
+                confirmBtn.disabled = true;
+            }
+            if (cancelBtn) cancelBtn.disabled = true;
+
+            let completed = false;
+            try {
+                if (confirmActionState.onConfirm) {
+                    await confirmActionState.onConfirm();
+                }
+                completed = true;
+                closeConfirmActionModal();
+            } catch (error) {
+                console.error(error);
+                if (errorEl) {
+                    errorEl.textContent = error?.message || 'No se pudo completar la acción.';
+                    errorEl.style.display = 'block';
+                }
+                showToast(error?.message || 'Error en la acción', 'error');
+            } finally {
+                if (!completed) {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    if (confirmBtn) {
+                        confirmBtn.classList.remove('is-loading');
+                        confirmBtn.disabled = false;
+                    }
+                    if (cancelBtn) cancelBtn.disabled = false;
+                }
+            }
+        }
+
+        function closeModal(id){
+            document.getElementById(id).style.display='none';
+            if(id==='cardDetailModal')currentDetailCardName=null;
+        }
+        async function saveCard(){
+            const n=document.getElementById('cardNameInput').value.trim();
+            const q=parseCurrencyInput(document.getElementById('cardQuotaInput').value);
+            const adj=parseCurrencyInput(document.getElementById('cardAvailableAdjustmentInput').value);
+            const pRaw=document.getElementById('cardPaymentDayInput').value.trim();
+            const i=document.getElementById('editCardId').value;
+            const btn=document.getElementById('btnSaveCard');
+            if(!n)return;
+            const dupe=cardsList.some(c=>c.name===n&&c.id!==i);
+            if(dupe){
+                showToast('Nombre ya existe','warning');
+                return;
+            }
+            let diaPago=null;
+            if(pRaw!==''){
+                const pNum=Number(pRaw);
+                if(!Number.isInteger(pNum)||pNum<1||pNum>31){
+                    showToast('Día de pago inválido','warning');
+                    return;
+                }
+                diaPago=pNum;
+            }
+            if(btn)btn.classList.add('is-loading');
+            try{
+                let result=null;
+                if(i){
+                    result=await enqueueOrExecute({
+                        entity: 'cards',
+                        action: 'update',
+                        payload: { id: i, data: { name:n,quota:q,diaPago,ajusteDisponible:adj } }
+                    });
+                }else{
+                    result=await enqueueOrExecute({
+                        entity: 'cards',
+                        action: 'add',
+                        payload: { data: { name:n,quota:q,diaPago,ajusteDisponible:adj } }
+                    });
+                }
+                await loadCards();
+                openQuotaModal();
+                if(!result?.queued){
+                    showToast(i ? 'Tarjeta actualizada' : 'Tarjeta guardada','success');
+                }
+            }catch(e){
+                console.error(e);
+                showToast('Error al guardar','error');
+            }finally{
+                if(btn)btn.classList.remove('is-loading');
+            }
+        }
+        async function reconcileCard(id){
+            const card=findCardById(id);
+            if(!card){showToast('Tarjeta no encontrada','error');return;}
+            const debtMap=calculateDebtByCard();
+            const debt=debtMap[card.name]||0;
+            const baseAvailable=(card.quota||0)-debt;
+            const currentAvailable=baseAvailable+(card.ajusteDisponible||0);
+            const input=prompt(`Saldo real disponible para "${card.name}" (base: ${formatMoney(baseAvailable)}).`, formatMoney(currentAvailable));
+            if(input===null)return;
+            const saldoReal=parseCurrencyInput(input);
+            if(Number.isNaN(saldoReal)){showToast('Saldo inválido','warning');return;}
+            const ajuste=saldoReal-baseAvailable;
+            const confirmMsg=`Se aplicará un ajuste de ${formatMoney(ajuste)} para "${card.name}".\n¿Confirmar conciliación?`;
+            if(!confirm(confirmMsg))return;
+            try{
+                const result=await enqueueOrExecute({
+                    entity: 'cards',
+                    action: 'update',
+                    payload: { id, data: { ajusteDisponible: ajuste } }
+                });
+                await loadCards();
+                openQuotaModal();
+                if(!result?.queued){
+                    showToast('Conciliación aplicada','success');
+                }
+            }catch(e){
+                console.error(e);
+                showToast('Error al conciliar','error');
+            }
+        }
+        async function deleteCard(id){
+            const card=findCardById(id);
+            const cardName=card?.name||'';
+            const relatedTransactions=transactions.filter(t=>t.cardId===id||resolveCreditCardName(t)===cardName||t.metodoPago===cardName||t.tarjetaDestino===cardName);
+            const txCount=relatedTransactions.length;
+            const confirmBody = `
+                <p>${txCount ? `Esta tarjeta tiene <strong>${txCount}</strong> transacción(es) asociada(s). Se desvincularán y quedarán marcadas como tarjeta eliminada.` : `Se eliminará la tarjeta "<strong>${escapeHtml(cardName || 'Sin nombre')}</strong>".`}</p>
+                <div class="modal-details modal-details--flush">
+                    <div class="modal-row"><span>Tarjeta:</span><strong>${escapeHtml(cardName || 'Sin nombre')}</strong></div>
+                    <div class="modal-row"><span>Transacciones afectadas:</span><span>${txCount}</span></div>
+                </div>
+            `;
+            openConfirmActionModal({
+                title: 'Eliminar tarjeta',
+                body: confirmBody,
+                confirmLabel: 'Eliminar',
+                confirmClass: 'btn--danger',
+                onConfirm: async () => {
+                    try {
+                        let queued=false;
+                        for(const t of relatedTransactions){
+                            const updateData={cardDeleted:true};
+                            if(t.cardId===id)updateData.cardId='';
+                            if(t.cardName===cardName)updateData.cardName='';
+                            if(resolveCreditCardName(t)===cardName&&!t.cardName)updateData.cardName='';
+                            if(t.metodoPago===cardName)updateData.metodoPago='';
+                            if(t.tarjetaDestino===cardName)updateData.tarjetaDestino='';
+                            const result=await enqueueOrExecute({
+                                entity: 'transactions',
+                                action: 'update',
+                                payload: { id: t.id, data: updateData },
+                                silent: true
+                            });
+                            if(result?.queued)queued=true;
+                        }
+                        const deleteResult=await enqueueOrExecute({
+                            entity: 'cards',
+                            action: 'delete',
+                            payload: { id },
+                            silent: true
+                        });
+                        if(deleteResult?.queued)queued=true;
+                        await loadCards();
+                        openQuotaModal();
+                        if(queued){
+                            showToast('Eliminación guardada localmente. Se sincronizará al reconectar.', 'info');
+                        }else{
+                            showToast(`Tarjeta eliminada. Transacciones actualizadas: ${txCount}.`,'success');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        showToast('Error al borrar','error');
+                        throw new Error('No se pudo eliminar la tarjeta. Intenta nuevamente.');
+                    }
+                }
+            });
+        }
+        function editCard(id,n,q,a,p){document.getElementById('cardNameInput').value=n;const i=document.getElementById('cardQuotaInput');i.value=q;formatCurrencyInput(i);const adjInput=document.getElementById('cardAvailableAdjustmentInput');adjInput.value=a||0;formatCurrencyInput(adjInput);document.getElementById('cardPaymentDayInput').value=p||'';document.getElementById('editCardId').value=id;document.getElementById('btnSaveCard').innerHTML='<i class="fas fa-save"></i>';}
+        async function switchView(id){
+            if(!VIEW_CONFIG[id])return;
+            logEvent('switchView',{view:id});
+            await loadView(id);
+            applyViewVisualConfig(id); // IMPORTANTE: tras cargar la vista aplicamos foco/plegados definidos en VIEW_CONFIG antes de mostrarla.
+            document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+            const targetView=document.getElementById('view-'+id);
+            if(targetView)targetView.classList.add('active');
+            const f=document.getElementById('headerDateFilter');
+            if(f)f.style.display=id==='dashboard'?'flex':'none';
+            document.querySelectorAll('.sidebar .nav-item, .mobile-nav .mob-link').forEach(x=>x.classList.remove('active'));
+            const s=document.querySelectorAll('.sidebar .nav-item');
+            const m=document.querySelectorAll('.mobile-nav .mob-link');
+            // IMPORTANTE: El orden de .nav-item debe mantenerse alineado con los ids internos de VIEW_CONFIG; Tarjetas usa .nav-action para no desplazar índices legacy.
+            if(id==='dashboard'){s[0].classList.add('active');m[0].classList.add('active');}
+            if(id==='transacciones'){s[1].classList.add('active');m[1].classList.add('active');}
+            if(id==='historial'){s[2].classList.add('active');m[3].classList.add('active');}
+            if(id==='estadisticas'){s[3].classList.add('active');}
+            if(id==='objetivos'){s[4].classList.add('active');}
+            if(id==='asistente'){s[5].classList.add('active');m[4].classList.add('active');}
+            // IMPORTANTE: ejecutar hooks de render de la vista activa (documentación funcional en VIEW_CONFIG).
+            requestAnimationFrame(()=>{(VIEW_CONFIG[id].onActivate||[]).forEach(fn=>fn());});
+            closeSidebar();
+        }
+        function goToAddTransaction(){switchView('transacciones');}
+        function openCardsNavigation(){
+            // IMPORTANTE: Tarjetas reutiliza el modal existente de cupos y no registra una ruta nueva en VIEW_CONFIG.
+            currentQuotaTab='cards';
+            openQuotaModal();
+        }
+
+        handleTipoChange();
+
+        // Formatear fecha
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const partes = dateStr.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }

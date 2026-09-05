@@ -28,7 +28,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="transaction-type-selector__control">
-                                                        <label for="tipo">Tipo</label>
+                                                        <label for="tipo">¿Qué vas a registrar?</label>
                                                         <!-- Select oculto para preservar comportamiento JS existente -->
                                                         <select id="tipo" required onchange="handleTipoChange()" class="visually-hidden">
                                                             <option value="gasto">💸 Gasto</option>
@@ -37,14 +37,16 @@
                                                             <option value="pago_tarjeta">📉 Abono TC</option>
                                                             <option value="transferencia">🔄 Transferencia</option>
                                                         </select>
+                                                        <!-- IMPORTANTE: los botones se sincronizan con #tipo vía syncTransactionTypeButtons(); el select es la fuente de verdad. -->
                                                         <!-- Grupo de botones táctiles -->
-                                                        <div class="transaction-type-buttons" role="radiogroup" aria-labelledby="lblTipo">
-                                                            <button type="button" class="transaction-type-btn" data-value="gasto">💸 Gasto</button>
-                                                            <button type="button" class="transaction-type-btn" data-value="ingreso">💰 Ingreso</button>
-                                                            <button type="button" class="transaction-type-btn" data-value="credito">💳 Crédito</button>
-                                                            <button type="button" class="transaction-type-btn" data-value="pago_tarjeta">📉 Abono TC</button>
-                                                            <button type="button" class="transaction-type-btn" data-value="transferencia">🔄 Transferencia</button>
+                                                        <div class="transaction-type-buttons" role="radiogroup" aria-label="Tipo de movimiento">
+                                                            <button type="button" class="transaction-type-btn transaction-type-btn--gasto" data-value="gasto" aria-pressed="false">💸 Gasto</button>
+                                                            <button type="button" class="transaction-type-btn transaction-type-btn--ingreso" data-value="ingreso" aria-pressed="false">💰 Ingreso</button>
+                                                            <button type="button" class="transaction-type-btn transaction-type-btn--credito" data-value="credito" aria-pressed="false">💳 Crédito</button>
+                                                            <button type="button" class="transaction-type-btn transaction-type-btn--pago_tarjeta" data-value="pago_tarjeta" aria-pressed="false">📉 Abono TC</button>
+                                                            <button type="button" class="transaction-type-btn transaction-type-btn--transferencia" data-value="transferencia" aria-pressed="false">🔄 Transferencia</button>
                                                         </div>
+                                                        <p class="transaction-type-selector__hint">Toca una opción: el formulario muestra solo los campos que necesita.</p>
                                                     </div>
                                                 </section>
 

@@ -53,9 +53,22 @@
     emit(prevState);
   }
 
+  // IMPORTANTE: se parsean strings YYYY-MM-DD como fecha local; `new Date(string)` los interpretaría como UTC
+  // y está marcado como deprecado para strings no ISO en navegadores modernos.
+  function normalizeViewDate(value) {
+    if (value instanceof Date) return value;
+    if (typeof value === 'string') {
+      const parts = value.slice(0, 10).split('-').map(Number);
+      if (parts.length === 3 && parts.every(Number.isFinite)) {
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
+    return new Date();
+  }
+
   function updateViewDate(viewDate) {
     const prevState = state;
-    state = { ...state, viewDate: viewDate instanceof Date ? viewDate : new Date(viewDate) };
+    state = { ...state, viewDate: normalizeViewDate(viewDate) };
     emit(prevState);
   }
 

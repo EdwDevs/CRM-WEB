@@ -3,6 +3,9 @@
 (function(){
 'use strict';
 
+// IMPORTANTE: escape local para no depender del escapeHtml global de app.js (que carga después de este módulo).
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+
 function renderDebugPanel(){
     if(!debugState.enabled)return;
     let panel=document.getElementById('debugPanel');
@@ -11,7 +14,7 @@ function renderDebugPanel(){
     panel.className=`debug-panel${debugState.expanded?'':' debug-panel--collapsed'}`;
     // IMPORTANTE: el panel debug debe iniciar colapsado y no ser intrusivo para QA visual.
     panel.innerHTML=debugState.expanded
-        ? `<div class="debug-panel__head"><button class="debug-panel-toggle" type="button" aria-expanded="true" title="Colapsar debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span><span>Debug local</span></button><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div class="debug-section-title"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div class="debug-section-title"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${e.scope}: ${e.message}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`
+        ? `<div class="debug-panel__head"><button class="debug-panel-toggle" type="button" aria-expanded="true" title="Colapsar debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span><span>Debug local</span></button><span>${currentViewDate.toISOString().slice(0,10)}</span></div><div class="debug-panel__body"><div>Tx: ${transactions.length} · Cards: ${cardsList.length} · Cola: ${offlineQueue.length}</div><div class="debug-section-title"><strong>Eventos</strong></div><ul class="debug-panel__list">${debugState.lastEvents.map(e=>`<li><code>${e.type}</code> · ${e.at.slice(11,19)}</li>`).join('')||'<li>Sin eventos</li>'}</ul><div class="debug-section-title"><strong>Errores</strong></div><ul class="debug-panel__list">${debugState.lastErrors.map(e=>`<li>${escapeHtml(e.scope)}: ${escapeHtml(e.message)}</li>`).join('')||'<li>Sin errores</li>'}</ul></div>`
         : `<button class="debug-panel-toggle" type="button" aria-expanded="false" title="Abrir debug local"><span aria-hidden="true">🐞</span><span class="debug-panel__badge">${recentErrorCount}</span></button>`;
     panel.querySelector('.debug-panel-toggle')?.addEventListener('click',toggleDebugPanel);
 }

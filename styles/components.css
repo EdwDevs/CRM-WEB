@@ -5097,6 +5097,40 @@ body:not(.is-data-loading) .chart-loading-shell {
     border-color: var(--primary);
 }
 
+/* IMPORTANTE: colores semánticos por tipo para que el estado seleccionado sea inequívoco
+   (evita que un ingreso quede registrado como gasto por un resaltado poco claro). */
+.transaction-type-btn.active.transaction-type-btn--gasto {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 14%, var(--bg-surface));
+}
+.transaction-type-btn.active.transaction-type-btn--ingreso {
+    color: var(--success);
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 14%, var(--bg-surface));
+}
+.transaction-type-btn.active.transaction-type-btn--credito {
+    color: #a78bfa;
+    border-color: #a78bfa;
+    background: color-mix(in srgb, #a78bfa 14%, var(--bg-surface));
+}
+.transaction-type-btn.active.transaction-type-btn--pago_tarjeta {
+    color: #38bdf8;
+    border-color: #38bdf8;
+    background: color-mix(in srgb, #38bdf8 14%, var(--bg-surface));
+}
+.transaction-type-btn.active.transaction-type-btn--transferencia {
+    color: #2dd4bf;
+    border-color: #2dd4bf;
+    background: color-mix(in srgb, #2dd4bf 14%, var(--bg-surface));
+}
+.transaction-type-selector__hint {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    opacity: 0.85;
+}
+
 /* ============================================================
    TRANSACCIÓN · Formulario compacto y agrupado (mobile-first)
    Reduce espaciado, elimina cajas individuales y mantiene IDs/JS intactos.
