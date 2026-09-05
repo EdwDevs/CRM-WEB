@@ -54,7 +54,10 @@
 .gap-sm { gap: 8px !important; }
 .gap-md { gap: 16px !important; }
 
-.text-primary { color: var(--primary) !important; }
+/* IMPORTANTE: Fase 4 - el dorado puro (#D4AF37) sobre superficies claras falla WCAG (~2.1:1);
+   en tema claro se usa el dorado oscurecido --primary-ink; en oscuro el dorado original contrasta bien. */
+.text-primary { color: var(--primary-ink, var(--primary)) !important; }
+[data-theme="dark"] .text-primary { color: var(--primary) !important; }
 .text-secondary { color: var(--text-secondary) !important; }
 .text-muted { color: var(--text-muted) !important; }
 .text-success { color: var(--success) !important; }

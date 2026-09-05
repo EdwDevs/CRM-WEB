@@ -12,7 +12,7 @@
             --bg-elevated: #EEF2FF;
             --text-primary: #0F172A;
             --text-secondary: #475569;
-            --text-muted: #64748B;
+            --text-muted: #5a6b82; /* IMPORTANTE: Fase 4 - gris más oscuro que el anterior (#64748B) para contraste AA sobre superficies claras. */
             --text-inverse: #FFFFFF;
             --border-light: rgba(212, 175, 55, 0.18);
             --success: #059669; /* IMPORTANTE: token base para estados positivos existentes. */
@@ -113,6 +113,25 @@
             --finance-pending: var(--warning);
             --finance-pending-bg: var(--warning-light);
 
+            /* IMPORTANTE: Fase 4 - tokens de texto accesibles: el dorado puro (#D4AF37) sobre claro falla WCAG (~2.1:1);
+               se usa un dorado oscurecido solo para texto/iconos decorativos en superficie clara. */
+            --primary-ink: #8a6d1d;
+            --primary-ink-soft: #a3801f;
+            /* IMPORTANTE: Fase 4 - tokens referenciados en components.css pero nunca definidos (fallaban en silencio). */
+            --border: var(--border-light);
+            --bg-muted: color-mix(in srgb, var(--text-secondary) 8%, var(--bg-surface));
+            --bg-accent: color-mix(in srgb, var(--primary) 12%, var(--bg-surface));
+            --muted-foreground: var(--text-muted);
+            /* IMPORTANTE: Fase 4 - escala tipográfica unificada para nuevos componentes y migración progresiva. */
+            --text-xs: 0.72rem;
+            --text-sm: 0.85rem;
+            --text-base: 1rem;
+            --text-md: 1.125rem;
+            --text-lg: 1.4rem;
+            --text-xl: 1.75rem;
+            --text-2xl: 2.15rem;
+            --text-3xl: 2.6rem;
+
             /* IMPORTANTE: Transiciones moderadas y medidas globales de layout; tokens base existentes. */
             --transition-fast: 180ms ease;
             --transition-base: 260ms ease;
@@ -158,9 +177,9 @@
             --surface-muted: var(--bg-elevated);
             --surface-overlay: rgba(3, 7, 18, 0.68);
             --surface-glass: rgba(18, 26, 43, 0.78);
-            --surface-selected: rgba(59, 130, 246, 0.16);
-            --surface-hover: rgba(59, 130, 246, 0.10);
-            --surface-active: rgba(59, 130, 246, 0.20);
+            --surface-selected: color-mix(in srgb, var(--primary) 16%, transparent);
+            --surface-hover: color-mix(in srgb, var(--primary) 10%, transparent);
+            --surface-active: color-mix(in srgb, var(--primary) 20%, transparent);
             --card-bg: var(--surface-raised);
 
             /* IMPORTANTE: EXTENSIONES de gradientes oscuros para nuevas vistas sin romper los gradientes actuales. */

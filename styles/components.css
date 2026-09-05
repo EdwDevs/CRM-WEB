@@ -163,7 +163,7 @@
             color: var(--text-primary);
             padding: 48px 40px;
             border-radius: var(--radius-xl);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 40px -18px rgba(59, 130, 246, 0.45);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 40px -18px color-mix(in srgb, var(--primary) 45%, transparent);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -178,7 +178,7 @@
             top: -40%;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, transparent 60%);
+            background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -191,7 +191,7 @@
             bottom: -50%;
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+            background: radial-gradient(circle, color-mix(in srgb, var(--primary) 8%, transparent) 0%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -229,7 +229,7 @@
             border-radius: var(--radius-xl);
             background: linear-gradient(135deg, color-mix(in srgb, var(--bg-surface) 90%, #0B1220) 0%, color-mix(in srgb, var(--bg-elevated) 72%, #111827) 100%);
             border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border-light));
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-xl), 0 0 44px -22px rgba(59, 130, 246, 0.52);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-xl), 0 0 44px -22px color-mix(in srgb, var(--primary) 52%, transparent);
             position: relative;
             overflow: hidden;
         }
@@ -241,7 +241,7 @@
             width: 440px;
             height: 440px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 62%);
+            background: radial-gradient(circle, color-mix(in srgb, var(--primary) 18%, transparent) 0%, transparent 62%);
             pointer-events: none;
         }
 
@@ -975,7 +975,7 @@
             justify-content: space-between;
             padding: 10px 12px;
             border-radius: var(--radius-md);
-            background: rgba(80, 70, 229, 0.06);
+            background: color-mix(in srgb, var(--primary) 6%, transparent);
             font-size: 0.9rem;
             font-weight: 600;
             color: var(--text-secondary);
@@ -1095,8 +1095,8 @@
         }
 
         #view-historial .table-container tbody tr.row-transfer td {
-            background: rgba(59, 130, 246, 0.05);
-            border-bottom-color: rgba(59, 130, 246, 0.1);
+            background: color-mix(in srgb, var(--primary) 5%, transparent);
+            border-bottom-color: color-mix(in srgb, var(--primary) 10%, transparent);
         }
 
         #view-historial .table-container td:nth-child(1) {
@@ -1160,9 +1160,9 @@
 
         #view-historial .type-transferencia,
         #view-historial .type-pago_tarjeta {
-            background: rgba(59, 130, 246, 0.15);
+            background: color-mix(in srgb, var(--primary) 15%, transparent);
             color: #93C5FD;
-            border-color: rgba(59, 130, 246, 0.3);
+            border-color: color-mix(in srgb, var(--primary) 30%, transparent);
         }
 
         .filter-row {
@@ -1330,7 +1330,7 @@
             background: linear-gradient(180deg, #3A3B45 0%, #1A1B23 100%);
             color: var(--primary);
             box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            border: 1px solid rgba(37, 99, 255, 0.2);
+            border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
         }
 
         .quota-tab-section {
@@ -1349,7 +1349,7 @@
             border-radius: var(--radius-xl);
             text-align: center;
             margin-bottom: 40px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 30px -5px rgba(37, 99, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-xl), 0 0 30px -5px color-mix(in srgb, var(--primary) 15%, transparent);
             position: relative;
             overflow: hidden;
         }
@@ -1361,7 +1361,7 @@
             top: -40%;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(37, 99, 255, 0.08) 0%, transparent 60%);
+            background: radial-gradient(circle, color-mix(in srgb, var(--primary) 8%, transparent) 0%, transparent 60%);
             border-radius: 50%;
         }
 
@@ -1688,7 +1688,7 @@
 
         .btn--primary:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 4px rgba(37, 99, 255, 0.3);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 30%, transparent);
         }
 
         .btn--secondary {
@@ -1707,7 +1707,7 @@
 
         .btn--secondary:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+            box-shadow: var(--focus-ring);
         }
 
         .btn--secondary:active {
@@ -1729,7 +1729,7 @@
 
         .btn--ghost:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+            box-shadow: var(--focus-ring);
         }
 
         .btn--ghost:active {
@@ -1900,7 +1900,7 @@
 
         .quota-card:hover {
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-md);
-            border-color: rgba(37, 99, 255, 0.2);
+            border-color: color-mix(in srgb, var(--primary) 20%, transparent);
         }
 
         .quota-header {
@@ -1935,7 +1935,7 @@
         .card-status-item:hover {
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-sm);
             transform: translateX(4px);
-            border-color: rgba(37, 99, 255, 0.2);
+            border-color: color-mix(in srgb, var(--primary) 20%, transparent);
         }
 
         .card-status-item .card-name {
@@ -2017,7 +2017,7 @@
             height: 3px;
             background: var(--primary);
             border-radius: 0 0 4px 4px;
-            box-shadow: 0 0 10px rgba(37, 99, 255, 0.5);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 50%, transparent);
         }
 
         .mob-link.ai-mob {
@@ -2088,7 +2088,7 @@
             align-items: center;
             font-size: 1.5rem;
             box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(37, 99, 255, 0.3);
+            border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
             cursor: pointer;
             z-index: var(--z-sticky);
             transition: all var(--transition-fast);
@@ -2097,8 +2097,8 @@
 
         .fab:hover {
             transform: scale(1.05) translateY(-4px);
-            box-shadow: var(--shadow-xl), 0 0 20px rgba(37, 99, 255, 0.2);
-            border-color: rgba(37, 99, 255, 0.6);
+            box-shadow: var(--shadow-xl), 0 0 20px color-mix(in srgb, var(--primary) 20%, transparent);
+            border-color: color-mix(in srgb, var(--primary) 60%, transparent);
         }
 
         .fab:focus-visible {
@@ -2761,7 +2761,7 @@
         .goal-card:hover {
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-md);
             transform: translateY(-2px);
-            border-color: rgba(37, 99, 255, 0.2);
+            border-color: color-mix(in srgb, var(--primary) 20%, transparent);
         }
 
         .goal-header {
@@ -2984,7 +2984,7 @@
             height: 64px;
             border-radius: 50%;
             background: linear-gradient(135deg, #1A1B23 0%, #090A0F 100%);
-            border: 1px solid rgba(37, 99, 255, 0.3);
+            border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
             color: var(--primary);
             display: flex;
             align-items: center;
@@ -3230,7 +3230,7 @@
 
         .btn-export:hover {
             background: var(--bg-body);
-            border-color: rgba(80, 70, 229, 0.3);
+            border-color: color-mix(in srgb, var(--primary) 30%, transparent);
             color: var(--primary);
             transform: translateY(-2px);
         }
@@ -3259,7 +3259,7 @@
         }
 
         .voice-search-btn:hover {
-            background: rgba(80, 70, 229, 0.1);
+            background: color-mix(in srgb, var(--primary) 10%, transparent);
         }
 
         .voice-search-btn.recording {
@@ -3296,7 +3296,7 @@
         .sync-indicator.syncing {
             background: var(--info-light);
             color: var(--info);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
         }
 
         .sync-indicator.online {
@@ -6316,3 +6316,30 @@ body:not(.is-data-loading) .chart-loading-shell {
     from { transform: translateY(10px); }
     to { transform: translateY(0); }
 }
+
+/* ============================================================
+   FASE 4 · SISTEMA VISUAL (2026-09)
+   Escala tipográfica aplicada, contraste WCAG del dorado en claro.
+   ============================================================ */
+
+/* --- Escala tipográfica en textos clave (migración progresiva desde tamaños ad-hoc) --- */
+.view-header__title { font-size: var(--text-2xl); }
+.view-header__subtitle { font-size: var(--text-sm); }
+.card-title { font-size: var(--text-md); }
+.card-subtitle { font-size: var(--text-xs); }
+.mini-value,
+.account-amount { font-size: var(--text-lg); }
+.mini-label,
+.account-label { font-size: var(--text-xs); }
+.daily-cap-value { font-size: var(--text-xl); }
+
+/* --- Contraste: dorado como TEXTO sobre superficie clara pasa a dorado oscurecido --- */
+[data-theme="light"] .view-eyebrow,
+[data-theme="light"] .card-title--muted,
+[data-theme="light"] .goal-percent,
+[data-theme="light"] .brand span {
+    color: var(--primary-ink);
+}
+
+/* --- Contraste: grises muted más legibles en claro (antes #64748B sobre claro, limítrofe) --- */
+/* (el gris muted claro ya se define en tokens.css) */
